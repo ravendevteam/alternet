@@ -1,0 +1,17 @@
+[package]
+name = "htx"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bytes = "1"
+quinn-proto = "0.11"
+thiserror = "1.0"
+
+# Cryptography
+chacha20poly1305 = "0.10"
+hkdf = "0.12"
+sha2 = "0.10"
+ed25519-dalek = "1.0"
+x25519-dalek = "1.0"
+rand = "0.8"
