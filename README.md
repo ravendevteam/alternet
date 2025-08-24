@@ -107,7 +107,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 Byte order: Unless otherwise stated, all multi-octet integers are unsigned big-endian. Bit numbering in diagrams starts at 0 (MSB).
 
-Deterministic serialization: When CBOR is used, it MUST be encoded deterministically as defined in Section 6.2.
+Deterministic serialization: When CBOR is used, it MUST be encoded deterministically as defined in [Section 6.2](#sec-6-2).
 
 Terms:
 - Node: A software agent implementing Betanet.
@@ -153,28 +153,26 @@ Layers and responsibilities:
 - L6  Payments: vouchers and settlement hooks.
 - L7  Applications: web-layer replacement services.
 
-Each layer is independently versioned and negotiated as defined in Section 5. Downward references are informative; the wire-visible fields are defined in their owning sections.
-
-<a id="sec-5"></a>
-
+Each layer is independently versioned and negotiated as defined in [Section 5](#sec-5). Downward references are informative; the wire-visible fields are defined in their owning sections.
 
 **Canonical wire stack mapping (Normative).**
 
-- Outer transport: **TLS 1.3 over TCP** or **QUIC v1 over UDP** to a real front origin selected via Section 8.1.1.
-- Application cover: **HTTP/2 or HTTP/3** behavior precisely as profiled in Sections 8.1.3 and 8.1.4.
-- Inner authenticated channel: a Noise XK channel (Section 8.2) that carries **L2 Frames** (Section 8.4).
+- Outer transport: **TLS 1.3 over TCP** or **QUIC v1 over UDP** to a real front origin selected via [Section 8.1.1](#sec-8-1-1).
+- Application cover: **HTTP/2 or HTTP/3** behavior precisely as profiled in [Sections 8.1.3](#sec-8-1-3) and [8.1.4](#sec-8-1-4).
+- Inner authenticated channel: a Noise XK channel ([Section 8.2](#sec-8-2)) that carries **L2 Frames** ([Section 8.4](#sec-8-4)).
 - L1 Path Selection is **not** a separate on-the-wire layer. L1 structures are encoded as **L2 control frames** and are not independently visible to the network.
 
-**Layering rule (Normative).** All path metadata and routing controls defined in Section 7 are serialized as the payload of L2 `PATH_CONTROL` frames (Type = `0x20`) and thus protected by the inner channel AEAD. L2 frames are carried inside the HTTP/2 or HTTP/3 message bodies/tunnels established over TLS/QUIC. There is no mapping in which “L1 encapsulates L2”.
+**Layering rule (Normative).** All path metadata and routing controls defined in [Section 7](#sec-7) are serialized as the payload of L2 `PATH_CONTROL` frames (Type = `0x20`) and thus protected by the inner channel AEAD. L2 frames are carried inside the HTTP/2 or HTTP/3 message bodies/tunnels established over TLS/QUIC. There is no mapping in which “L1 encapsulates L2”.
 
 **Carriage mapping.**
-- L1 “Packet Header” (Section 7.2) is the **binary payload** of L2 `PATH_CONTROL` and never appears as a stand‑alone datagram on the wire.
-- Application data is carried in L2 `STREAM` frames (Section 8.4.2).
-- Flow control and credit signals use L2 `WINDOW_UPDATE` (Section 8.4.3).
-- Congestion feedback from L1 (CF) is conveyed using L2 `PATH_CONTROL` subtype `CF` (Section 7.7).
+- L1 “Packet Header” ([Section 7.2](#sec-7-2)) is the **binary payload** of L2 `PATH_CONTROL` and never appears as a stand‑alone datagram on the wire.
+- Application data is carried in L2 `STREAM` frames ([Section 8.4.2](#sec-8-4-2)).
+- Flow control and credit signals use L2 `WINDOW_UPDATE` ([Section 8.4.3](#sec-8-4-3)).
+- Congestion feedback from L1 (CF) is conveyed using L2 `PATH_CONTROL` subtype `CF` ([Section 7.7](#sec-7-7)).
 
 Conformance: any implementation that exposes an L1 header directly on the wire is **non‑conformant**.
 
+<a id="sec-5"></a>
 ## 5. Versioning and Capability Negotiation
 
 <a id="sec-5-1"></a>
@@ -194,15 +192,15 @@ Each layer exposes a Protocol ID string on L3 capability exchange:
 <a id="sec-5-3"></a>
 ### 5.3 Negotiation Procedure
 
-During L3 handshake (Section 9.3), peers send a DET-CBOR map:
+During L3 handshake ([Section 9.3](#sec-9-3)), peers send a DET-CBOR map:
 {"l2":[strings], "l3":[strings], "l4":[strings], "l5":[strings], "features":{string: bool}}
 
-Peers MUST select the highest mutually supported ID per layer. The selected IDs are bound into the L2 key schedule exporter context (Section 8.3). A peer detecting a version mismatch without a translation path MUST abort with error VERSION_NEGOTIATION_FAILED (Section 15).
+Peers MUST select the highest mutually supported ID per layer. The selected IDs are bound into the L2 key schedule exporter context ([Section 8.3](#sec-8-3)). A peer detecting a version mismatch without a translation path MUST abort with error VERSION_NEGOTIATION_FAILED ([Section 15](#sec-15)).
 
 <a id="sec-5-4"></a>
 ### 5.4 Downgrade Resistance
 
-The L2 inner key derivation (Section 8.3) includes the concatenation of both peers offered capability sets and the final chosen IDs in the exporter context. If a middlebox strips capabilities, keys will differ and decryption will fail.
+The L2 inner key derivation ([Section 8.3](#sec-8-3)) includes the concatenation of both peers offered capability sets and the final chosen IDs in the exporter context. If a middlebox strips capabilities, keys will differ and decryption will fail.
 
 <a id="sec-6"></a>
 ## 6. Common Wire Encoding
@@ -244,7 +242,7 @@ All CBOR used by this specification MUST be encoded deterministically as defined
 - Entry ordering: sort by the bytewise lexicographic order of the deterministically encoded key. Compare as raw bytes; do not apply type-aware collation.
 
 6) Canonical Encoding Function (Pseudocode)
-See Appendix D.
+See [Appendix D](#app-d).
 
 7) Deterministic CBOR for TemplateID Context
 Maps used in key schedules and TemplateID computation MUST follow the above rules. The SHA-256 over the exact encoded bytes is the value used elsewhere in this specification.
@@ -280,7 +278,7 @@ Constraints (Normative):
 - The total header size (name + value) MUST NOT exceed 256 bytes.
 - `v` MUST equal `v1`.
 - `tok` MUST decode (base64url without padding) to exactly 120 bytes.
-- `tok` MUST be produced as: `tok = HKDF-Expand(ikm=exporter_secret, info="BN-Ticket v1" || ctx, L=120)` where `exporter_secret` is the L2 exporter for the session (Section 8.3).
+- `tok` MUST be produced as: `tok = HKDF-Expand(ikm=exporter_secret, info="BN-Ticket v1" || ctx, L=120)` where `exporter_secret` is the L2 exporter for the session ([Section 8.3](#sec-8-3)).
 - Implementations MUST send `tok` padded using base64url **without** `=` padding, and recipients MUST reject inputs containing `=`.
 - `ctx` if present is ASCII alphanumerics plus `-` and `_`.
 
@@ -335,12 +333,12 @@ Each segment encodes:
 Sig is Ed25519 over H where:
 H = SHA-256("BN-L1-seg" || Version || Type || Flags || NextNode || Expiry || PrevNode || Timestamp)
 
-PrevNode is the sender NodeID (20B). A Node MUST verify Sig before forwarding. Failure: PATH_INVALID (Section 15).
+PrevNode is the sender NodeID (20B). A Node MUST verify Sig before forwarding. Failure: PATH_INVALID ([Section 15](#sec-15)).
 
 <a id="sec-7-4"></a>
 ### 7.4 Multi-Path
 
-Type 0x03 carries SegCnt >= 2 segments. The sender selects one based on local policy. Receivers MAY send CongestionFeedback frames to influence future selection (Section 7.6).
+Type 0x03 carries SegCnt >= 2 segments. The sender selects one based on local policy. Receivers MAY send CongestionFeedback frames to influence future selection ([Section 7.6](#sec-7-6)).
 
 <a id="sec-7-5"></a>
 ### 7.5 Replay and Freshness
@@ -369,7 +367,7 @@ Receivers MAY use CF to adjust path selection. CF is authenticated by L2 AEAD an
 Provide a mandatory, interoperable algorithm for next-hop selection, path construction, liveness, loop avoidance, and use of congestion feedback (CF).
 
 **Path construction.**
-- Clients build paths of 3 segments by default: entry → core → exit. Each segment is a NextNode (Section 7.3) with Expiry ≥ now()+120s.
+- Clients build paths of 3 segments by default: entry → core → exit. Each segment is a NextNode ([Section 7.3](#sec-7-3)) with Expiry ≥ now()+120s.
 - Nodes MUST refuse to construct or forward paths containing repeated NodeIDs (loop prevention).
 
 **Next-hop selection.**
@@ -410,7 +408,7 @@ Before establishing the Betanet session to a front origin, the client performs a
 - HTTP/2 SETTINGS and frame behaviors if ALPN is "h2".
 - QUIC: initial_max_data, active_connection_id_limit, max_idle_timeout.
 
-The client computes TemplateID = SHA-256 over a deterministic CBOR encoding of these parameters (Section 6.2) and stores it for 24 hours. If the origin template changes within the cache period, the client MUST refresh and recompute TemplateID before initiating new sessions.
+The client computes TemplateID = SHA-256 over a deterministic CBOR encoding of these parameters ([Section 6.2](#sec-6-2)) and stores it for 24 hours. If the origin template changes within the cache period, the client MUST refresh and recompute TemplateID before initiating new sessions.
 
 <a id="sec-8-1-2"></a>
 #### 8.1.2 Front Origin Registry and Compliance Profiles
@@ -455,7 +453,7 @@ When ALPN negotiates "h2", clients and servers MUST conform to the following min
 
 5) TemplateID Construction
 - Canonicalized parameter set includes: ordered ALPN list, GREASE presence, TLS groups, signature algorithms, HTTP/2 SETTINGS identifier/value pairs (ordered by identifier), QUIC transport parameters when ALPN is "h3", and any server-advertised limits discovered during the calibration fetch.
-- Encode this parameter set using Deterministic CBOR (Section 6.2) and compute TemplateID = SHA-256 over the resulting bytes.
+- Encode this parameter set using Deterministic CBOR ([Section 6.2](#sec-6-2)) and compute TemplateID = SHA-256 over the resulting bytes.
 
 <a id="sec-8-1-4"></a>
 #### 8.1.4 HTTP/3 Behavioral Profile (Normative)
@@ -689,7 +687,7 @@ These requirements are compliance-critical for censorship resistance but do not 
 - The entire map is signed using Ed25519 over `SHA-256("BN-FOR1" || cbor_bytes)`, producing `sig (bstr[64])` and `signer (bstr[32])`.
 
 **Distribution.**
-- Registries MAY be distributed inline with software and/or via the Alias Ledger (Section 11.2) under record type `FrontOriginRegistry`.
+- Registries MAY be distributed inline with software and/or via the Alias Ledger ([Section 11.2](#sec-11-2)) under record type `FrontOriginRegistry`.
 - Clients MUST cache entries until `expiry` and MUST refresh on or before expiry; stale entries MUST NOT be used for calibration.
 
 **Update cadence.**
@@ -700,7 +698,7 @@ These requirements are compliance-critical for censorship resistance but do not 
 - Divergence is detectable: include the `TemplateID` used in the L2 exporter context and surface it in error logs.
 
 **Interoperability.**
-- Different vendors observing the same origin MUST compute the same `TemplateID` given Section 8.1.3/8.1.4 and the rounding rules in Section 8.1.5; otherwise the connection is considered non‑compliant.
+- Different vendors observing the same origin MUST compute the same `TemplateID` given [Section 8.1.3](#sec-8-1-3)/[Section 8.1.4](#sec-8-1-4) and the rounding rules in [Section 8.1.5](#sec-8-1-5); otherwise the connection is considered non‑compliant.
 ## 9. Overlay Mesh Layer (L3)
 
 <a id="sec-9-1"></a>
@@ -736,13 +734,13 @@ PeerID is defined as the multihash of the Ed25519 public key using SHA-256.
 
 Upon establishing L2, each side opens StreamID=1 and exchanges CapMsg:
 
-CapMsg := DET-CBOR map per Section 5.3.
+CapMsg := DET-CBOR map per [Section 5.3](#sec-5-3).
 
 The side with lexicographically lower PeerID becomes the Decider and selects the final IDs. If PeerIDs compare equal (collision), negotiation MUST abort with AUTH_FAILED. The Decider sends SelMsg:
 
 SelMsg := DET-CBOR {"l2": string, "l3": string, "l4": string, "l5": string}
 
-Both sides commit the selection and update their exporter context (Section 8.3).
+Both sides commit the selection and update their exporter context ([Section 8.3](#sec-8-3)).
 
 <a id="sec-9-4"></a>
 ### 9.4 Multiplexing and Stream ID Allocation
@@ -757,7 +755,7 @@ L3 allocates StreamIDs (odd=client, even=server). StreamIDs are u32 monotonicall
 
 **Bootstrap sources.**
 1) **Static seeds.** Software MUST ship with at least 5 seed peers (PeerID + host:port + certificate pin) maintained by independent operators.
-2) **Alias Ledger.** Deployments MAY publish additional bootstrap peers via the Alias Ledger (Section 11.2) record type `BootstrapPeer`.
+2) **Alias Ledger.** Deployments MAY publish additional bootstrap peers via the Alias Ledger [Section 11.2](#sec-11-2)) record type `BootstrapPeer`.
 
 **Join procedure.**
 - A node attempts up to 3 parallel connections to distinct seeds using L2 over TLS and/or QUIC as permitted by policy. No more than one connection per seed at a time.
@@ -787,7 +785,7 @@ An L4 Relay is an L3 peer flagged "mix=true" in capabilities. A sender MAY route
 <a id="sec-10-2"></a>
 ### 10.2 Relay Mix Capability
 
-Relays that advertise "mix=true" MUST support delay insertion per Section 10.3 and MUST NOT modify L2 frames.
+Relays that advertise "mix=true" MUST support delay insertion per [Section 10.3](#sec-10-3) and MUST NOT modify L2 frames.
 
 <a id="sec-10-3"></a>
 ### 10.3 Relay Delay Model
@@ -804,11 +802,11 @@ Minimum delay per relay is 30 to 150 ms jittered; total added delay MUST NOT exc
 - L4 relays MUST NOT decrypt L2 `STREAM` payloads. They MAY read `PATH_CONTROL` headers only to the extent needed to perform delay/mix operations and next-hop forwarding.
 
 **Permitted mutations.**
-- Relays MAY update the per-hop `Timestamp` they own and MUST recompute the corresponding per-hop signature (Section 7.3).
+- Relays MAY update the per-hop `Timestamp` they own and MUST recompute the corresponding per-hop signature ([Section 7.3](#sec-7-3)).
 - Relays MUST NOT change `NextNode`, `Expiry`, `SegCnt`, or any prior-hop signature fields.
 
 **Delay application.**
-- Apply an independent random delay sampled from U[30ms,150ms] per Section 10.3. The cumulative delay budget for a path is bounded to 600ms unless the client explicitly marks a stream as `priority=low`.
+- Apply an independent random delay sampled from U[30ms,150ms] per [Section 10.3](#sec-10-3). The cumulative delay budget for a path is bounded to 600ms unless the client explicitly marks a stream as `priority=low`.
 
 **Error handling.**
 - On next-hop failure, a relay sends `PATH_CONTROL/ERROR` with `code=PEER_DOWN` toward the previous hop and MUST NOT buffer user payload for more than 2s awaiting recovery.
@@ -975,7 +973,7 @@ Codes (u16):
 - 0x0009 POLICY_REJECTED
 - 0x000A UNSUPPORTED_FEATURE
 
-On error, peers SHOULD send CLOSE with Code and a human-readable Reason. Section 16 centralizes the canonical registry for error codes.
+On error, peers SHOULD send CLOSE with Code and a human-readable Reason. [Section 16](#sec-16) centralizes the canonical registry for error codes.
 
 <a id="sec-16"></a>
 ## 16. Registries (Canonical)
@@ -1024,7 +1022,7 @@ Registry Record Hashing
 
 - Binding: Version choices and TemplateID are bound into the L2 key schedule to prevent reflection and downgrade attacks.
 - Replay: Nonces derive from per-direction counters; peers MUST NOT reuse counters across keys and MUST NOT permit counter wrap.
-- Traffic analysis: Cover behavior MUST emulate origin templates per Section 8.5.
+- Traffic analysis: Cover behavior MUST emulate origin templates per [Section 8.5](#sec-8-5).
 - Compromise: Loss of a Node static key does not compromise past sessions due to forward secrecy.
 - Privacy hops: Relays SHOULD be jurisdictionally and topologically diverse; clients SHOULD rotate selection every 24 hours.
 
@@ -1061,7 +1059,7 @@ These parameters are normative and directly affect wire-visible behavior; deviat
 ## 19. Compliance Profiles
 
 - MINIMAL: L1, L2 (TLS), L3, L7.
-- STANDARD: MINIMAL plus L2 (QUIC), L4, L5 plus Section 8.5 compliance.
+- STANDARD: MINIMAL plus L2 (QUIC), L4, L5 plus [Section 8.5](#sec-8-5) compliance.
 - EXTENDED: STANDARD plus L6.
 
 <a id="sec-20"></a>
@@ -1213,7 +1211,7 @@ Segment fields:
 <a id="app-d"></a>
 ## Appendix D. Pseudocode Routines
 
-Deterministic CBOR canonical encoding function referenced in Section 6.2.
+Deterministic CBOR canonical encoding function referenced in [Section 6.2](#sec-6-2).
 
 ```
 encode(V):
