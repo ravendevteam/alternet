@@ -158,7 +158,7 @@ Each layer is independently versioned and negotiated as defined in [Section 5](#
 **Canonical wire stack mapping (Normative).**
 
 - Outer transport: **TLS 1.3 over TCP** or **QUIC v1 over UDP** to a real front origin selected via [Section 8.1.1](#sec-8-1-1).
-- Application cover: **HTTP/2 or HTTP/3** behavior precisely as profiled in [Sections 8.1.3](#sec-8-1-3) and [8.1.4](#sec-8-1-4).
+- Application cover: **HTTP/2 or HTTP/3** behavior precisely as profiled in [Sections 8.1.3](#sec-8-1-3) and [Section 8.1.4](#sec-8-1-4).
 - Inner authenticated channel: a Noise XK channel ([Section 8.2](#sec-8-2)) that carries **L2 Frames** ([Section 8.4](#sec-8-4)).
 - L1 Path Selection is **not** a separate on-the-wire layer. L1 structures are encoded as **L2 control frames** and are not independently visible to the network.
 
@@ -288,6 +288,8 @@ Generation:
 
 Non-compliance:
 - If the header is missing or malformed, the connection MUST be closed with error `L2_TICKET_INVALID`.
+
+<a id="sec-7"></a>
 ## 7. Path Selection Layer (L1)
 
 <a id="sec-7-1"></a>
