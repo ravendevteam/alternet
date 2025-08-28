@@ -214,9 +214,12 @@ The L2 inner key derivation ([Section 8.3](#sec-8-3)) includes the concatenation
 - varvec: Length-prefixed (u16) vector of items of the same type.
 
 <a id="sec-6-2"></a>
-### 6.2 Deterministic CBOR (Normative, Self-Contained)
+### 6.2 Deterministic [CBOR (Concise Binary Object Representation)](https://datatracker.ietf.org/doc/html/rfc8949)
 
-All CBOR used by this specification MUST be encoded deterministically as defined here.
+This section defines rules for the usage of CBOR and MUST be followed. Everything needed for compliant CBOR is defined in this section.
+
+For a beginner-friendly overview of CBOR, see [cbor.io](https://cbor.io).
+
 
 1) General
 - Indefinite-length items are PROHIBITED.
