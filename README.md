@@ -165,12 +165,12 @@ Each layer is independently versioned and negotiated as defined in [Section 5](#
 **Layering rule (Normative).** All path metadata and routing controls defined in [Section 7](#sec-7) are serialized as the payload of L2 `PATH_CONTROL` frames (Type = `0x20`) and thus protected by the inner channel AEAD. L2 frames are carried inside the HTTP/2 or HTTP/3 message bodies/tunnels established over TLS/QUIC. There is no mapping in which “L1 encapsulates L2”.
 
 **Carriage mapping.**
-- L1 “Packet Header” ([Section 7.2](#sec-7-2)) is the **binary payload** of L2 `PATH_CONTROL` and never appears as a stand‑alone datagram on the wire.
+- L1 “Packet Header” ([Section 7.2](#sec-7-2)) is the **binary payload** of L2 `PATH_CONTROL` and never appears as a stand-alone datagram on the wire.
 - Application data is carried in L2 `STREAM` frames ([Section 8.4.2](#sec-8-4-2)).
 - Flow control and credit signals use L2 `WINDOW_UPDATE` ([Section 8.4.3](#sec-8-4-3)).
 - Congestion feedback from L1 (CF) is conveyed using L2 `PATH_CONTROL` subtype `CF` ([Section 7.7](#sec-7-7)).
 
-Conformance: any implementation that exposes an L1 header directly on the wire is **non‑conformant**.
+Conformance: any implementation that exposes an L1 header directly on the wire is **non-conformant**.
 
 <a id="sec-5"></a>
 ## 5. Versioning and Capability Negotiation
@@ -317,7 +317,7 @@ Type: 0x01 single-path, 0x03 multi-path list.
 Flags: bit0=EncryptedPathMetaPresent, bit1=CongestionFeedback.  
 SegCnt: Number of segments. MUST be >= 1 for Type 0x01.
 
-Payload Len denotes the exact number of octets of the L1 logical header structure. This structure is carried verbatim as the payload of the L2 `PATH_CONTROL` frame (Type 0x20). There is no stand‑alone L1 packet on the wire and therefore no L1 fragmentation or aggregation.
+Payload Len denotes the exact number of octets of the L1 logical header structure. This structure is carried verbatim as the payload of the L2 `PATH_CONTROL` frame (Type 0x20). There is no stand-alone L1 packet on the wire and therefore no L1 fragmentation or aggregation.
 
 <a id="sec-7-3"></a>
 ### 7.3 Path Segment and Signature Context
@@ -379,7 +379,7 @@ Provide a mandatory, interoperable algorithm for next-hop selection, path constr
 
 **Liveness and health.**
 - A node MUST probe a next-hop if idle for 20s by sending `PATH_CONTROL/PROBE` and waiting ≤1 RTT for `PROBE_ACK`. On timeout, mark the peer `health=STALE` and attempt one alternate hop.
-- Failure detection: if 3 consecutive sends to a hop time out, evict it from the candidate set for 5 minutes (exponential backoff with jitter in [0.5×,1.5×]).
+- Failure detection: if 3 consecutive sends to a hop time out, evict it from the candidate set for 5 minutes (exponential backoff with jitter in [0.5x,1.5x]).
 
 **Congestion feedback (CF).**
 - Each hop MAY attach a CF record indicating `queue_depth (u16)`, `rtt_sample (u16 ms)`, and `congestion ∈ {NONE, MODERATE, SEVERE}`.
@@ -696,11 +696,11 @@ These requirements are compliance-critical for censorship resistance but do not 
 - Operators SHOULD publish updated registries at least every 30 days or immediately upon origin change.
 
 **Failure handling.**
-- If calibration produces a `TemplateID` not in the registry, clients MUST either (a) fall back to local policy that allows ad‑hoc acceptance, or (b) abort with `L2_ORIGIN_MISMATCH` depending on the selected `ComplianceProfile`.
+- If calibration produces a `TemplateID` not in the registry, clients MUST either (a) fall back to local policy that allows ad-hoc acceptance, or (b) abort with `L2_ORIGIN_MISMATCH` depending on the selected `ComplianceProfile`.
 - Divergence is detectable: include the `TemplateID` used in the L2 exporter context and surface it in error logs.
 
 **Interoperability.**
-- Different vendors observing the same origin MUST compute the same `TemplateID` given [Section 8.1.3](#sec-8-1-3)/[Section 8.1.4](#sec-8-1-4) and the rounding rules in [Section 8.1.5](#sec-8-1-5); otherwise the connection is considered non‑compliant.
+- Different vendors observing the same origin MUST compute the same `TemplateID` given [Section 8.1.3](#sec-8-1-3)/[Section 8.1.4](#sec-8-1-4) and the rounding rules in [Section 8.1.5](#sec-8-1-5); otherwise the connection is considered non-compliant.
 ## 9. Overlay Mesh Layer (L3)
 
 <a id="sec-9-1"></a>
@@ -832,8 +832,8 @@ AliasRecord := DET-CBOR {"alias": tstr, "node": bstr[20], "seq": u64, "sig": bst
 Sig is Ed25519 over SHA-256("BN-L5" || alias || node || seq || ts).
 
 **Finality and monotonicity (Normative).**
-- Two‑of‑three signer finality is REQUIRED per alias for a record to be accepted.
-- Nodes MUST reject any record where the per‑alias `seq` is not strictly increasing.
+- Two-of-three signer finality is REQUIRED per alias for a record to be accepted.
+- Nodes MUST reject any record where the per-alias `seq` is not strictly increasing.
 
 **Bootstrap and trust anchors.**
 - Software MUST ship with at least three bootstrap signer public keys (Ed25519) from independent operators. These keys are the initial trust anchors.
@@ -916,7 +916,7 @@ Methods and codes below are REQUIRED for interoperability.
 - 429 Too Many Requests
 - 500 Internal Error, 503 Unavailable
 
-Headers (`h`) use lower‑case ASCII keys. Servers MUST preserve unknown headers.
+Headers (`h`) use lower-case ASCII keys. Servers MUST preserve unknown headers.
 
 <a id="sec-13-3"></a>
 ### 13.3 Streaming and Backpressure
@@ -925,7 +925,7 @@ Headers (`h`) use lower‑case ASCII keys. Servers MUST preserve unknown headers
 
 **Backpressure.** Receivers advertise credit via `WINDOW_UPDATE`; senders MUST NOT exceed advertised credit. If credit is zero for 15s, senders MAY close the stream with status 503.
 
-**Order and reassembly.** In‑order delivery per StreamID is required; receivers MAY buffer gaps up to 64 KB per stream.
+**Order and reassembly.** In-order delivery per StreamID is required; receivers MAY buffer gaps up to 64 KB per stream.
 
 ## 14. Translation Layer for v1.1 Interoperability
 
@@ -1041,11 +1041,11 @@ Registry Record Hashing
 
 **Retry/backoff.**
 - Connection attempts use exponential backoff with full jitter: initial 1s, factor 2.0, cap 2 minutes.
-- Per-peer consecutive failure cap: 5 attempts before a 10‑minute cool‑down.
+- Per-peer consecutive failure cap: 5 attempts before a 10-minute cool-down.
 
 **PMTU and sizing.**
 - QUIC Initial path MUST keep `UDP datagram ≤ 1200` bytes; implementations MUST ensure that L2 frame payloads on initial paths fit within this bound.
-- After validation, peers MAY raise L2 frame sizes up to 16 KB, discovering PMTU via QUIC PMTUD (RFC 9000 §14). Blackhole detection MUST revert to 1200‑byte safe size.
+- After validation, peers MAY raise L2 frame sizes up to 16 KB, discovering PMTU via QUIC PMTUD (RFC 9000 §14). Blackhole detection MUST revert to 1200-byte safe size.
 
 **Congestion control interaction.**
 - The outer transport (TCP/QUIC) controls congestion. L2 flow control windows MUST be configured such that `L2_window ≥ 2 × cwnd_estimate`. If `cwnd` is unknown, set `L2_window ≥ 256 KB`.
@@ -1057,7 +1057,7 @@ Registry Record Hashing
 **Logging.**
 - Implementations MUST support privacy-preserving logs that store only transcript hashes and error codes; no payloads.
 
-These parameters are normative and directly affect wire-visible behavior; deviations render a node non‑compliant.
+These parameters are normative and directly affect wire-visible behavior; deviations render a node non-compliant.
 ## 19. Compliance Profiles
 
 - MINIMAL: L1, L2 (TLS), L3, L7.
@@ -1071,19 +1071,19 @@ These parameters are normative and directly affect wire-visible behavior; deviat
 Implementations MUST provide tests that cover:
 
 **Crypto and framing**
-- L2 AEAD round‑trips with nonces 0..1024 and random AAD.
-- KEY_UPDATE handover with 3‑frame overlap and concurrent updates.
+- L2 AEAD round-trips with nonces 0..1024 and random AAD.
+- KEY_UPDATE handover with 3-frame overlap and concurrent updates.
 - Version binding mismatch causes decryption failure.
 - Frame sizing: reject frames where `(Len + 3) > 65535`.
 
 **Layering and mapping**
-- Assert that no stand‑alone L1 headers appear on the wire; capture shows only HTTP/2 or HTTP/3 over TLS/QUIC.
+- Assert that no stand-alone L1 headers appear on the wire; capture shows only HTTP/2 or HTTP/3 over TLS/QUIC.
 
 **Discovery and bootstrap**
 - Deterministic join using 5 seeds; verify gossip expirations, backoff, and admission limits.
 
 **Routing and forwarding**
-- Path construction with loop detection; ECMP tie‑break; liveness probes and eviction after 3 timeouts.
+- Path construction with loop detection; ECMP tie-break; liveness probes and eviction after 3 timeouts.
 - CF handling reduces selection probability through congested hops.
 
 **Relays**
@@ -1096,7 +1096,7 @@ Implementations MUST provide tests that cover:
 - GET/PUT respond with 2xx/4xx/5xx as specified; streaming semantics (13.3) including backpressure and FIN handling.
 
 **BN-Ticket header**
-- Enforce 256‑byte maximum; base64url without padding; exact 120‑byte decoded length; malformed header closes connection.
+- Enforce 256-byte maximum; base64url without padding; exact 120-byte decoded length; malformed header closes connection.
 
 Conformance requires all tests to pass.
 ## 21. References
