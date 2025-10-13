@@ -1,3 +1,306 @@
+the  CONTRACT
+*** CENSORED *** 
+# Betanet Bounty Software Deliverables Contract
+
+## Contract Overview
+
+**Project**: CppFort Compiler with Betanet Integration
+**Bounty Amount**: $12,000 USD (Complete HTX Client/Server Crate)
+**Payment Method**: USDC via Betanet Cashu/Lightning
+**Delivery Timeline**: 90 days from contract acceptance
+**Verification Standard**: SLSA4+ with Betanet attestation
+
+---
+
+## Deliverable 1: HTX Client/Server Crate Implementation
+
+### 1.1 Core HTX Protocol Implementation
+
+**Acceptance Criteria:**
+- [ ] Complete Rust crate implementing Betanet HTX protocol v1.1.0
+- [ ] Full compliance with Betanet specification sections 5.1-5.6
+- [ ] Origin-mirrored TLS 1.3 handshake with auto-calibration
+- [ ] Access-ticket bootstrap with negotiated carrier support
+- [ ] Noise XK inner handshake with PQ-hybrid (X25519-Kyber768)
+- [ ] HTTP/2 & HTTP/3 behavior emulation with adaptive timing
+
+**Technical Requirements:**
+```rust
+// Required public API surface
+pub struct HTXClient {
+    pub fn new(config: HTXConfig) -> Result<Self, HTXError>;
+    pub async fn connect(&mut self, target: TargetSite) -> Result<HTXConnection, HTXError>;
+    pub async fn calibrate_origin(&self, origin: &str) -> Result<OriginFingerprint, HTXError>;
+}
+
+pub struct HTXServer {
+    pub fn new(config: ServerConfig) -> Result<Self, HTXError>;
+    pub async fn listen(&mut self, bind_addr: SocketAddr) -> Result<(), HTXError>;
+    pub async fn handle_connection(&self, conn: IncomingConnection) -> Result<(), HTXError>;
+}
+```
+
+**Verification Methods:**
+- Automated test suite with >95% code coverage
+- Integration tests against reference Betanet implementation
+- Fuzzing tests for protocol robustness
+- Performance benchmarks meeting latency requirements
+
+### 1.2 CAS-DAG Integration for Compilation Artifacts
+
+**Acceptance Criteria:**
+- [ ] Content-Addressable Storage for compilation artifacts
+- [ ] Merkle DAG structure with cryptographic integrity
+- [ ] Integration with cpp2 reflection metafunction
+- [ ] BOM generation for main entrypoints
+- [ ] Betanet identity integration for trustless verification
+
+**Technical Requirements:**
+```rust
+pub struct CASDAGStorage {
+    pub fn store_artifact(&mut self, artifact: CompilationArtifact) -> Result<SHA256Hash, CASError>;
+    pub fn retrieve_artifact(&self, hash: SHA256Hash) -> Result<CompilationArtifact, CASError>;
+    pub fn verify_dag_integrity(&self, root_hash: SHA256Hash) -> Result<VerificationResult, CASError>;
+}
+
+pub struct EntrypointBOM {
+    pub fn generate_from_reflection(entrypoint: MetaInfo) -> Self;
+    pub fn verify_against_betanet(&self, client: &HTXClient) -> Result<bool, VerificationError>;
+    pub fn export_slsa_attestation(&self) -> SLSAAttestation;
+}
+```
+
+### 1.3 MCP Build Iterator Enhancement
+
+**Acceptance Criteria:**
+- [ ] Enhanced MCP protocol with HTX transport
+- [ ] CouchDB integration for debug session storage
+- [ ] Grammar analysis capabilities via reflection
+- [ ] Turn-based debugging with context persistence
+- [ ] Betanet-distributed debug session sharing
+
+**Technical Requirements:**
+```rust
+pub struct MCPBetanetBridge {
+    pub fn create_debug_session(&mut self, config: DebugConfig) -> Result<SessionID, MCPError>;
+    pub fn store_session_in_betanet(&self, session: DebugSession) -> Result<SHA256Hash, StorageError>;
+    pub fn resume_from_context(&mut self, context_id: SHA256Hash) -> Result<DebugSession, MCPError>;
+}
+```
+
+---
+
+## Deliverable 2: Documentation and Testing
+
+### 2.1 Comprehensive Documentation
+
+**Acceptance Criteria:**
+- [ ] Complete API documentation with rustdoc
+- [ ] Integration guide with cpp2 compiler
+- [ ] Betanet deployment instructions
+- [ ] Performance optimization guide
+- [ ] Security audit documentation
+
+### 2.2 Test Suite and Validation
+
+**Acceptance Criteria:**
+- [ ] Unit tests for all public APIs (>95% coverage)
+- [ ] Integration tests with actual Betanet network
+- [ ] Performance benchmarks vs. baseline implementations
+- [ ] Security test suite including adversarial scenarios
+- [ ] Compatibility tests with multiple cpp2 versions
+
+---
+
+## Deliverable 3: Betanet Network Integration
+
+### 3.1 SLSA4+ Provenance Integration
+
+**Acceptance Criteria:**
+- [ ] Automatic SLSA attestation generation
+- [ ] Storage in Betanet's 2-of-3 chain consensus
+- [ ] Verification of compilation artifact provenance
+- [ ] Integration with existing SLSA tooling
+
+### 3.2 Economic Integration
+
+**Acceptance Criteria:**
+- [ ] Cashu ecash payment integration
+- [ ] Lightning settlement for larger transactions
+- [ ] Rate limiting and DoS protection
+- [ ] Economic incentive alignment with Betanet tokenomics
+
+---
+
+## Quality Standards
+
+### Code Quality Requirements
+
+1. **Rust Best Practices**
+   - Zero unsafe code without explicit justification
+   - Comprehensive error handling with proper error types
+   - Memory safety guarantees
+   - Thread safety where applicable
+
+2. **Security Standards**
+   - All cryptographic operations use audited libraries
+   - Constant-time implementations where required
+   - Protection against timing attacks
+   - Secure key management practices
+
+3. **Performance Requirements**
+   - Connection establishment <500ms (95th percentile)
+   - Data transfer overhead <10% vs. direct HTTPS
+   - Memory usage <100MB for typical workloads
+   - CPU overhead <5% during steady-state operation
+
+### Testing Standards
+
+1. **Automated Testing**
+   - Continuous integration on multiple platforms
+   - Automated security scanning
+   - Performance regression testing
+   - Compatibility testing with reference implementations
+
+2. **Manual Testing**
+   - End-to-end integration testing
+   - Adversarial testing scenarios
+   - Real-world deployment validation
+   - User experience testing
+
+---
+
+## Delivery and Acceptance Process
+
+### Phase 1: Initial Implementation (30 days)
+- Core HTX protocol implementation
+- Basic CAS-DAG storage
+- Initial test suite
+- **Milestone Payment**: $3,000 USDC
+
+### Phase 2: Integration and Enhancement (30 days)
+- MCP-Betanet bridge implementation
+- Complete reflection metafunction
+- SLSA4+ integration
+- **Milestone Payment**: $4,000 USDC
+
+### Phase 3: Testing and Documentation (30 days)
+- Comprehensive test suite completion
+- Full documentation package
+- Performance optimization
+- **Final Payment**: $5,000 USDC
+
+### Acceptance Criteria for Each Phase
+
+Each milestone requires:
+1. Code review approval by Betanet core team
+2. Automated test suite passing at >95% coverage
+3. Integration testing against Betanet testnet
+4. Documentation review and approval
+5. Security audit completion (for final milestone)
+
+---
+
+## Technical Specifications Reference
+
+### Betanet Protocol Compliance
+
+Must implement the following Betanet 1.1 specification sections:
+- Section 5: Cover Transport (HTX) - **Complete Implementation**
+- Section 6.2: Transport layer integration
+- Section 8: Self-certifying identities
+- Section 9: Cashu payment integration
+- Section 10: Governance compliance for upgrades
+
+### Cryptographic Requirements
+
+All implementations must use:
+- **Hash**: SHA-256 (32 bytes)
+- **AEAD**: ChaCha20-Poly1305 (IETF, 12-byte nonce, 16-byte tag)
+- **KDF**: HKDF-SHA256
+- **Signatures**: Ed25519
+- **DH**: X25519 (hybrid X25519-Kyber768 from 2027-01-01)
+
+### Performance Benchmarks
+
+Reference performance targets:
+- **Latency**: <300ms connection establishment
+- **Throughput**: >100 Mbps on gigabit connections
+- **Memory**: <50MB baseline, <100MB under load
+- **CPU**: <5% overhead vs. direct HTTPS
+
+---
+
+## Legal and Compliance
+
+### Intellectual Property - AGPL v3 COPYLEFT REQUIREMENTS
+- **ALL deliverables licensed under GNU Affero General Public License v3 (AGPL)**
+- **Network service provision requires source code disclosure**
+- **No proprietary derivatives permitted - COPYLEFT ENFORCED**
+- **Full source code delivery required for ALL modifications**
+- **Patent non-assertion covenant included**
+- **Betanet integration must preserve trustless, decentralized nature**
+
+#### AGPL Compliance Requirements for Bounty Recipients:
+1. **Source Code Availability**: Any modification or derivative work MUST provide complete source code
+2. **Network Service Clause**: Running this code as a service requires public source access
+3. **Betanet Compatibility**: Integration must maintain censorship resistance
+4. **CAS-DAG Verifiability**: All modifications must be verifiable through content-addressable storage
+5. **Economic Integration**: Participation in Betanet bounties does NOT exempt from AGPL obligations
+
+### Security and Audit
+- Code must pass security audit by approved third party
+- Vulnerability disclosure process must be documented
+- Regular security updates commitment (12 months minimum)
+- Compliance with relevant export control regulations
+
+### Support and Maintenance
+- 30-day bug fix warranty period
+- Documentation of known limitations
+- Migration guide for future protocol updates
+- Community support channel participation
+
+---
+
+## Payment Terms
+
+### Payment Schedule
+- **Milestone 1**: $3,000 USDC upon Phase 1 completion
+- **Milestone 2**: $4,000 USDC upon Phase 2 completion
+- **Final Payment**: $5,000 USDC upon full delivery and acceptance
+
+### Payment Method
+- Primary: USDC via Betanet Cashu mints
+- Fallback: Lightning Network settlement
+- Payment within 7 days of milestone acceptance
+- Gas fees and transaction costs covered by payer
+
+### Escrow and Dispute Resolution
+- Funds held in multi-sig escrow during development
+- Technical disputes resolved by independent technical arbitrator
+- Commercial disputes subject to arbitration
+- Partial payment available for substantial partial deliveries
+
+---
+
+## Success Metrics
+
+### Technical Success Criteria
+1. **Functionality**: All specified features implemented and tested
+2. **Performance**: Meets or exceeds benchmark requirements
+3. **Security**: Passes comprehensive security audit
+4. **Integration**: Successfully integrates with existing cpp2 toolchain
+
+5. **Documentation**: Complete and accurate technical documentation
+
+### Business Success Criteria
+1. **Adoption**: Successfully deployed on Betanet testnet
+2. **Community**: Positive reception from Betanet developer community
+3. **Maintenance**: Sustainable maintenance and update process
+4. **Extensibility**: Clean architecture for future enhancements
+
+This contract represents a complete software deliverable that advances both the cpp2 compiler ecosystem and the Betanet trustless infrastructure, creating a foundation for decentralized, verifiable software development.
+
 Betanet Version 1.1 – Official Implementation Specification
 Normative document. All requirements marked MUST, MUST NOT, or SHALL are mandatory for compliance.
 
