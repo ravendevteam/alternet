@@ -1,6 +1,17 @@
-[package]
-name = "alternet"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
+package.name = "alternet"
+package.version = "0.1.0"
+package.edition = "2024"
+dependencies.libp2p.version = "0.56.0"
+dependencies.libp2p.features = [
+    "tcp",
+    "quic",
+    "noise",
+    "yamux",
+    "mdns",
+    "kad",
+    "ping",
+    "identify",
+    "relay"
+]
+dependencies.tokio.version = "*"
+dependencies.tokio.features = ["full"]
