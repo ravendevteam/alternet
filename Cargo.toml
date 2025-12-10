@@ -11,7 +11,10 @@ dependencies.libp2p.features = [
     "kad",
     "ping",
     "identify",
-    "relay"
+    "relay",
+    "macros",
+    "tls",
+    "tokio"
 ]
 dependencies.tokio.version = "*"
 dependencies.tokio.features = ["full"]
