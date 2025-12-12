@@ -1,14 +1,5 @@
 use super::*;
 
-pub type Result<T> = ::std::result::Result<T, Error>;
-
-#[derive(Debug)]
-#[derive(Clone)]
-#[derive(::thiserror::Error)]
-pub enum Error {
-
-}
-
 #[allow(clippy::large_enum_variant)]
 pub enum Event {
     Ping(ping::Event),
@@ -30,8 +21,8 @@ impl From<kad::Event> for Event {
 #[derive(swarm::NetworkBehaviour)]
 #[behaviour(out_event = "Event")]
 pub struct Network {
-    ping: ping::Behaviour,
-    kad: kad::Behaviour<kad_store::MemoryStore>
+    pub ping: ping::Behaviour,
+    pub kad: kad::Behaviour<kad_store::MemoryStore>
 }
 
 impl Network {

@@ -20,3 +20,4 @@ libp2p = { version = "=0.56.0", features = [
 ] }
 tokio = { version = "=1.48.0", features = ["full"] }
 thiserror = { version = "=2.0.17" }
+modwire = { version = "*" }
