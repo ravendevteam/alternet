@@ -1,6 +1,6 @@
 use super::*;
 
-impl Node<Network> {
+impl Node {
     pub fn register_domain(&mut self) {
         // pseudo code example
         let record = kad::Record {

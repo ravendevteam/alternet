@@ -12,15 +12,17 @@ use io::AsyncBufReadExt as _;
 ::modwire::expose!(
     pub domain
     pub network
+    pub swarm_component
 );
 
-pub struct Node<T> {
+pub struct Node {
     keypair: identity::Keypair,
     peer_id: ::libp2p::PeerId,
-    network: T
+    network: Network,
+    listeners: Vec<Box<dyn SwarmComponent>>
 }
 
-impl Node<Network> {
+impl Node {
     pub async fn bootstrap(self) {
         let quic_config: quic::Config = quic::Config::new(&self.keypair);
         
@@ -71,7 +73,7 @@ impl Node<Network> {
     }
 }
 
-impl Default for Node<Network> {
+impl Default for Node {
     fn default() -> Self {
         let keypair: identity::Keypair = identity::Keypair::generate_ed25519();
         let peer_id: ::libp2p::PeerId = keypair.public().into();
@@ -79,7 +81,8 @@ impl Default for Node<Network> {
         Self {
             keypair,
             peer_id,
-            network
+            network,
+            listeners: Vec::new()
         }
     }
 }
