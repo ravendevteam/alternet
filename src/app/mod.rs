@@ -1,5 +1,6 @@
-use libp2p::futures::StreamExt;
+use ::std::sync;
 use ::tokio::io;
+use ::libp2p::futures::StreamExt;
 use ::libp2p::identity;
 use ::libp2p::quic;
 use ::libp2p::ping;
@@ -27,9 +28,15 @@ impl App {
         let mut swarm: ::libp2p::Swarm<_> = ::libp2p::SwarmBuilder::with_new_identity()
             .with_tokio()
             .with_quic_config(|_| quic_config)
+
+            // network moved into behaviour so it cannot be used later...
+            // so why have kad and methods there? how would i connect it and do things with it?
             .with_behaviour(|_| self.network)
+
             .unwrap()
             .build();
+
+        // network moves into swarm and can be accessed from there.
 
         let mut stdin: io::Lines<_> = ::tokio::io::BufReader::new(::tokio::io::stdin()).lines();
 
@@ -44,7 +51,7 @@ impl App {
                         concurrent_dial_errors, 
                         established_in 
                     } => {
-
+                        
                     },
                     swarm::SwarmEvent::ConnectionClosed {
                         peer_id, 

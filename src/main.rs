@@ -11,8 +11,6 @@ async fn main() {
     app.bootstrap().await;
 }
 
-
-
 // rough test build before running
 #[cfg(test)]
 mod int_test {
