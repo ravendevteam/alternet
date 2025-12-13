@@ -11,15 +11,13 @@ use io::AsyncBufReadExt as _;
 
 ::modwire::expose!(
     pub domain
-    pub event_handler
     pub network
 );
 
 pub struct App {
     keypair: identity::Keypair,
     peer_id: ::libp2p::PeerId,
-    network: Network,
-    event_handlers: Vec<Box<dyn EventHandler>>
+    network: Network
 }
 
 impl App {
@@ -71,10 +69,6 @@ impl App {
             }
         }
     }
-
-    pub fn add_event_handler(&mut self, hook: Box<dyn EventHandler>) {
-        self.event_handlers.push(hook);
-    }
 }
 
 impl Default for App {
@@ -85,8 +79,7 @@ impl Default for App {
         Self {
             keypair,
             peer_id,
-            network,
-            event_handlers: Vec::new()
+            network
         }
     }
 }
