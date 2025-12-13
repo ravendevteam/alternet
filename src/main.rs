@@ -1,10 +1,14 @@
 #![deny(clippy::unwrap_used)]
 
-mod node;
+mod app;
 
 #[::tokio::main]
 async fn main() {
-    node::Node::default().bootstrap().await;
+    let app: app::App = app::App::default();
+    
+    // add event handlers
+
+    app.bootstrap().await;
 }
 
 
