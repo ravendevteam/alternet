@@ -1,23 +1,4 @@
-[package]
-name = "alternet"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-libp2p = { version = "=0.56.0", features = [
-    "tcp",
-    "quic",
-    "noise",
-    "yamux",
-    "mdns",
-    "kad",
-    "ping",
-    "identify",
-    "relay",
-    "macros",
-    "tls",
-    "tokio"
-] }
-tokio = { version = "=1.48.0", features = ["full"] }
-thiserror = { version = "=2.0.17" }
-modwire = { version = "*" }
+workspace.resolver = "3"
+workspace.members = [
+    "app/alternet"
+]

@@ -1,0 +1,23 @@
+package.name = "alternet"
+package.version = "0.1.0"
+package.edition = "2024"
+dependencies.thiserror.version = "=2.0.17"
+dependencies.modwire.version = "=0.1.0"
+dependencies.async-trait.version = "*"
+dependencies.tokio.version = "=1.48.0"
+dependencies.tokio.features = ["full"]
+dependencies.libp2p.version = "=0.56.0"
+dependencies.libp2p.features = [
+    "tcp",
+    "quic",
+    "noise",
+    "yamux",
+    "mdns",
+    "kad",
+    "ping",
+    "identify",
+    "relay",
+    "macros",
+    "tls",
+    "tokio"
+]

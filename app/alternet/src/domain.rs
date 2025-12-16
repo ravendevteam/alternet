@@ -1,14 +1,16 @@
 use super::*;
 
-impl App {
+impl Behaviour {
     pub fn register_domain(&mut self) {
         // pseudo code example
         let record = kad::Record {
             key: Vec::new().into(),
             value: Vec::new(),
-            publisher: Some(self.peer_id),
+
+            // somehow pass peer_id in here, maybe through state behaviour
+            publisher: Some(peer_id),
             expires: None
         };
-        self.network.kad.put_record(record, kad::Quorum::Majority);
+        self.kad.put_record(record, kad::Quorum::Majority);
     }
 }
