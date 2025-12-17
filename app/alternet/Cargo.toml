@@ -19,5 +19,9 @@ dependencies.libp2p.features = [
     "relay",
     "macros",
     "tls",
-    "tokio"
+    "tokio",
+    "gossipsub",
+    "request-response"
 ]
+dependencies.jsonwebtoken.version = "*"
+dependencies.redb.version = "*"

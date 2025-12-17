@@ -3,20 +3,24 @@
 use ::std::sync;
 use ::std::collections as coll;
 use ::tokio::io;
-use ::libp2p::futures::StreamExt;
+use ::libp2p::futures;
 use ::libp2p::identity;
 use ::libp2p::quic;
 use ::libp2p::ping;
 use ::libp2p::kad;
 use ::libp2p::kad::store as kad_store;
+use ::libp2p::gossipsub;
+use ::libp2p::request_response;
 use ::libp2p::swarm;
 
 use io::AsyncBufReadExt as _;
+use futures::StreamExt as _;
 
 ::modwire::expose!(
     pub connection_event_handler
     pub domain
     pub event
+    pub record
 );
 
 pub type Swarm = swarm::Swarm<Behaviour>;
@@ -31,18 +35,23 @@ pub trait EventHandlerExt {
 #[behaviour(out_event = "Event")]
 pub struct Behaviour {
     pub ping: ping::Behaviour,
-    pub kad: kad::Behaviour<kad_store::MemoryStore>
+    pub kad: kad::Behaviour<kad_store::MemoryStore>,
+    pub gossipsub: gossipsub::Behaviour
 }
 
 impl Behaviour {
-    pub fn new(peer_id: ::libp2p::PeerId) -> Self {
+    pub fn new(keypair: identity::Keypair, peer_id: ::libp2p::PeerId) -> Self {
         let ping_config: ping::Config = ping::Config::new();
         let ping: ping::Behaviour = ping::Behaviour::new(ping_config);
         let kad_store: kad_store::MemoryStore = kad_store::MemoryStore::new(peer_id);
         let kad: kad::Behaviour<kad_store::MemoryStore> = kad::Behaviour::new(peer_id, kad_store);
+        let gossipsub_key: gossipsub::MessageAuthenticity = gossipsub::MessageAuthenticity::Signed(keypair);
+        let gossipsub_config: gossipsub::Config = gossipsub::Config::default();
+        let gossipsub: gossipsub::Behaviour = gossipsub::Behaviour::new(gossipsub_key, gossipsub_config).unwrap();
         Self {
             ping,
-            kad
+            kad,
+            gossipsub
         }
     }
 }
@@ -56,7 +65,7 @@ async fn main() {
     let mut swarm: ::libp2p::Swarm<_> = ::libp2p::SwarmBuilder::with_new_identity()
         .with_tokio()
         .with_quic_config(|_| quic_config)
-        .with_behaviour(|_| Behaviour::new(peer_id))
+        .with_behaviour(|keypair| Behaviour::new(keypair.to_owned(), peer_id))
         .unwrap()
         .build();
 
@@ -91,3 +100,8 @@ async fn main() {
         }
     }
 }
+
+// networking stuff first
+// dial relay as client
+// lookup alternet site.com.. find dht ref to a website
+// direct connection or through relay
