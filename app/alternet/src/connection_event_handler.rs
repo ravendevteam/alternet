@@ -2,7 +2,7 @@ use super::*;
 
 pub struct ConnectionEventHandler;
 
-#[::async_trait::async_trait]
+#[async_trait::async_trait]
 impl EventHandlerExt for ConnectionEventHandler {
     async fn handle(&mut self, swarm: &mut Swarm, event: &SwarmEvent) {
         match event {
