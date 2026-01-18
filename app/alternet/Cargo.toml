@@ -1,12 +1,21 @@
 package.name = "alternet"
 package.version = "0.1.0"
 package.edition = "2024"
-dependencies.thiserror.version = "=2.0.17"
-dependencies.modwire.version = "=0.1.0"
+package.publish = false
 dependencies.async-trait.version = "*"
-dependencies.tokio.version = "=1.48.0"
+dependencies.orchestrator.version = "*"
+dependencies.orchestrator.path = "../../lib/orchestrator"
+dependencies.tokio.version = "1.48.0"
 dependencies.tokio.features = ["full"]
-dependencies.libp2p.version = "=0.56.0"
+dependencies.p2p.version = "*"
+dependencies.p2p.path = "../../lib/p2p"
+dependencies.jsonwebtoken.version = "*"
+dependencies.jsonwebtoken.features = ["rust_crypto"]
+dependencies.redb.version = "*"
+dependencies.serde.version = "*"
+dependencies.serde.features = ["derive"]
+dependencies.libp2p.version = "0.56.0"
+dependencies.anyhow.version = "*"
 dependencies.libp2p.features = [
     "tcp",
     "quic",
@@ -21,7 +30,6 @@ dependencies.libp2p.features = [
     "tls",
     "tokio",
     "gossipsub",
-    "request-response"
+    "request-response",
+    "dcutr"
 ]
-dependencies.jsonwebtoken.version = "*"
-dependencies.redb.version = "*"

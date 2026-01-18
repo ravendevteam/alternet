@@ -1,0 +1,10 @@
+package.name = "orchestrator"
+package.version = "0.1.0"
+package.edition = "2024"
+package.publish = false
+dependencies.tokio.version = "1.48.0"
+dependencies.tokio.features = ["full"]
+dependencies.async-trait.version = "*"
+dependencies.anyhow.version = "*"
+dependencies.p2p.version = "*"
+dependencies.p2p.path = "../p2p"

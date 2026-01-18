@@ -1,4 +1,6 @@
 workspace.resolver = "3"
 workspace.members = [
-    "app/alternet"
+    "app/alternet",
+    "lib/orchestrator",
+    "lib/p2p"
 ]

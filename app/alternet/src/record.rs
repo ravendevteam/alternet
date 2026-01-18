@@ -1,19 +1,21 @@
-use super::*;
-
-pub struct Record {
-
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(derive_new::new)]
+#[derive(bincode::Encode)]
+#[derive(bincode::Decode)]
+#[derive(serde::Serialize)]
+#[derive(serde::Deserialize)]
+pub struct Domain {
+    name: heapless::String<32>,
+    ip: (u8, u8, u8, u8)
 }
 
-impl Record {
-    pub fn into_kad_record(self) -> kad::Record {
-        kad::Record {
-            
-        }
-    }
-}
-
-impl From<kad::Record> for Record {
-    fn from(value: kad::Record) -> Self {
-        
-    }
-}
+#[repr(transparent)]
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(derive_new::new)]
+#[derive(serde::Serialize)]
+#[derive(serde::Deserialize)]
+#[derive(bincode::Encode)]
+#[derive(bincode::Decode)]
+pub struct Record<T>(T);
