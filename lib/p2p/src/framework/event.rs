@@ -1,6 +1,13 @@
 use super::*;
 
-pub use Event::*;
+pub use Event::Dcutr;
+pub use Event::Gossipsub;
+pub use Event::Identify;
+pub use Event::Kad;
+pub use Event::Mdns;
+pub use Event::Ping;
+pub use Event::Relay;
+
 pub use libp2p::ping::Event as PingEvent;
 pub use libp2p::gossipsub::Event::GossipsubNotSupported;
 pub use libp2p::dcutr::Event as DcutrEvent;
