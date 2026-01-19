@@ -68,6 +68,7 @@ checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 name = "alternet"
 version = "0.1.0"
 dependencies = [
+ "alternet-transport",
  "anyhow",
  "async-trait",
  "jsonwebtoken",
@@ -77,6 +78,19 @@ dependencies = [
  "redb",
  "serde",
  "tokio",
+]
+
+[[package]]
+name = "alternet-transport"
+version = "0.1.0"
+dependencies = [
+ "futures-core",
+ "futures-util",
+ "hickory-resolver",
+ "libp2p",
+ "parking_lot",
+ "tokio",
+ "unsigned-varint 0.8.0",
 ]
 
 [[package]]
@@ -2254,9 +2268,11 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 name = "orchestrator"
 version = "0.1.0"
 dependencies = [
+ "alternet-transport",
  "anyhow",
  "async-trait",
- "p2p",
+ "futures",
+ "libp2p",
  "tokio",
 ]
 

@@ -6,21 +6,4 @@ dependencies.modwire.version = "*"
 dependencies.derive_more.version = "*"
 dependencies.derive_more.features = ["full"]
 dependencies.paste.version = "*"
-dependencies.libp2p.version = "0.56.0"
-dependencies.libp2p.features = [
-    "tcp",
-    "quic",
-    "noise",
-    "yamux",
-    "mdns",
-    "kad",
-    "ping",
-    "identify",
-    "relay",
-    "macros",
-    "tls",
-    "tokio",
-    "gossipsub",
-    "request-response",
-    "dcutr"
-]
+dependencies.libp2p = { workspace = true }

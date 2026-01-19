@@ -5,8 +5,7 @@ package.publish = false
 dependencies.async-trait.version = "*"
 dependencies.orchestrator.version = "*"
 dependencies.orchestrator.path = "../../lib/orchestrator"
-dependencies.tokio.version = "1.48.0"
-dependencies.tokio.features = ["full"]
+dependencies.tokio.workspace = true
 dependencies.p2p.version = "*"
 dependencies.p2p.path = "../../lib/p2p"
 dependencies.jsonwebtoken.version = "*"
@@ -14,22 +13,6 @@ dependencies.jsonwebtoken.features = ["rust_crypto"]
 dependencies.redb.version = "*"
 dependencies.serde.version = "*"
 dependencies.serde.features = ["derive"]
-dependencies.libp2p.version = "0.56.0"
 dependencies.anyhow.version = "*"
-dependencies.libp2p.features = [
-    "tcp",
-    "quic",
-    "noise",
-    "yamux",
-    "mdns",
-    "kad",
-    "ping",
-    "identify",
-    "relay",
-    "macros",
-    "tls",
-    "tokio",
-    "gossipsub",
-    "request-response",
-    "dcutr"
-]
+dependencies.libp2p.workspace = true
+dependencies.alternet-transport = { version = "0.1.0", path = "../../lib/transport" }

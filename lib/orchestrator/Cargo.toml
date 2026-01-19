@@ -6,5 +6,6 @@ dependencies.tokio.version = "1.48.0"
 dependencies.tokio.features = ["full"]
 dependencies.async-trait.version = "*"
 dependencies.anyhow.version = "*"
-dependencies.p2p.version = "*"
-dependencies.p2p.path = "../p2p"
+dependencies.alternet-transport = { version = "0.1.0", path = "../transport" }
+dependencies.libp2p.workspace = true
+dependencies.futures.workspace = true
