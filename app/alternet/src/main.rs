@@ -1,31 +1,53 @@
 #![deny(clippy::unwrap_used)]
 #![allow(unused)]
 
+use std::marker::PhantomData;
 use p2p::*;
 use orchestrator::network;
 use orchestrator::runtime;
 use async_trait::async_trait;
 use anyhow::Result;
 
-pub struct Alternet {
-    swarm: Swarm
+mod ipv4;
+mod record;
+mod records;
+
+#[derive(derive_more::Deref)]
+#[derive(derive_more::DerefMut)]
+pub struct Alternet(Swarm);
+
+impl Alternet {
+    pub fn kad(&self) -> &kad::Behaviour<kad::store::MemoryStore> {
+        &self.behaviour().kad
+    }
+
+    pub fn add_record(&mut self, record: impl Into<record::Record<()>>) {
+        
+        let record: record::Record<()> = record.into();
+        let record: kad::Record = kad::Record {
+            key:,
+            value: vec![],
+            publisher: None,
+            expires: None
+        };
+        let swarm_mut: &mut Behaviour = self.behaviour_mut();
+        swarm_mut.kad.put_record( , kad::Quorum::Majority);
+    }
 }
 
 #[async_trait]
 impl runtime::Node for Alternet {
     fn new(swarm: impl Into<Swarm>) -> Self {
         let swarm: Swarm = swarm.into();
-        Self {
-            swarm
-        }
+        Self(swarm)
     }
 
     fn swarm(&self) -> &Swarm {
-        &self.swarm
+        self
     }
 
     fn swarm_mut(&mut self) -> &mut Swarm {
-        &mut self.swarm
+        self
     }
 
     async fn run(&mut self, event: SwarmEvent) -> Result<()> {
@@ -34,7 +56,7 @@ impl runtime::Node for Alternet {
                 peer_id,
                 ..
             } => {
-                println!("{} connected to {}", self.swarm.local_peer_id(), peer_id);
+                println!("{} connected to {}", self.local_peer_id(), peer_id);
             },
             event::Behaviour(event::Relay(event::RelayCircuitReqAccepted {
                 src_peer_id,
@@ -75,7 +97,7 @@ impl runtime::Node for Alternet {
 async fn main() -> Result<()> {
     use runtime::Node as _;
 
-    network::Network::new(vec![])
+    network::Network::default()
         .add_runtime(runtime::Runtime::<Alternet>::new(Alternet::bootstrap()?))
         .add_runtime(runtime::Runtime::<Alternet>::new(Alternet::bootstrap()?))
         .connect()

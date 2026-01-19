@@ -14,8 +14,9 @@ dependencies.jsonwebtoken.features = ["rust_crypto"]
 dependencies.redb.version = "*"
 dependencies.serde.version = "*"
 dependencies.serde.features = ["derive"]
-dependencies.libp2p.version = "0.56.0"
 dependencies.anyhow.version = "*"
+dependencies.derive_more.version = "*"
+dependencies.libp2p.version = "0.56.0"
 dependencies.libp2p.features = [
     "tcp",
     "quic",
