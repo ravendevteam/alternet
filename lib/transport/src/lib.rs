@@ -102,6 +102,7 @@ where
 
 pub struct AlternetBehaviour {
     request_receiver: tokio::sync::mpsc::Receiver<Resolvable>,
+    request_sender: tokio::sync::mpsc::Sender<Resolvable>,
     lookups: std::sync::Arc<
         parking_lot::Mutex<
             std::collections::HashMap<
@@ -325,7 +326,7 @@ where
                 .map(|either, _| either.into_inner())
                 .boxed(),
         )),
-        resolver: sender,
+        resolver: sender.clone(),
     };
 
     let delegating = DelegatingBehaviour {
@@ -340,6 +341,7 @@ where
 
     let behaviour = AlternetBehaviour {
         request_receiver: receiver,
+        request_sender: sender,
         lookups: Default::default(),
         delegating,
     };

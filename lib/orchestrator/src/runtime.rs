@@ -10,11 +10,10 @@ pub type Swarm<T> = libp2p::Swarm<T>;
 pub type SwarmEvent<T> = libp2p::swarm::SwarmEvent<<T as NetworkBehaviour>::ToSwarm>;
 
 fn get_alternet_stuff(
-    keypair: Keypair,
+    keypair: &Keypair,
 ) -> (
     libp2p::core::transport::Boxed<(libp2p::PeerId, libp2p::core::muxing::StreamMuxerBox)>,
     alternet_transport::AlternetBehaviour,
-    Keypair,
 ) {
     let quic_config: quic::Config = quic::Config::new(&keypair);
     let tcp_config: tcp::Config = tcp::Config::default();
@@ -46,7 +45,7 @@ fn get_alternet_stuff(
         std::time::Duration::from_secs(10),
     );
 
-    return (transport_timeout.boxed(), alternet_behaviour, keypair);
+    return (transport_timeout.boxed(), alternet_behaviour);
 }
 
 #[async_trait]
@@ -65,62 +64,9 @@ where
     where
         F: FnOnce(&mut Swarm<Self::T>) -> Result<()>,
     {
-        // let mut swarm: Swarm = libp2p::SwarmBuilder::with_existing_identity(keypair.to_owned())
-        //     .with_tokio()
-        //     .with_tcp(tcp_config, noise::Config::new, yamux::Config::default)?
-        //     .with_quic_config(|_| quic_config)
-        //     .with_dns()
-        //     .unwrap()
-        //     .with_behaviour(move |_| {
-        //         let local_peer_id: PublicKey = keypair.public();
-        //         let local_peer_id: PeerId = PeerId::from(local_peer_id);
-        //         let identify_config: identify::Config =
-        //             identify::Config::new("/an/1.0.0".to_owned(), keypair.public());
-        //         let identify: identify::Behaviour = identify::Behaviour::new(identify_config);
-        //         let ping_config: ping::Config = ping::Config::new();
-        //         let ping: ping::Behaviour = ping::Behaviour::new(ping_config);
-        //         let kad_store: kad::store::MemoryStore = kad::store::MemoryStore::new(peer_id);
-        //         let kad: kad::Behaviour<kad::store::MemoryStore> =
-        //             kad::Behaviour::new(peer_id, kad_store);
-        //         let gossipsub_key: gossipsub::MessageAuthenticity =
-        //             gossipsub::MessageAuthenticity::Signed(keypair.to_owned());
-        //         let gossipsub_config: gossipsub::Config = gossipsub::Config::default();
-        //         let gossipsub: gossipsub::Behaviour =
-        //             gossipsub::Behaviour::new(gossipsub_key, gossipsub_config).expect(
-        //                 "key and config should be correct whilst building the gossipsub behaviour",
-        //             );
-        //         let relay_config: relay::Config = relay::Config::default();
-        //         let relay: relay::Behaviour = relay::Behaviour::new(local_peer_id, relay_config);
-        //         let dcutr: dcutr::Behaviour = dcutr::Behaviour::new(local_peer_id);
-        //         let mdns_config: mdns::Config = mdns::Config::default();
-        //         let mdns: mdns::tokio::Behaviour =
-        //             mdns::tokio::Behaviour::new(mdns_config, local_peer_id).expect("");
-        //         Behaviour {
-        //             identify,
-        //             ping,
-        //             kad,
-        //             gossipsub,
-        //             relay,
-        //             dcutr,
-        //             mdns,
-        //         }
-        //     })?
-        //     .build();
-        // swarm
-        //     .listen_on(
-        //         "/ip4/0.0.0.0/udp/0/quic-v1"
-        //             .parse()
-        //             .expect("multi address should be correct"),
-        //     )
-        //     .expect("swarm should be able to listen on given multi address");
-        // swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
-
-        // swarm
-        //     .dial(libp2p::Multiaddr::empty().with_an("coolblog.pets"))
-        //     .expect("failed to dial");
         let keypair: Keypair = keypair.unwrap_or_else(Keypair::generate_ed25519);
 
-        let (transport, behaviour, keypair) = get_alternet_stuff(keypair);
+        let (transport, behaviour) = get_alternet_stuff(&keypair);
 
         let mut swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
             .with_tokio()

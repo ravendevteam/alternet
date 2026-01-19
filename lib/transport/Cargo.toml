@@ -1,0 +1,13 @@
+[package]
+name = "alternet-transport"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+futures-core = "0.3.31"
+futures-util = "0.3.31"
+parking_lot = "0.12.5"
+libp2p = { workspace = true }
+tokio = { workspace = true }
+unsigned-varint = "0.8.0"
+hickory-resolver = "0.25.2"

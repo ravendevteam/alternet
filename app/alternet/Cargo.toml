@@ -16,3 +16,8 @@ dependencies.serde.features = ["derive"]
 dependencies.anyhow.version = "*"
 dependencies.libp2p.workspace = true
 dependencies.alternet-transport = { version = "0.1.0", path = "../../lib/transport" }
+dependencies.libp2p-stream = "0.4.0-alpha"
+dependencies.tide = "0.16.0"
+dependencies.async-h1 = "2.3.4"
+dependencies.futures.workspace = true
+dependencies.async-dup = "1.2.4"

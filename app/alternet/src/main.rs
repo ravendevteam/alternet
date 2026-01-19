@@ -1,12 +1,19 @@
 #![deny(clippy::unwrap_used)]
 #![allow(unused)]
 
+use std::sync::Arc;
+
 use ::anyhow::Result;
 use ::async_trait::async_trait;
 use ::orchestrator::network;
 use ::orchestrator::runtime;
 use ::orchestrator::runtime::{Swarm, SwarmEvent};
+use p2p::Multiaddr;
 use p2p::NetworkBehaviour;
+use p2p::StreamProtocol;
+use p2p::future::AsyncRead;
+use p2p::future::AsyncWrite;
+use p2p::future::StreamExt;
 use p2p::swarm::behaviour;
 
 pub struct Alternet<T: NetworkBehaviour> {
@@ -25,9 +32,111 @@ where
 #[derive(libp2p::swarm::NetworkBehaviour)]
 pub struct Behaviour {
     alternet: alternet_transport::AlternetBehaviour,
-    mdns: libp2p::mdns::tokio::Behaviour,
-    // ping: libp2p::ping::Behaviour,
 }
+
+pub struct Config {
+    mdns: bool,
+}
+fn alternet<B: NetworkBehaviour>(
+    cfg: Config,
+    from_alternet: impl FnOnce(alternet_transport::AlternetBehaviour) -> B,
+) -> libp2p::Swarm<B> {
+    todo!()
+}
+
+async fn asdf_main() {
+    #[derive(libp2p::swarm::NetworkBehaviour)]
+    struct MyBehavior {
+        alternet: alternet_transport::AlternetBehaviour,
+        http: libp2p_stream::Behaviour,
+    }
+
+    let swarm = alternet(Config { mdns: true }, |alternet| MyBehavior {
+        alternet,
+        http: libp2p_stream::Behaviour::new(),
+    });
+
+    let mut x = swarm
+        .behaviour()
+        .http
+        .new_control()
+        .accept(StreamProtocol::new("http"))
+        .expect("not already registered");
+
+    let mut server = tide::Server::new();
+    server
+        .at("/")
+        .serve_dir("/home/rob9315/Desktop/website/public/")
+        .unwrap();
+    let server = std::sync::Arc::new(server);
+
+    while let Some((peer, stream)) = x.next().await {
+        let stream = async_dup::Arc::new(async_dup::Mutex::new(stream));
+        let _join_handle = tokio::spawn(my_handler(server.clone(), stream)).await;
+    }
+}
+async fn server_main() {
+    #[derive(libp2p::swarm::NetworkBehaviour)]
+    struct MyBehavior {
+        alternet: alternet_transport::AlternetBehaviour,
+        http_client: libp2p_stream::Behaviour,
+    }
+
+    let mut swarm = alternet(Config { mdns: true }, |alternet| MyBehavior {
+        alternet,
+        http_client: libp2p_stream::Behaviour::new(),
+    });
+
+    swarm
+        .dial(Multiaddr::try_from("/dns/coolblog.pets").unwrap())
+        .expect("asdf");
+
+    // swarm.behaviour_mut().alternet.
+
+    let mut x = swarm
+        .behaviour()
+        .http_client
+        .new_control()
+        .accept(StreamProtocol::new("http"))
+        .expect("not already registered");
+
+
+    let mut server = tide::Server::new();
+    server
+        .at("/")
+        .serve_dir("/home/rob9315/Desktop/website/public/")
+        .unwrap();
+    let server = std::sync::Arc::new(server);
+
+    loop {
+        tokio::select! {
+            _ = swarm.select_next_some() => {},
+            conn = x.next() => {
+                if let Some((peer, stream)) = conn {
+                    let stream = async_dup::Arc::new(async_dup::Mutex::new(stream));
+                    let _join_handle = tokio::spawn(my_handler(server.clone(), stream)).await;
+                }
+            }
+        }
+    }
+
+}
+
+async fn my_handler<S>(
+    server: Arc<tide::Server<()>>,
+    stream: S,
+) -> std::result::Result<(), tide::Error>
+where
+    S: AsyncRead + AsyncWrite + Send + Unpin + Sync + Clone + 'static,
+{
+    Ok(async_h1::accept(stream, |req| server.respond(req)).await?)
+}
+
+
+
+//                      an://coolblog.pets/index.html
+//                      /an/coolblog.pets/http/index.html
+//                      /p2p-circuit/p2p/Qmyourthing/http/index.html
 
 #[async_trait]
 impl runtime::Node for Alternet<Behaviour> {
@@ -39,17 +148,11 @@ impl runtime::Node for Alternet<Behaviour> {
     ) -> <Self as crate::runtime::Node>::T {
         Behaviour {
             alternet: behaviour,
-            mdns: libp2p::mdns::Behaviour::new(
-                libp2p::mdns::Config::default(),
-                kp.public().to_peer_id(),
-            )
-            .expect("no"),
         }
     }
     fn swarm(&self) -> &Swarm<Self::T> {
         &self.swarm
     }
-
     fn swarm_mut(&mut self) -> &mut Swarm<Self::T> {
         &mut self.swarm
     }
@@ -59,50 +162,11 @@ impl runtime::Node for Alternet<Behaviour> {
             return Ok(());
         };
         match ev {
-            BehaviourEvent::Alternet(asdf) => todo!(),
-            BehaviourEvent::Mdns(mdns) => {
-                eprintln!("mdns: {mdns:?}");
-            },
+            BehaviourEvent::Alternet(asdf) => {}
+            // BehaviourEvent::Mdns(mdns) => {
+            //     eprintln!("mdns: {mdns:?}");
+            // }
         }
-
-        // match event {
-        //     event::ConnectionEstablished {
-        //         peer_id,
-        //         ..
-        //     } => {
-        //         println!("{} connected to {}", self.swarm.local_peer_id(), peer_id);
-        //     },
-        //     event::Behaviour(event::Relay(event::RelayCircuitReqAccepted {
-        //         src_peer_id,
-        //         dst_peer_id
-        //     })) => {
-        //         println!("{}", src_peer_id);
-        //     },
-        //     event::Behaviour(event::Dcutr(event::DcutrEvent {
-        //         remote_peer_id,
-        //         result
-        //     })) => {
-        //         println!("{}", remote_peer_id);
-        //     },
-        //     event::Behaviour(event::Mdns(event::MdnsDiscovered(discovered))) => {
-        //         for (peer_id, peer_addr) in discovered {
-        //             let swarm = self.swarm_mut().behaviour_mut();
-        //             swarm.kad.add_address(&peer_id, peer_addr.to_owned());
-        //         }
-        //     },
-        //     event::Behaviour(event::Identify(event::IdentifyReceived {
-        //         peer_id,
-        //         info,
-        //         ..
-        //     })) => {
-        //         let swarm: &mut p2p::Behaviour = self.swarm_mut().behaviour_mut();
-        //         for addr in info.listen_addrs {
-        //             swarm.kad.add_address(&peer_id, addr);
-        //         }
-        //         let _ = swarm.kad.bootstrap();
-        //     },
-        //     _ => {}
-        // }
 
         Ok(())
     }
