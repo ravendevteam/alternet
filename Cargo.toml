@@ -1,29 +1,41 @@
-workspace.resolver = "3"
-workspace.members = [
-    "app/alternet",
-    "lib/orchestrator",
-    "lib/p2p",
-    "lib/transport",
-]
+[package]
+name = "libp2p-alternet"
+license = "Unlicense"
+edition = "2024"
 
-[workspace.dependencies]
+[features]
+default = ["autonat", "dcutr", "mdns", "tcp", "quic"]
+
+# peer discovery
+
+# Automatic NAT detection
+autonat = ["libp2p/autonat"]
+# Direct Connection Upgrade Through Relay
+dcutr = ["libp2p/dcutr"]
+# Multicast DNS
+mdns = ["libp2p/mdns", "libp2p/tokio"]
+
+# transport
+
+# Transport Control Protocol
+tcp = ["libp2p/noise", "libp2p/tcp", "libp2p/tls"]
+# Quic over UDP
+quic = ["libp2p/quic"]
+websocket = ["libp2p/websocket"]
+
+# websys transports
+webrtc-websys = ["libp2p/webrtc-websys"]
+websocket-websys = ["libp2p/websocket-websys"]
+webtransport-websys = ["libp2p/webtransport-websys"]
+
+[dependencies]
+either = "1.15.0"
 libp2p = { version = "0.56.0", features = [
-    "tcp",
-    "quic",
-    "noise",
-    "yamux",
-    "mdns",
-    "dns",
-    "kad",
-    "ping",
     "identify",
-    "relay",
+    "kad",
     "macros",
-    "tls",
-    "tokio",
-    "gossipsub",
-    "request-response",
-    "dcutr",
-] }
-tokio = { version = "1.48.0", features = ["full"] }
-futures = "0.3.31"
+    "relay",
+], default-features = false }
+ouroboros = "0.18.5"
+parking_lot = "0.12.5"
+pin-project = "1.1.10"

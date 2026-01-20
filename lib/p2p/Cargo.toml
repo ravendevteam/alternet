@@ -1,9 +1,0 @@
-package.name = "p2p"
-package.version = "0.1.0"
-package.edition = "2024"
-package.publish = false
-dependencies.modwire.version = "*"
-dependencies.derive_more.version = "*"
-dependencies.derive_more.features = ["full"]
-dependencies.paste.version = "*"
-dependencies.libp2p = { workspace = true }
