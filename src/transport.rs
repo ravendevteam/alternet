@@ -23,11 +23,11 @@ pub enum Error<TErr> {
 }
 impl<TErr> Error<TErr> {
     fn map_transport(
-        transport_error: TransportError<InnerError/*<T>*/>,
-    ) -> TransportError<Error<InnerError/*<T>*/>> {
+        transport_error: TransportError<InnerError>,
+    ) -> TransportError<Error<InnerError>> {
         TransportError::Other(Error::<TErr>::map(transport_error))
     }
-    fn map(transport_error: TransportError<InnerError/*<T>*/>) -> Error<InnerError/*<T>*/> {
+    fn map(transport_error: TransportError<InnerError>) -> Error<InnerError> {
         match transport_error {
             TransportError::MultiaddrNotSupported(multiaddr) => {
                 Error::MultiaddrNotSupported(multiaddr)
@@ -74,9 +74,9 @@ where
 }
 
 // todo: wrong type. switch back to Boxed? probably
-// pub type InnerTransport/*<T>*/ = core::transport::OrTransport<relay::client::Transport, T>;
-pub type InnerTransport/*<T>*/ = core::transport::Boxed<(PeerId, core::muxing::StreamMuxerBox)>;
-// pub type InnerTransport/*<T>*/ = core::transport::OrTransport<core::transport::Boxed<>, T>;
+// pub type InnerTransport = core::transport::OrTransport<relay::client::Transport, T>;
+pub type InnerTransport = core::transport::Boxed<(PeerId, core::muxing::StreamMuxerBox)>;
+// pub type InnerTransport = core::transport::OrTransport<core::transport::Boxed<>, T>;
 // pub type InnerTransport = relay::client::Transport;
 
 struct DomainIds {
@@ -130,12 +130,12 @@ impl DomainIds {
 // - set an order in which all mutexes have to be acquired in and enforce this everywhere
 // right now the code can probably deadlock somewhere
 
-/// alternet::Transport/*<T>*/ acts as a wrapper around relay (actually OrTransport<relay::client::Transport, T>)
+/// alternet::Transport acts as a wrapper around relay (actually OrTransport<relay::client::Transport, T>)
 /// and allows you to use `/dns/yourdomain.an` anywhere you would normally use `/p2p/QmYourPeerId`
-pub struct Transport/*<T>*/ {
+pub struct Transport {
     control: crate::control::Control,
     peerid: PeerId,
-    inner: std::sync::Arc<parking_lot::Mutex<InnerTransport/*<T>*/>>,
+    inner: std::sync::Arc<parking_lot::Mutex<InnerTransport>>,
     // pending items:
     domains: parking_lot::Mutex<DomainIds>,
     // - dns registration
@@ -146,19 +146,19 @@ pub struct Transport/*<T>*/ {
     // >,
 }
 
-type InnerOutput/*<T>*/ = <InnerTransport/*<T>*/ as ::libp2p::Transport>::Output;
-type InnerError/*<T>*/ = <InnerTransport/*<T>*/ as ::libp2p::Transport>::Error;
-type InnerListenerUpgrade/*<T>*/ = <InnerTransport/*<T>*/ as ::libp2p::Transport>::ListenerUpgrade;
-type InnerDial/*<T>*/ = <InnerTransport/*<T>*/ as ::libp2p::Transport>::Dial;
+type InnerOutput = <InnerTransport as ::libp2p::Transport>::Output;
+type InnerError = <InnerTransport as ::libp2p::Transport>::Error;
+type InnerListenerUpgrade = <InnerTransport as ::libp2p::Transport>::ListenerUpgrade;
+type InnerDial = <InnerTransport as ::libp2p::Transport>::Dial;
 
 #[pin_project::pin_project]
-pub struct Dial/*<T: ::libp2p::Transport>*/ {
+pub struct Dial {
     control: crate::control::Control,
-    inner: std::sync::Arc<parking_lot::Mutex<InnerTransport/*<T>*/>>,
+    inner: std::sync::Arc<parking_lot::Mutex<InnerTransport>>,
     opts: core::transport::DialOpts,
 
-    current_inner_dial: Option<InnerDial/*<T>*/>,
-    dial_errs: Vec<Error<InnerError/*<T>*/>>,
+    current_inner_dial: Option<InnerDial>,
+    dial_errs: Vec<Error<InnerError>>,
 
     // multiaddr dns-lookup / replacement part
     start: Multiaddr,
@@ -168,11 +168,8 @@ pub struct Dial/*<T: ::libp2p::Transport>*/ {
     resolves: stream::SelectAll<crate::control::resolve::ResolveFut>,
 }
 
-impl/*<T: ::libp2p::Transport>*/ Future for Dial/*<T>*/
-where
-    /*T::Dial: Unpin,*/
-{
-    type Output = Result<InnerOutput/*<T>*/, Error<InnerError/*<T>*/>>;
+impl Future for Dial {
+    type Output = Result<InnerOutput, Error<InnerError>>;
 
     fn poll(
         mut self: std::pin::Pin<&mut Self>,
@@ -243,7 +240,7 @@ where
                     break 'pending;
                 }
                 Err(e) => {
-                    let err: Error<InnerError/*<T>*/> = Error::<InnerError>::map(e);
+                    let err: Error<InnerError> = Error::<InnerError>::map(e);
                     this.dial_errs.push(err);
                 }
             }
@@ -257,22 +254,17 @@ where
     }
 }
 
-impl/*<T>*/ ::libp2p::Transport for Transport/*<T>*/
-where
-    /*T: ::libp2p::Transport + std::marker::Unpin,*/
-    /*T::Error: 'static,*/
-    /*T::Dial: Unpin,*/
-{
-    type Output = InnerOutput/*<T>*/;
-    type Error = Error<InnerError/*<T>*/>;
+impl ::libp2p::Transport for Transport {
+    type Output = InnerOutput;
+    type Error = Error<InnerError>;
     type ListenerUpgrade =
-        futures::future::MapErr<InnerListenerUpgrade/*<T>*/, fn(InnerError/*<T>*/) -> Self::Error>;
-    type Dial = Dial/*<T>*/;
+        futures::future::MapErr<InnerListenerUpgrade, fn(InnerError) -> Self::Error>;
+    type Dial = Dial;
     // // either:
     // // - result of T::dial with its error mapped to Self::Error
     // // - (boxed async block) returning a Result-wrapped Self::Error
     // futures::future::Either<
-    //     futures::future::MapErr<InnerDial/*<T>*/, fn(InnerError/*<T>*/) -> Self::Error>,
+    //     futures::future::MapErr<InnerDial, fn(InnerError) -> Self::Error>,
     //     futures::future::BoxFuture<'static, Result<Self::Output, Self::Error>>,
     // >;
 

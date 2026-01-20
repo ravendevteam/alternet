@@ -4,7 +4,7 @@ license = "Unlicense"
 edition = "2024"
 
 [features]
-default = ["autonat", "dcutr", "mdns", "tcp", "quic"]
+default = ["autonat", "dcutr", "mdns"]
 
 # peer discovery
 
@@ -15,21 +15,7 @@ dcutr = ["libp2p/dcutr"]
 # Multicast DNS
 mdns = ["libp2p/mdns", "libp2p/tokio"]
 
-# transport
-
-# Transport Control Protocol
-tcp = ["libp2p/noise", "libp2p/tcp", "libp2p/tls"]
-# Quic over UDP
-quic = ["libp2p/quic"]
-websocket = ["libp2p/websocket"]
-
-# websys transports
-webrtc-websys = ["libp2p/webrtc-websys"]
-websocket-websys = ["libp2p/websocket-websys"]
-webtransport-websys = ["libp2p/webtransport-websys"]
-
 [dependencies]
-either = "1.15.0"
 libp2p = { version = "0.56.0", features = [
     "identify",
     "kad",
