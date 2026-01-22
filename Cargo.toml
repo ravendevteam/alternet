@@ -1,4 +1,32 @@
-workspace.resolver = "3"
-workspace.members = [
-    "app/alternet"
-]
+[package]
+name = "libp2p-alternet"
+license = "Unlicense"
+edition = "2024"
+
+[features]
+default = ["autonat", "dcutr", "mdns"]
+
+# peer discovery
+
+# Automatic NAT detection
+autonat = ["libp2p/autonat"]
+# Direct Connection Upgrade Through Relay
+dcutr = ["libp2p/dcutr"]
+# Multicast DNS
+mdns = ["libp2p/mdns", "libp2p/tokio"]
+
+[dependencies]
+async-trait = "0.1.89"
+either = "1.15.0"
+hickory-resolver = "0.25.2"
+libp2p = { version = "0.56.0", features = [
+    "identify",
+    "kad",
+    "macros",
+    "relay",
+    "dns"
+], default-features = false }
+ouroboros = "0.18.5"
+oxicode = "0.1.1"
+parking_lot = "0.12.5"
+pin-project = "1.1.10"
