@@ -110,32 +110,17 @@ where
 
 pub mod resolve {
     use crate::{control::inspect_and_then, prelude::*};
-    use futures::channel::mpsc::{UnboundedReceiver, UnboundedSender, unbounded};
-
-    // todo:
-    // - add reason for resolve failure
-    #[derive(Debug)]
-    pub struct Error;
-    impl std::fmt::Display for Error {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            f.write_str("error resolving Alternet Domain")
-        }
-    }
-    impl std::error::Error for Error {
-        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-            None
-        }
-    }
+    use futures::channel::oneshot::{Receiver, Sender, channel};
 
     // todo: maybe this shouldn't be a result and instead just a stream of Multiaddr?
     // i doubt code will care about an error - they can just detect when there is no more
     // addresses and stop, as well as when there are no addresses at all they know it isn't registered
-    pub type Response = ::std::result::Result<Multiaddr, Error>;
-    pub type ResponseSender = UnboundedSender<Response>;
-    pub type ResponseReceiver = UnboundedReceiver<Response>;
+    pub type Response = ::std::result::Result<Vec<Multiaddr>, hickory_resolver::proto::ProtoError>;
+    pub type ResponseSender = Sender<Response>;
+    pub type ResponseReceiver = Receiver<Response>;
 
     pub struct Request {
-        pub domain: String,
+        pub domain: hickory_resolver::Name,
         pub responder: ResponseSender,
     }
 
@@ -144,8 +129,8 @@ pub mod resolve {
     impl super::Control {
         #[allow(private_interfaces)]
         #[must_use = "futures do nothing unless polled"]
-        pub fn resolve(&mut self, domain: String) -> ResolveFut {
-            let (sender, receiver) = unbounded();
+        pub fn resolve(&self, domain: hickory_resolver::Name) -> ResolveFut {
+            let (sender, receiver) = channel();
             let command_fut = self.command(super::Request::Resolve(Request {
                 domain,
                 responder: sender,
@@ -188,7 +173,7 @@ pub mod register {
     impl super::Control {
         #[allow(private_interfaces)]
         #[must_use = "futures do nothing unless polled"]
-        pub fn register(&mut self, domain: String) -> RegisterFut {
+        pub fn register(&self, domain: String) -> RegisterFut {
             let (sender, receiver) = channel();
             let command_fut = self.command(super::Request::Register(Request {
                 domain,
@@ -228,7 +213,7 @@ pub mod deregister {
     impl super::Control {
         #[allow(private_interfaces)]
         #[must_use = "futures do nothing unless polled"]
-        pub fn deregister(&mut self, domain: String) -> DeregisterFut {
+        pub fn deregister(&self, domain: String) -> DeregisterFut {
             let command_fut = self.command(super::Request::Deregister(Request { domain }));
             inspect_and_then(command_fut, futures::future::ready(()))
         }

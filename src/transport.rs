@@ -11,7 +11,7 @@ pub enum Error<TErr> {
     Transport(TErr),
     /// Alternet DNS resolution failed.
     #[allow(clippy::enum_variant_names)]
-    ResolveError(crate::control::resolve::Error),
+    ResolveError(hickory_resolver::ResolveError),
     /// Alternet DNS resolution was successful, but the underlying transport refused the resolved address.
     MultiaddrNotSupported(multiaddr::Multiaddr),
     /// Multiple dial errors were encountered.
@@ -79,7 +79,7 @@ pub type InnerTransport = core::transport::Boxed<(PeerId, core::muxing::StreamMu
 // pub type InnerTransport = core::transport::OrTransport<core::transport::Boxed<>, T>;
 // pub type InnerTransport = relay::client::Transport;
 
-struct DomainIds {
+pub(crate) struct DomainIds {
     id_to_domain: HashMap<core::transport::ListenerId, String>,
     domain_to_ids: HashMap<String, Vec<core::transport::ListenerId>>,
 }
@@ -165,7 +165,7 @@ pub struct Dial {
     replacements: Vec<(usize, Vec<Multiaddr>, Multiaddr)>,
     // latest resolved multiaddr
     current_replacement: Option<(Multiaddr, usize)>,
-    resolves: stream::SelectAll<crate::control::resolve::ResolveFut>,
+    resolves: future::SelectAll<crate::control::resolve::ResolveFut>,
 }
 
 impl Future for Dial {
@@ -277,7 +277,10 @@ impl ::libp2p::Transport for Transport {
         // actually: the relay-behaviour does the subscribing on the relay_addr, so it will loop around to a dial later and be rewritten there
 
         fn is_alternet_dns_record(p: multiaddr::Protocol) -> bool {
-            matches!(p, multiaddr::Protocol::Dns(_))
+            match p {
+                multiaddr::Protocol::Dnsaddr(domain) => domain.ends_with(".an"),
+                _ => false,
+            }
         }
         fn is_p2p_circuit(p: multiaddr::Protocol) -> bool {
             matches!(p, multiaddr::Protocol::P2pCircuit)
@@ -301,7 +304,7 @@ impl ::libp2p::Transport for Transport {
             {
                 return Err(TransportError::MultiaddrNotSupported(addr));
             }
-            let Some(multiaddr::Protocol::Dns(domain)) = addr.iter().nth(domain_pos) else {
+            let Some(multiaddr::Protocol::Dnsaddr(domain)) = addr.iter().nth(domain_pos) else {
                 unreachable!()
             };
 
@@ -317,7 +320,7 @@ impl ::libp2p::Transport for Transport {
             // rewrite multiaddr and replace /an/domain with /p2p/QmOurPeerId
             addr = addr
                 .replace(domain_pos, |_| Some(multiaddr::Protocol::P2p(self.peerid)))
-                .expect("i return a some, how would this ever fail?");
+                .expect("i return a some on a position i know exists, how would this ever fail?");
         }
 
         let mut inner_lock = self.inner.lock();
@@ -354,9 +357,11 @@ impl ::libp2p::Transport for Transport {
 
         let mut domains = vec![];
         while let Some(p) = iter.next() {
-            if let multiaddr::Protocol::Dns(domain) = p {
-                domains.push(domain.to_string());
-                break;
+            if let multiaddr::Protocol::Dnsaddr(domain) = p {
+                if let Ok(name) = hickory_resolver::Name::from_utf8(domain) {
+                    domains.push(name);
+                    break;
+                }
             }
             start.push(iter.next().unwrap());
         }
@@ -365,10 +370,12 @@ impl ::libp2p::Transport for Transport {
             let mut addr = Multiaddr::empty();
             loop {
                 if let Some(p) = iter.next() {
-                    if let multiaddr::Protocol::Dns(domain) = p {
-                        domains.push(domain.to_string());
-                        replacements.push((0, vec![], addr));
-                        break;
+                    if let multiaddr::Protocol::Dnsaddr(domain) = &p {
+                        if let Ok(name) = hickory_resolver::Name::from_utf8(domain) {
+                            domains.push(name);
+                            replacements.push((0, vec![], addr));
+                            break;
+                        }
                     }
                     addr.push(iter.next().unwrap());
                 } else {
@@ -376,7 +383,7 @@ impl ::libp2p::Transport for Transport {
                 }
             }
         }
-        let resolves: stream::SelectAll<_> = FromIterator::from_iter(
+        let resolves: future::SelectAll<_> = FromIterator::from_iter(
             domains
                 .into_iter()
                 .map(|domain| self.control.resolve(domain)),
