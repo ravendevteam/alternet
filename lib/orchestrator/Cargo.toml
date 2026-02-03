@@ -1,10 +1,14 @@
-package.name = "orchestrator"
-package.version = "0.1.0"
-package.edition = "2024"
-package.publish = false
-dependencies.tokio.version = "1.48.0"
-dependencies.tokio.features = ["full"]
-dependencies.async-trait.version = "*"
-dependencies.anyhow.version = "*"
-dependencies.p2p.version = "*"
-dependencies.p2p.path = "../p2p"
+[package]
+name = "orchestrator"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+async-trait = "*"
+anyhow = "*"
+tokio = { version = "1.48.0", features = ["full"] }
+tokio-scoped = "*"
+p2p = { version = "*", path = "../p2p" }
+bus = { version = "*", path = "../bus" }
+derive_more = { version = "*", features = ["full"] }

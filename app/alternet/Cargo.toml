@@ -1,23 +1,18 @@
-package.name = "alternet"
-package.version = "0.1.0"
-package.edition = "2024"
-package.publish = false
-dependencies.async-trait.version = "*"
-dependencies.orchestrator.version = "*"
-dependencies.orchestrator.path = "../../lib/orchestrator"
-dependencies.tokio.version = "1.48.0"
-dependencies.tokio.features = ["full"]
-dependencies.p2p.version = "*"
-dependencies.p2p.path = "../../lib/p2p"
-dependencies.jsonwebtoken.version = "*"
-dependencies.jsonwebtoken.features = ["rust_crypto"]
-dependencies.redb.version = "*"
-dependencies.serde.version = "*"
-dependencies.serde.features = ["derive"]
-dependencies.anyhow.version = "*"
-dependencies.derive_more.version = "*"
-dependencies.libp2p.version = "0.56.0"
-dependencies.libp2p.features = [
+[package]
+name = "alternet"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+async-trait = "*"
+anyhow = "*"
+redb = "*"
+derive_more = "*"
+getset = "*"
+rkyv = "*"
+sha2 = "*"
+libp2p = { version = "*", features = [
     "tcp",
     "quic",
     "noise",
@@ -33,4 +28,24 @@ dependencies.libp2p.features = [
     "gossipsub",
     "request-response",
     "dcutr"
-]
+] }
+
+[dependencies.orchestrator]
+version = "*"
+path = "../../lib/orchestrator"
+
+[dependencies.tokio]
+version = "*"
+features = ["full"]
+
+[dependencies.p2p]
+version = "*"
+path = "../../lib/p2p"
+
+[dependencies.jsonwebtoken]
+version = "*"
+features = ["rust_crypto"]
+
+[dependencies.serde]
+version = "*"
+features = ["derive"]

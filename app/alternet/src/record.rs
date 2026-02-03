@@ -1,66 +1,52 @@
 use super::*;
 
-pub trait Common {
-    fn to_empty(self) -> Option<Empty>;
-    fn to_domain_mapping(self: Box<Self>) -> Option<DomainMapping>;
-}
-
 #[derive(Debug)]
 #[derive(Clone)]
-#[derive(serde::Serialize)]
-#[derive(serde::Deserialize)]
-pub struct Domain {
-    name: String,
-    ip: (u8, u8, u8, u8)
+#[derive(getset::Getters)]
+pub struct Record {
+    #[get = "pub"]
+    domain: String,
+    #[get = "pub"]
+    publisher: PeerId,
+    #[get = "pub"]
+    expiration: std::time::Instant
 }
 
-pub type Empty = Record<IsEmpty>;
-pub type DomainMapping = Record<IsDomainMapping>;
-
-pub struct IsEmpty;
-pub struct IsDomainMapping(Domain);
-
-#[repr(transparent)]
-#[derive(Debug)]
-#[derive(Clone)]
-#[derive(serde::Serialize)]
-#[derive(serde::Deserialize)]
-pub struct Record<T> {
-    state: T
-}
-
-impl DomainMapping {
-    pub fn n() {
-
-    }
-}
-
-impl<T> Default for Record<T> 
-where
-    T: Default {
-    fn default() -> Self {
+impl Record {
+    pub fn new(domain: String, publisher: PeerId, expiration: std::time::Instant) -> Self {
         Self {
-            state: T::default()
+            domain,
+            publisher,
+            expiration
         }
     }
 }
 
-impl Common for Empty {
-    fn to_empty(self: Box<Self>) -> Option<Empty> {
-        Some(*self)
-    }
-
-    fn to_domain_mapping(self: Box<Self>) -> Option<Record<IsDomainMapping>> {
-        None
+impl Record {
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let ret: &str = &self.domain;
+        let ret: &[u8] = ret.as_bytes();
+        let ret: Vec<u8> = ret.to_owned();
+        ret
     }
 }
 
-impl Common for DomainMapping {
-    fn to_empty(self: Box<Self>) -> Option<Empty> {
-        None
-    }
-
-    fn to_domain_mapping(self: Box<Self>) -> Option<Record<IsDomainMapping>> {
-        Some(*self)
+#[allow(clippy::from_over_into)]
+impl Into<kad::Record> for Record {
+    fn into(self) -> kad::Record {
+        let key: &str = self.domain();
+        let key: Vec<u8> = key.as_bytes().to_vec();
+        let key: kad::RecordKey = key.into();
+        let value: Vec<u8> = self.to_bytes();
+        let publisher: PeerId = self.to_owned().publisher().to_owned();
+        let publisher: Option<PeerId> = Some(publisher);
+        let expires: std::time::Instant = self.expiration().to_owned();
+        let expires: Option<std::time::Instant> = Some(expires);
+        kad::Record {
+            key,
+            value,
+            publisher,
+            expires
+        }
     }
 }
