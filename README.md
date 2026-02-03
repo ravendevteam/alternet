@@ -98,7 +98,13 @@ On the front end, when you dial a domain for the first time. You'll need to ente
 
 Reasoning for this techinical decision/structure:
 
-Within the DHT, one key (domain) can resolve to multiple values. This is an inherent property of how the DHT functions. Once you've dialed this domain. It will become cached in your client and won't be required for future lookups. 
+Within the DHT, one key (domain) can resolve to multiple values. 
+
+This is an inherent property of how the DHT functions. This could mean, one domain could resolve to multiple values. It becomes a technical nightmare for resolving ownership once a record is retrieved without a fast way of resolving the owner. 
+
+This method ties the peer_hash to the domain cryptographically, and, in theory cannot be spoofed. As the hash/value is validated by the client recieving the resource server peer_id.
+
+Once you've dialed this domain. It will become cached in your client and won't be required for future lookups. 
 
 There are also plans to implement a custom stream protocol for resource servers to provide to intermeditry layers (search engines etc) what content they hold, HTML meta tags etc for SEO. Within the UI, the domain would appear just as an://domain, but like other `<link src="" />` elements within html, it automatically redirects to the correct peer for that content. 
 
