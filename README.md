@@ -104,7 +104,7 @@ This is an inherent property of how the DHT functions. This could mean, one doma
 
 This method ties the peer_hash to the domain cryptographically, and, in theory cannot be spoofed. As the hash/value is validated by the client recieving the resource server peer_id.
 
-Once you've dialed this domain. It will become cached in your client and won't be required for future lookups. 
+Once you've dialed this domain. The peer_hash will become cached in your client and won't be required for future lookups. 
 
 There are also plans to implement a custom stream protocol for resource servers to provide to intermeditry layers (search engines etc) what content they hold, HTML meta tags etc for SEO. Within the UI, the domain would appear just as an://domain, but like other `<link src="" />` elements within html, it automatically redirects to the correct peer for that content. 
 
