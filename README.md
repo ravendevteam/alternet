@@ -15,6 +15,8 @@
 
 The specification and a proof-of-concept implementation are currently in active development.
 
+# Update 04/02/2026: DHT DNS System Design Update.
+
 
 # Implementation
 
@@ -90,25 +92,23 @@ Additionally, nodes storing a record automatically republish it to nearby peers 
 
 Every record includes a **SHA256 signature** of its content, signed by the publisher's private key. Clients verify this signature using the provided public key upon retrieval, confirming the record's authenticity and integrity without centralized authorities.
 
-#### IPV6 Address Security
+#### Peer_id hash in Domain to handle ownership
 
-IPv6 addresses (or multiaddresses) tie cryptographically to:
+On the front end, when you dial a domain for the first time. You'll need to enter in the peer@domain (peer is a small hashed value of the resource servers peer_id).
 
-- The service's keypairs.
-- The record's Decentralized Identifier (DID).
+Reasoning for this techinical decision/structure:
 
-This binding allows independent validation of address legitimacy, preventing spoofing or unauthorized changes and eliminating reliance on central certificate authorities.
+Within the DHT, one key (domain) can resolve to multiple values. This is an inherent property of how the DHT functions. Once you've dialed this domain. It will become cached in your client and won't be required for future lookups. 
 
-#### Topic-Based Naming Structure
+There are also plans to implement a custom stream protocol for resource servers to provide to intermeditry layers (search engines etc) what content they hold, HTML meta tags etc for SEO. Within the UI, the domain would appear just as an://domain, but like other `<link src="" />` elements within html, it automatically redirects to the correct peer for that content. 
 
-Unlike traditional DNS with fixed top-level domains (TLDs), all records use a `domain:topic` format (e.g., `mysite:code`). The topic acts as a human-readable category or namespace, enabling infinite variations.
+TLDR: System integrators, clients etc are responsible for providing a clean UI/UX when interfacing with Alternet. 
 
-This allows multiple users to register the same domain name under different topics without conflict. For example:
+The first planned user client, is a browser extension. Within this extension, you'll also have the option to override the peer of a domain if you so choose.
 
-- Jimmy can operate `an://coolblog:code` for programming content.
-- Janice can simultaneously run `an://coolblog:pets` for animal-related posts.
+We discussed potentially building a rudimentry consensus system, but it wouldn't scale well. Because the entire network would have to agree on the true owner of a record. And the only way to do actually make this work, at scale, would be to utlize blockchain. And we want to avoid that.
 
-The protocol prefix (e.g., `an://)` distinguishes this alternative network.
+
 
 
 #### Example: Root Record
@@ -119,18 +119,13 @@ Here's a detailed example of a root record (note: format may evolve):
     "did": "dns:1Hx9WzpC7AHOdfz7E9cMw9VJ0",
     "type": "root",
     "publisherPublicKey": "QmYyQSo1c1Ym7orWxLYvCrM2EmxFTANf8wXmmE7DWjhx5N",
-    "lookup": "an://mysite:code",
+    "lookup": "an://peer_hash@mysite",
     "dns": {
         "name": "mysite",
         "protocol": "an",
-        "topic": "code",
         "isRoot": true
     },
     "ivp6MutliAdrs": "/ipv6/2001:db8:85a3:0:0:8a2e:370:7334/quic/443",
-    "metadata": {
-        "transports": ["QUIC", "TCP"],
-        "comment": "hello world"
-    },
     "ttl": {
         "timesRepublished": 3330,
         "timestampRepublished": "blah",
@@ -152,24 +147,20 @@ For a subdomain like `an://api.mysite:code`, resolution points to the same or a 
 {
   "did" : "dns:5Q8VA2LHb2meGinkoOFs3CV0L",
   "type" : "A",
-  "lookup" : "an://api.mysite:code",
-  "publisherPublicKey" : "ksdskldjfkldfjkldfjskldfjskldfjsldkf",
+  "lookup" : "an://peer_hash@api.mysite",
+  "publisherPublicKey" : "QmYyQSo1c1Ym7orWxLYvCrM2EmxFTANf8wXmmE7DWjhx5N",
   "dns" : {
       "name" : "api",
       "isRoot" : false
   },
   "root" : [
       {
-          "targetDID" : "dns:1Hx9WzpC7AHOdfz7E9cMw9VJ0",
-          "context" : "mysite:code",
+          "target" : "dns:1Hx9WzpC7AHOdfz7E9cMw9VJ0",
+          "context" : "mysite",
           "sigature" : "sha256=9622b922dbba3ed2c8934eed84d77cf8f3b9a509864ded3f6032d30a4c7e3ad4"
       }
   ],
   "ivp6Addr" : "/ipv6/2001:db8:85a3:0:0:8a2e:370:7334/quic/443",
-  "metadata" : {
-      "transports" : ["QUIC", "TCP"],
-      "comment" : "hello world"
-  },
   "ttl" : {
       "timesRepublished" : 3330,
       "timestampRepublished" : "blah",
@@ -219,7 +210,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Client resolves an://mysite:code via DHT] --> B[Obtains Target PeerID & Multiaddrs<br>direct + relay]
+    A[Client resolves an://mysite via DHT] --> B[Obtains Target PeerID & Multiaddrs<br>direct + relay]
     B --> C[Parse Multiaddrs]
     C --> D[Dial via libp2p Swarm<br>tries direct addresses first]
     D --> E{Direct dial successful?}
@@ -232,8 +223,8 @@ flowchart TD
     I --> K[Connection Established<br>Direct or Relayed]
     J --> K
     K --> L[Client opens new stream<br>on /an/route/1.0.0]
-    L --> M[Client sends initial request<br>including resolved DID<br>for subdomain routing, e.g. api.mysite:code]
+    L --> M[Client sends initial request<br>including resolved DID<br>for subdomain routing, e.g. api.mysite]
     M --> N[Target service handles stream]
-    N --> O[Target verifies DID/context]
+    N --> O[Target verifies context]
     O --> P[Target serves content<br>HTTP-like, files, API responses, etc.]
 ```
