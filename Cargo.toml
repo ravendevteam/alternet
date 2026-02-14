@@ -1,4 +1,5 @@
-workspace.resolver = "3"
-workspace.members = [
+[workspace]
+resolver = "3"
+members = [
     "app/alternet"
 ]

@@ -4,19 +4,14 @@
 > All current information withtin this repo (from before: 03/12/25) is considered deprecated and is not indicative of the current state.
 
 # Overview
-
 - Alternet is a decentralized networking protocol/architecture meant to replace the current HTTP and DNS stack, which has become easy for governments and corporations to censor or monitor.
-
 - It removes central authorities and single points of failure by using cryptographic identities and distributed routing instead of hierarchical services.
-
 - The design focuses on strong privacy, resistance to control, and the ability to keep working even under hostile conditions. 
-
 - Its deterrent model, based on the concept of Mutually Assured Destruction, ensures that attempts to suppress the network would harm the attacker as much as the target, making censorship impractical. 
 
 The specification and a proof-of-concept implementation are currently in active development.
 
 # Update 04/02/2026: DHT DNS System Design Update.
-
 
 # Implementation
 
