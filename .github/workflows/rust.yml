@@ -1,19 +1,15 @@
-name: Rust
-
 on:
+  push:
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
-
+    branches: ["main"]
 env:
   CARGO_TERM_COLOR: always
-
 jobs:
   build:
-    if: contains(github.event.pull_request.labels.*.name, 'code-pr')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+    - uses: dtolnay/rust-toolchain@stable
+    - run: cargo build --verbose
+    - run: cargo test --verbose
