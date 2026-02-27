@@ -1,3 +1,5 @@
+#![cfg(feature = "end-to-end")]
+
 use std::io::Read as _;
 use futures_util::StreamExt as _;
 use futures_util::TryStreamExt as _;

@@ -13,4 +13,5 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
     - run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
     - run: cargo build --verbose
+    - run: cargo run --package task build-node-release
     - run: cargo test --verbose
