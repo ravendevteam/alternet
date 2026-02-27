@@ -1,5 +1,3 @@
 [workspace]
 resolver = "3"
-members = [
-    "app/alternet"
-]
+members = ["app/node", "task"]

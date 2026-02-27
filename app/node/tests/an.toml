@@ -1,0 +1,30 @@
+[core]
+mode = "client"
+port = 8080
+
+[bootstrap]
+dial = [
+    "/ip4/0.0.0.0/tcp/0",
+    "/ip4/0.0.0.0/tcp/0",
+    "/ip4/0.0.0.0/tcp/0"
+]
+
+[client]
+discovery-refresh-interval = 2000
+identity-cache-size = 2000
+webrtc = true
+
+[server]
+discovery-refresh-interval = 2000
+identity-cache-size = 2000
+pool = { address = "0x000000000000000000", timeout = 3000 }
+domain = "hello-world"
+capture = [
+    "hello",
+    "world"
+]
+bid = 0.058
+
+[relay]
+identity-cache-size = 5000
+ask = 2

@@ -1,0 +1,136 @@
+[package]
+name = "node"
+version = "0.1.0"
+edition = "2024"
+readme = "readme.md"
+build = "build.rs"
+publish = false
+
+[dependencies]
+async-trait = "*"
+futures = "*"
+tokio = { version = "1.48.0", features = ["full"] }
+libp2p = { version = "0.56.0", default-features = false }
+toml = "*"
+bon = "*"
+serde = { version = "*", features = ["derive"] }
+tonic = "0.14.5"
+tonic-prost = "*"
+tonic-reflection = "*"
+prost = "0.14.3"
+fern = "*"
+log = "*"
+colored = "*"
+humantime = "*"
+modwire = "*"
+derive_more = { version = "*", features = ["full"] }
+num = "0.4.3"
+enum_dispatch = "*"
+
+[dev-dependencies]
+testcontainers = "*"
+tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
+bollard = "*"
+cargo_metadata = "*"
+futures-util = "*"
+reqwest = "*"
+
+[build-dependencies]
+tonic-prost = "*"
+tonic-prost-build = "0.14.5"
+
+[[bin]]
+name = "bootstrap"
+path = "src/main.rs"
+required-features = ["bootstrap"]
+
+[[bin]]
+name = "client"
+path = "src/main.rs"
+required-features = ["client"]
+
+[[bin]]
+name = "server"
+path = "src/main.rs"
+required-features = ["server"]
+
+[[bin]]
+name = "relay"
+path = "src/main.rs"
+required-features = ["relay"]
+
+[features]
+default = ["client"]
+bootstrap = [
+    "tokio/full",
+    "libp2p/tcp",
+    "libp2p/quic",
+    "libp2p/noise",
+    "libp2p/yamux",
+    "libp2p/mdns",
+    "libp2p/kad",
+    "libp2p/ping",
+    "libp2p/identify",
+    "libp2p/relay",
+    "libp2p/macros",
+    "libp2p/tls",
+    "libp2p/tokio",
+    "libp2p/gossipsub",
+    "libp2p/request-response",
+    "libp2p/dcutr"
+]
+client = [
+    "tokio/full",
+    "libp2p/tcp",
+    "libp2p/quic",
+    "libp2p/noise",
+    "libp2p/yamux",
+    "libp2p/mdns",
+    "libp2p/kad",
+    "libp2p/ping",
+    "libp2p/identify",
+    "libp2p/relay",
+    "libp2p/macros",
+    "libp2p/tls",
+    "libp2p/tokio",
+    "libp2p/gossipsub",
+    "libp2p/request-response",
+    "libp2p/dcutr"
+]
+server = [
+    "tokio/full",
+    "libp2p/tcp",
+    "libp2p/quic",
+    "libp2p/noise",
+    "libp2p/yamux",
+    "libp2p/mdns",
+    "libp2p/kad",
+    "libp2p/ping",
+    "libp2p/identify",
+    "libp2p/relay",
+    "libp2p/macros",
+    "libp2p/tls",
+    "libp2p/tokio",
+    "libp2p/gossipsub",
+    "libp2p/request-response",
+    "libp2p/dcutr"
+]
+relay = [
+    "tokio/full",
+    "libp2p/tcp",
+    "libp2p/quic",
+    "libp2p/noise",
+    "libp2p/yamux",
+    "libp2p/mdns",
+    "libp2p/kad",
+    "libp2p/ping",
+    "libp2p/identify",
+    "libp2p/relay",
+    "libp2p/macros",
+    "libp2p/tls",
+    "libp2p/tokio",
+    "libp2p/gossipsub",
+    "libp2p/request-response",
+    "libp2p/dcutr"
+]
+grpc = []

@@ -1,3 +1,9 @@
 .obsidian
 .env
 /target
+/doc/README.md
+/doc/milestone.md
+/doc/proof-of-transport.md
+/lib/algo
+/lib/chain
+/lib/crypto

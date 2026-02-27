@@ -1,0 +1,16 @@
+[package]
+name = "task"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "*", features = ["derive"] }
+tokio = { version = "*", features = ["full"] }
+serde_json = "*"
+serde = { version = "*", features = ["derive"] }
+bollard = "*"
+futures-util = "*"
+bytes = "*"
+tar = "*"
+walkdir = "*"
+cargo_metadata = "*"
