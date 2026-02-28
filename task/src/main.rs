@@ -88,6 +88,81 @@ fn bin_to_crate() -> Result<Vec<(String, std::path::PathBuf)>> {
 
 
 
+trait DockerExt {
+    async fn snapshot(
+        &self, 
+        ws_root: &std::path::Path, 
+        ws_root_dockerfile_rel_path: &std::path::Path,
+        ws_root_exclude: &[std::path::PathBuf],
+        image_name: &str,
+        image_tag: &str,
+        image_out_dir: &std::path::Path
+    ) -> Result<()>;
+}
+
+impl DockerExt for bollard::Docker {
+    async fn snapshot(
+        &self, 
+        ws_root: &std::path::Path, 
+        ws_root_dockerfile_rel_path: &std::path::Path,
+        ws_root_exclude: &[std::path::PathBuf],
+        image_name: &str,
+        image_tag: &str,
+        image_out_dir: &std::path::Path
+    ) -> Result<()> {
+        let mut tar: tar::Builder<_> = tar::Builder::new(vec![]);
+        let walker = walkdir::WalkDir::new(ws_root)
+            .into_iter()
+            .filter_entry(|item| {
+                let rel = item
+                    .path()
+                    .strip_prefix(ws_root)
+                    .unwrap_or(item.path());
+                let rel_str = rel.to_string_lossy();
+                !ws_root_exclude.iter().any(|p| rel_str.starts_with(p.to_str().unwrap()))
+            });
+        for item in walker {
+            let item = item?;
+            let path = item.path();
+            let rel_path = path.strip_prefix(ws_root)?;
+
+            if rel_path.as_os_str().is_empty() {
+                continue;
+            }
+
+            if path.is_file() {
+                tar.append_path_with_name(path, rel_path)?;
+            } else if path.is_dir() {
+                tar.append_dir(rel_path, path)?;
+            }
+        }
+        tar.finish()?;
+        let buf: Vec<_> = tar.into_inner()?;
+        let body = bollard::body_full(buf.into());
+        let conf: bollard::query_parameters::BuildImageOptions = bollard::query_parameters::BuildImageOptionsBuilder::new()
+            .dockerfile(ws_root_dockerfile_rel_path.to_str().unwrap())
+            .t(image_tag)
+            .rm(true)
+            .pull("true")
+            .build();
+        let mut stream = self.build_image(conf, None, Some(body));
+        while let Some(msg) = stream.try_next().await? {
+            if let Some(s) = msg.stream {
+                print!("{}", s);
+            }
+            if let Some(error) = msg.error_detail {
+                return Err(format!("internal docker error: {:?}", error).into());
+            }
+        }
+        let mut export_stream = self.export_image(image_tag);
+        let mut file = std::fs::File::create(image_out_dir.join(image_name))?;
+        while let Some(chunk) = export_stream.try_next().await? {
+            file.write_all(&chunk)?;
+        }
+        file.flush()?;
+        Ok(())
+    }
+}
 
 
 
@@ -115,12 +190,12 @@ async fn build_docker_image(
     dockerfile_header.set_mode(0o644);
     dockerfile_header.set_cksum();
 
-    let mut bin_file = std::fs::File::open(path)?;
+    let mut bin_file: std::fs::File = std::fs::File::open(path)?;
     let mut bin_content = vec![];
     bin_file.read_to_end(&mut bin_content)?;
     let bin_content_size = bin_content.len() as u64;
     let mut bin_header = tar::Header::new_gnu();
-    bin_header.set_path("app")?;
+    bin_header.set_path("node")?;
     bin_header.set_size(bin_content_size);
     bin_header.set_mode(0o755);
     bin_header.set_cksum();
@@ -184,33 +259,35 @@ async fn main() -> Result<()> {
     match &main.command {
         Command::BuildImage => {
             let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults()?;
-            let bins: Vec<_> = bin_to_crate()?;
-            let target_dir: std::path::PathBuf = workspace_dir()?.join("target");
-            if !target_dir.exists() {
-                std::fs::create_dir(&target_dir)?;
-            }
-            let image_dir: std::path::PathBuf = target_dir.join("image");
-            if !image_dir.exists() {
-                std::fs::create_dir(&image_dir)?;
-            }
-            let release_dir: std::path::PathBuf = target_dir.join("release");
-            if !release_dir.exists() {
-                return Ok(())
-            }
-            for (bin_name, crate_dir) in bins {
-                let dockerfile_path: std::path::PathBuf = crate_dir.join("Dockerfile");
-                if !dockerfile_path.exists() {
-                    continue
-                }
-                let bin_path: std::path::PathBuf = release_dir.join(&bin_name);
-                if !bin_path.exists() {
-                    eprintln!("release binary not found: {:?}", bin_path);
-                    continue
-                }
-                let image_tar_path: String = format!("{}.tar", bin_name);
-                let image_tar_path: std::path::PathBuf = image_dir.join(image_tar_path);
-                let image_name: String = bin_name;
-                build_docker_image(&docker, &dockerfile_path, &bin_path, &image_tar_path, image_name, None).await?;
+            let ws_root: std::path::PathBuf = workspace_dir()?;
+            let ws_root_exclude: Vec<&str> = vec![
+                ".github",
+                ".obsidian",
+                ".gitignore",
+                "doc",
+                "target",
+                "task",
+            ];
+            let ws_root_exclude: Vec<std::path::PathBuf> = ws_root_exclude
+                .iter()
+                .map(|s| s.into())
+                .collect();
+            let roles: [_; _] = [
+                "bootstrap",
+                "client",
+                "server",
+                "relay"
+            ];
+            for role in roles {
+                let ws_root: &std::path::Path = &ws_root;
+                let ws_root_dockerfile_rel_path: std::path::PathBuf = format!("Dockerfile.{}", role).into();
+                let ws_root_exclude: &[_] = &ws_root_exclude;
+                let image_name: &str = role;
+                let image_tag: &str = "latest";
+                let image_out_dir: std::path::PathBuf = ws_root
+                    .join("target")
+                    .join("image");
+                docker.snapshot(ws_root, &ws_root_dockerfile_rel_path, ws_root_exclude, image_name, image_tag, &image_out_dir).await?;
             }
         },
         Command::BuildNode => {

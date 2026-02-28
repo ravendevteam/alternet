@@ -45,6 +45,8 @@ fn promise<T>() -> Promise<T> {
     tokio::sync::oneshot::channel()
 }
 
+// MARK: Envelope
+
 #[derive(Debug)]
 #[derive(derive_more::From)]
 struct Event {
@@ -86,6 +88,8 @@ impl Event {
         }
     }
 }
+
+// MARK: Cli
 
 #[derive(Debug)]
 #[derive(clap::Parser)]

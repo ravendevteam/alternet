@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 clap = { version = "*", features = ["derive"] }
 tokio = { version = "*", features = ["full"] }
+tokio-util = { version = "*", features = ["io"] }
 serde_json = "*"
 serde = { version = "*", features = ["derive"] }
 bollard = "*"
@@ -14,3 +15,4 @@ bytes = "*"
 tar = "*"
 walkdir = "*"
 cargo_metadata = "*"
+spinners = "*"

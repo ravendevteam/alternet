@@ -5,6 +5,7 @@ use futures_util::StreamExt as _;
 use futures_util::TryStreamExt as _;
 use testcontainers::ImageExt as _;
 use testcontainers::runners::AsyncRunner as _;
+use tokio::io::AsyncWriteExt;
 
 trait DockerEngine {
     async fn load(&self, path: &std::path::Path);
@@ -26,6 +27,41 @@ impl DockerEngine for bollard::Docker {
         while let Some(_) = stream.try_next().await.unwrap() {
 
         }
+    }
+}
+
+async fn write_logs_to_file(docker: &bollard::Docker, container_id: &str, path: &std::path::Path) {
+    let logs_conf: bollard::query_parameters::LogsOptions = bollard::query_parameters::LogsOptions {
+        follow: true,
+        stdout: true,
+        stderr: true,
+        timestamps: true,
+        tail: "all".into(),
+        ..Default::default()
+    };
+    let mut file: tokio::fs::File = tokio::fs::File::create(path).await.unwrap();
+    let mut stream = docker.logs(container_id, Some(logs_conf));
+    while let Some(log) = stream.next().await {
+        let log: bollard::container::LogOutput = log.unwrap();
+        let bytes = match log {
+            bollard::container::LogOutput::StdOut {
+                message
+            } => {
+                message
+            },
+            bollard::container::LogOutput::StdErr {
+                message
+            } => {
+                message
+            },
+            bollard::container::LogOutput::Console {
+                message
+            } => {
+                message
+            },
+            _ => continue
+        };
+        file.write_all(&bytes).await.unwrap()
     }
 }
 
@@ -99,4 +135,12 @@ async fn end_to_end() {
             .unwrap()
     ];
     tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+    for image in container_images {
+        let id = image.id();
+        let path = std::path::PathBuf::new()
+            .join("tests")
+            .join("log")
+            .join(format!("{}", id));
+        write_logs_to_file(&docker, id, &path).await;
+    }
 }
