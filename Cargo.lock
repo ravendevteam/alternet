@@ -2832,6 +2832,7 @@ dependencies = [
  "bollard",
  "bon",
  "cargo_metadata",
+ "clap",
  "colored",
  "derive_more",
  "enum_dispatch",

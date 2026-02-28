@@ -1,18 +1,16 @@
-[core]
-mode = "client"
-port = 8080
+grpc-endpoint = "0.0.0.0:8080"
 
-[bootstrap]
+# bootstrap addrs to dial for bootstrap
 dial = [
     "/ip4/0.0.0.0/tcp/0",
     "/ip4/0.0.0.0/tcp/0",
     "/ip4/0.0.0.0/tcp/0"
 ]
 
+[bootstrap]
+
 [client]
-discovery-refresh-interval = 2000
 identity-cache-size = 2000
-webrtc = true
 
 [server]
 discovery-refresh-interval = 2000

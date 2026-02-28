@@ -6,10 +6,14 @@ pub mod mode;
 pub mod relay;
 pub mod server;
 
+#[derive(Debug)]
+#[derive(Clone)]
 #[derive(serde::Serialize)]
 #[derive(serde::Deserialize)]
 pub struct Config {
-    pub mode: mode::Mode,
+    #[serde(rename = "grpc-endpoint")]
+    pub grpc_endpoint: Option<std::net::SocketAddr>,
+    pub dial: Option<Vec<libp2p::Multiaddr>>,
     pub bootstrap: Option<bootstrap::Bootstrap>,
     pub client: Option<client::Client>,
     pub server: Option<server::Server>,
@@ -20,14 +24,16 @@ pub struct Config {
 impl Config {
     #[builder]
     pub fn new(
-        mode: mode::Mode,
+        grpc_endpoint: Option<std::net::SocketAddr>,
+        dial: Option<Vec<libp2p::Multiaddr>>,
         bootstrap: Option<bootstrap::Bootstrap>,
         client: Option<client::Client>,
         server: Option<server::Server>,
         relay: Option<relay::Relay>
     ) -> Self {
         Self {
-            mode,
+            grpc_endpoint,
+            dial,
             bootstrap,
             client,
             server,

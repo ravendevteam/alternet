@@ -68,16 +68,35 @@ async fn end_to_end() {
 
     let container_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
     
-    let container_image = testcontainers::GenericImage::new("server", "latest")
-        .with_exposed_port(container_port)
-        .with_env_var("PUBLIC_KEY", "x")
-        .with_env_var("SECRET_KEY", "y")
-        .start()
-        .await
-        .unwrap();
-
-    tokio::time::sleep(std::time::Duration::from_secs(6)).await;
-
-    let host = container_image.get_host().await.unwrap();
-    dbg!("{}", host);
+    let container_images: Vec<_> = vec![
+        testcontainers::GenericImage::new("relay", "latest")
+            .with_exposed_port(container_port)
+            .with_env_var("PUBLIC_KEY", "x")
+            .with_env_var("SECRET_KEY", "y")
+            .start()
+            .await
+            .unwrap(),
+        testcontainers::GenericImage::new("server", "latest")
+            .with_exposed_port(container_port)
+            .with_env_var("PUBLIC_KEY", "x")
+            .with_env_var("SECRET_KEY", "y")
+            .start()
+            .await
+            .unwrap(),
+        testcontainers::GenericImage::new("client", "latest")
+            .with_exposed_port(container_port)
+            .with_env_var("PUBLIC_KEY", "x")
+            .with_env_var("SECRET_KEY", "y")
+            .start()
+            .await
+            .unwrap(),
+        testcontainers::GenericImage::new("server", "latest")
+            .with_exposed_port(container_port)
+            .with_env_var("PUBLIC_KEY", "x")
+            .with_env_var("SECRET_KEY", "y")
+            .start()
+            .await
+            .unwrap()
+    ];
+    tokio::time::sleep(std::time::Duration::from_secs(30)).await;
 }

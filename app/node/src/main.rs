@@ -10,6 +10,7 @@ compile_error!("Only one of `client`, `server`, `relay`, or `bootstrap` may be e
 #[cfg(all(feature = "relay", any(feature = "client", feature = "server", feature = "bootstrap")))]
 compile_error!("Only one of `client`, `server`, `relay`, or `bootstrap` may be enabled at a time.");
 
+use clap::Parser;
 use tokio::io::AsyncBufReadExt as _;
 use libp2p::swarm;
 use libp2p::identify;
@@ -40,6 +41,18 @@ enum Grpc {
     
 }
 
+#[derive(Debug)]
+#[derive(clap::Parser)]
+#[command(author)]
+#[command(version)]
+#[command(about)]
+struct Cli {
+    #[arg(long)]
+    pub grpc_endpoint: Option<std::net::SocketAddr>,
+    #[arg(long)]
+    pub dial: Option<Vec<libp2p::Multiaddr>>
+}
+
 // MARK: Behaviour
 
 #[derive(swarm::NetworkBehaviour)]
@@ -60,6 +73,8 @@ struct Behaviour {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let cli: Cli = Cli::parse();
+
     fern::Dispatch::new()
         .format(|out, message, record| {
             use colored::Colorize as _;
@@ -83,7 +98,15 @@ async fn main() -> Result<()> {
 
     log::info!("Booting");
 
-    let config: Option<_> = config::Config::from_toml()?;
+    let conf: Option<_> = config::Config::from_toml()?;
+
+    let dial: Vec<_> = if let Some(dial) = cli.dial {
+        dial
+    } else if let Some(conf) = &conf && let Some(dial) = &conf.dial {
+        dial.to_owned()
+    } else {
+        vec![]
+    };
 
     let version: &str = env!("CARGO_PKG_VERSION");
     let protocol_version: String = format!("/an/{}", version);
@@ -101,8 +124,8 @@ async fn main() -> Result<()> {
     let agent_version: String = format!("an-bootstrap/{}", version);
 
     #[cfg(feature = "client")]
-    let identify_cache_size: usize = if let Some(config) = config
-    && let Some(client) = config.client
+    let identify_cache_size: usize = if let Some(conf) = &conf
+    && let Some(client) = &conf.client
     && let Some(identity_cache_size) = client.identity_cache_size {
         identity_cache_size
     } else {
@@ -110,8 +133,8 @@ async fn main() -> Result<()> {
     };
 
     #[cfg(feature = "server")]
-    let identify_cache_size: usize = if let Some(config) = config 
-    && let Some(server) = config.server 
+    let identify_cache_size: usize = if let Some(conf) = conf 
+    && let Some(server) = conf.server 
     && let Some(identity_cache_size) = server.identity_cache_size {
         identity_cache_size
     } else {
@@ -268,13 +291,20 @@ async fn main() -> Result<()> {
     swarm.listen_on("/ip4/0.0.0.0/udp/4001/quic-v1".parse()?)?;
 
     let (mut sx, mut rx) = tokio::sync::mpsc::channel::<Grpc>(1000);
-    
+
+    let grpc_endpoint: std::net::SocketAddr = if let Some(grpc_endpoint) = cli.grpc_endpoint {
+        grpc_endpoint
+    } else if let Some(conf) = &conf && let Some(grpc) = &conf.grpc_endpoint {
+        grpc.to_owned()
+    } else {
+        "0.0.0.0:8080".parse()?
+    };
+
     let grpc_server: grpc::Node = grpc::Node {};
     let grpc_server: grpc::proto::node_server::NodeServer<_> = grpc::proto::node_server::NodeServer::new(grpc_server);
-    let grpc_address: std::net::SocketAddr = "0.0.0.0:8080".parse()?;
     let grpc = tonic::transport::Server::builder()
         .add_service(grpc_server)
-        .serve(grpc_address);
+        .serve(grpc_endpoint);
 
     let ctrl_c = tokio::signal::ctrl_c();
 
@@ -286,10 +316,7 @@ async fn main() -> Result<()> {
     let bootstrap: sub_system::bootstrap::Bootstrap = sub_system::bootstrap::Bootstrap::builder()
         .timeout_duration(std::time::Duration::from_secs(8))
         .min_peers(2)
-        .bootstrap_addrs(vec![
-            "/ip4/0.0.0.0/udp/4001/quic-v1".parse()?,
-            "/ip4/0.0.0.0/udp/4001/quic-v1".parse()?
-        ])
+        .bootstrap_addrs(dial)
         .build();
 
     let connection_manager: sub_system::connection_manager::ConnectionManager = sub_system::connection_manager::ConnectionManager::builder()
@@ -312,7 +339,7 @@ async fn main() -> Result<()> {
     loop {
         tokio::select!(
             _ = &mut ctrl_c => break,
-            outcome = &mut grpc => break,
+            _ = &mut grpc => break,
             event = swarm.select_next_some() => sub_system_bus.receive(&mut swarm, sub_system::Event::new(event)),
             Some(opcode) = rx.recv() => sub_system_bus.receive(&mut swarm, sub_system::Event::new(opcode))
         );

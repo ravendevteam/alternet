@@ -1,15 +1,18 @@
+#[derive(Debug)]
+#[derive(Clone)]
 #[derive(serde::Serialize)]
 #[derive(serde::Deserialize)]
 pub struct Bootstrap {
-    pub dial: Option<Vec<libp2p::Multiaddr>>
+    #[serde(rename = "identity-cache-size")]
+    pub identity_cache_size: Option<usize>
 }
 
 #[bon::bon]
 impl Bootstrap {
     #[builder]
-    pub fn new(dial: Option<Vec<libp2p::Multiaddr>>) -> Self {
+    pub fn new(identity_cache_size: Option<usize>) -> Self {
         Self {
-            dial
+            identity_cache_size
         }
     }
 }
