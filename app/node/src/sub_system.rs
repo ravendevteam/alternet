@@ -10,48 +10,6 @@ pub trait SubSystem {
     fn receive(&mut self, swarm: &mut Swarm, event: &mut Event, queue: &mut dyn FnMut(Event));
 }
 
-#[derive(Debug)]
-#[derive(derive_more::From)]
-pub struct Event {
-    item: Box<dyn std::any::Any + Send>
-}
-
-impl Event {
-    pub fn new<T>(item: T) -> Self
-    where
-        T: std::any::Any,
-        T: Send,
-        T: 'static {
-        let item: Box<_> = Box::new(item);
-        Self {
-            item
-        }
-    }
-
-    pub fn downcast_ref<T>(&self) -> Option<&T> 
-    where
-        T: std::any::Any {
-        self.item.downcast_ref()
-    }
-
-    pub fn downcast<T>(self) -> std::result::Result<T, Self> 
-    where
-        T: std::any::Any {
-        match self.item.downcast::<T>() {
-            Ok(item) => {
-                let item: T = *item;
-                Ok(item)
-            },
-            Err(item) => {
-                let item: Self = Self {
-                    item
-                };
-                Err(item)
-            }
-        }
-    }
-}
-
 #[derive(Default)]
 pub struct Bus {
     systems: Vec<Box<dyn SubSystem>>

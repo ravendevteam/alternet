@@ -45,8 +45,46 @@ fn promise<T>() -> Promise<T> {
     tokio::sync::oneshot::channel()
 }
 
-enum Grpc {
-    
+#[derive(Debug)]
+#[derive(derive_more::From)]
+struct Event {
+    item: Box<dyn std::any::Any + Send>
+}
+
+impl Event {
+    pub fn new<T>(item: T) -> Self
+    where
+        T: std::any::Any,
+        T: Send,
+        T: 'static {
+        let item: Box<_> = Box::new(item);
+        Self {
+            item
+        }
+    }
+
+    pub fn downcast_ref<T>(&self) -> Option<&T> 
+    where
+        T: std::any::Any {
+        self.item.downcast_ref()
+    }
+
+    pub fn downcast<T>(self) -> std::result::Result<T, Self> 
+    where
+        T: std::any::Any {
+        match self.item.downcast::<T>() {
+            Ok(item) => {
+                let item: T = *item;
+                Ok(item)
+            },
+            Err(item) => {
+                let item: Self = Self {
+                    item
+                };
+                Err(item)
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -298,7 +336,7 @@ async fn main() -> Result<()> {
 
     swarm.listen_on("/ip4/0.0.0.0/udp/4001/quic-v1".parse()?)?;
 
-    let (mut sx, mut rx) = tokio::sync::mpsc::channel::<grpc::Envelope>(1000);
+    let (sx, mut rx) = tokio::sync::mpsc::channel::<Event>(1000);
 
     let grpc_endpoint: std::net::SocketAddr = if let Some(grpc_endpoint) = cli.grpc_endpoint {
         grpc_endpoint
@@ -346,10 +384,18 @@ async fn main() -> Result<()> {
 
     loop {
         tokio::select!(
-            _ = &mut ctrl_c => break,
-            _ = &mut grpc => break,
-            event = swarm.select_next_some() => sub_system_bus.receive(&mut swarm, sub_system::Event::new(event)),
-            Some(opcode) = rx.recv() => sub_system_bus.receive(&mut swarm, sub_system::Event::new(opcode))
+            _ = &mut ctrl_c => {
+                break
+            },
+            _ = &mut grpc => {
+                break
+            },
+            event = swarm.select_next_some() => {
+                sub_system_bus.receive(&mut swarm, Event::new(event))
+            },
+            Some(event) = rx.recv() => {
+                sub_system_bus.receive(&mut swarm, event)
+            }
         );
     }
 
