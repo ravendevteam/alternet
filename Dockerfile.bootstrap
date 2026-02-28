@@ -1,5 +1,0 @@
-FROM debian:bookworm
-WORKDIR /app
-COPY node /app/node
-RUN chmod +x /app/node
-ENTRYPOINT ["/app/node"]
