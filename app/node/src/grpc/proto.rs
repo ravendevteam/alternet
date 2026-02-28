@@ -1,0 +1,1 @@
+include!("../../proto_target/an.rs");

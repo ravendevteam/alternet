@@ -37,6 +37,14 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 type Swarm = swarm::Swarm<Behaviour>;
 type SwarmEvent = swarm::SwarmEvent<BehaviourEvent>;
 
+type Receiver<T> = tokio::sync::oneshot::Receiver<T>;
+type Sender<T> = tokio::sync::oneshot::Sender<T>;
+type Promise<T> = (Sender<T>, Receiver<T>);
+
+fn promise<T>() -> Promise<T> {
+    tokio::sync::oneshot::channel()
+}
+
 enum Grpc {
     
 }
@@ -290,7 +298,7 @@ async fn main() -> Result<()> {
 
     swarm.listen_on("/ip4/0.0.0.0/udp/4001/quic-v1".parse()?)?;
 
-    let (mut sx, mut rx) = tokio::sync::mpsc::channel::<Grpc>(1000);
+    let (mut sx, mut rx) = tokio::sync::mpsc::channel::<grpc::Envelope>(1000);
 
     let grpc_endpoint: std::net::SocketAddr = if let Some(grpc_endpoint) = cli.grpc_endpoint {
         grpc_endpoint
@@ -300,7 +308,7 @@ async fn main() -> Result<()> {
         "0.0.0.0:8080".parse()?
     };
 
-    let grpc_server: grpc::Node = grpc::Node {};
+    let grpc_server: grpc::Server = grpc::Server::new(sx);
     let grpc_server: grpc::proto::node_server::NodeServer<_> = grpc::proto::node_server::NodeServer::new(grpc_server);
     let grpc = tonic::transport::Server::builder()
         .add_service(grpc_server)
