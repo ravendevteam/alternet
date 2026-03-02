@@ -12,6 +12,17 @@ rustc --version
 cargo --version
 ```
 
+
+## Image
+
+```shell
+docker run --rm node:latest ./bootstrap
+docker run --rm node:latest ./client
+docker run --rm node:latest ./server
+docker run --rm node:latest ./relay
+```
+
+
 ## Devops
 
 ### Task

@@ -183,8 +183,8 @@ async fn main() -> Result<()> {
     };
 
     #[cfg(feature = "server")]
-    let identify_cache_size: usize = if let Some(conf) = conf 
-    && let Some(server) = conf.server 
+    let identify_cache_size: usize = if let Some(conf) = &conf 
+    && let Some(server) = &conf.server 
     && let Some(identity_cache_size) = server.identity_cache_size {
         identity_cache_size
     } else {
@@ -192,8 +192,8 @@ async fn main() -> Result<()> {
     };
 
     #[cfg(feature = "relay")]
-    let identify_cache_size: usize = if let Some(config) = config
-    && let Some(relay) = config.relay
+    let identify_cache_size: usize = if let Some(conf) = &conf
+    && let Some(relay) = &conf.relay
     && let Some(identity_cache_size) = relay.identity_cache_size {
         identity_cache_size
     } else {

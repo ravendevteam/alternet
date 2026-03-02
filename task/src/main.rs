@@ -20,7 +20,8 @@ enum Command {
 }
 
 trait DockerExt {
-    async fn snapshot(
+    async fn import_image_tar(&self, path: &std::path::Path) -> Result<()>;
+    async fn export_image_to_tar_from_ws_context(
         &self, 
         ws_root: &std::path::Path, 
         ws_root_exclude: &[std::path::PathBuf],
@@ -32,7 +33,23 @@ trait DockerExt {
 }
 
 impl DockerExt for bollard::Docker {
-    async fn snapshot(
+    async fn import_image_tar(&self, path: &std::path::Path) -> Result<()> {
+        use std::io::Read as _;
+        use futures_util::TryStreamExt as _;
+        let mut file = std::fs::File::open(path)?;
+        let mut buf = vec![];
+        file.read_to_end(&mut buf)?;
+        let conf: bollard::query_parameters::ImportImageOptions = bollard::query_parameters::ImportImageOptionsBuilder::new()
+            .quiet(false)
+            .build();
+        let mut stream = self.import_image(conf, bollard::body_full(buf.into()), None);
+        while let Some(_) = stream.try_next().await? {
+
+        }
+        Ok(())
+    }
+
+    async fn export_image_to_tar_from_ws_context(
         &self, 
         ws_root: &std::path::Path, 
         ws_root_exclude: &[std::path::PathBuf],
@@ -139,38 +156,31 @@ async fn main() -> Result<()> {
                 .iter()
                 .map(|s| s.into())
                 .collect();
-            let roles: [_; _] = [
-                "bootstrap",
-                "client",
-                "server",
-                "relay"
-            ];
-            for role in roles {
-                let ws_root: &std::path::Path = &ws_root;
-                let ws_root_exclude: &[_] = &ws_root_exclude;
-                let image_name: &str = role;
-                let image_tag: &str = "latest";
-                let image_out_dir: std::path::PathBuf = ws_root
-                    .join("target")
-                    .join("image");
-                let dockerfile: String = format!(
-                    r#"
-                        FROM rust:1.93.1-slim
-                        WORKDIR /app
-                        COPY . .
-                        RUN apt-get update
-                        RUN apt-get install -y protobuf-compiler
-                        RUN rm -rf /var/lib/apt/lists/*
-                        RUN cargo fetch
-                        RUN cargo build --release --package node --bin {} --features={} --no-default-features
-                        CMD ["./target/release/{}"]
-                    "#,
-                    role,
-                    role,
-                    role
-                );
-                docker.snapshot(ws_root, ws_root_exclude, image_name, image_tag, &image_out_dir, &dockerfile).await?;
-            }
+            let image_name: &str = "node";
+            let image_tag: &str = "latest";
+            let image_out_dir: std::path::PathBuf = ws_root
+                .join("target")
+                .join("image");
+            let dockerfile: String = r#"
+                FROM rust:1.93.1-slim as builder
+                WORKDIR /app
+                COPY . .
+                RUN apt-get update
+                RUN apt-get install -y protobuf-compiler
+                RUN rm -rf /var/lib/apt/lists/*
+                RUN cargo build --release --package node --bin bootstrap --features=bootstrap --no-default-features
+                RUN cargo build --release --package node --bin client --features=client --no-default-features
+                RUN cargo build --release --package node --bin server --features=server --no-default-features
+                RUN cargo build --release --package node --bin relay --features=relay --no-default-features
+                FROM debian:bookworm-slim
+                WORKDIR /app
+                COPY --from=builder /app/target/release/bootstrap .
+                COPY --from=builder /app/target/release/client .
+                COPY --from=builder /app/target/release/server .
+                COPY --from=builder /app/target/release/relay .  
+            "#
+            .to_owned();
+            docker.export_image_to_tar_from_ws_context(&ws_root, &ws_root_exclude, image_name, image_tag, &image_out_dir, &dockerfile).await?;
         },
         Command::BuildNode => {
             let roles: [_; _] = [

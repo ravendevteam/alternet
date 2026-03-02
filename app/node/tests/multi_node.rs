@@ -32,7 +32,6 @@ impl DockerEngine for bollard::Docker {
 
 async fn write_logs_to_file(docker: &bollard::Docker, container_id: &str, path: &std::path::Path) {
     let logs_conf: bollard::query_parameters::LogsOptions = bollard::query_parameters::LogsOptions {
-        follow: true,
         stdout: true,
         stderr: true,
         timestamps: true,
@@ -65,82 +64,146 @@ async fn write_logs_to_file(docker: &bollard::Docker, container_id: &str, path: 
     }
 }
 
+
+
+struct VirtualNetwork {
+    docker: bollard::Docker,
+    containers: Vec<testcontainers::ContainerAsync<testcontainers::GenericImage>>
+}
+
+impl VirtualNetwork {
+    pub async fn new(docker: bollard::Docker) -> Result<Self, Box<dyn std::error::Error>> {
+        if false {
+            std::process::Command::new("cargo")
+                .arg("run")
+                .arg("--package")
+                .arg("task")
+                .arg("build-image")
+                .spawn()
+                .expect("")
+                .wait()
+                .expect("");
+        }
+        
+        let workspace_dir: std::path::PathBuf = cargo_metadata::MetadataCommand::new()
+            .exec()
+            .unwrap()
+            .workspace_root
+            .to_string()
+            .into();
+        
+        let image_dir: std::path::PathBuf = workspace_dir
+            .join("target")
+            .join("image");
+
+        let image_path: std::path::PathBuf = image_dir.join("node.tar");
+
+        docker.load(&image_path).await;
+
+        let containers: Vec<_> = vec![];
+        let new: Self = Self {
+            docker,
+            containers
+        };
+        Ok(new)
+    }
+}
+
+impl VirtualNetwork {
+    pub async fn launch_bootstrap_node(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let container_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
+        let container: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+            .with_exposed_port(container_port)
+            .with_env_var("PUBLIC_KEY", "x")
+            .with_env_var("SECRET_KEY", "y")
+            .with_cmd(["./bootstrap"])
+            .with_network("an")
+            .start().await?;
+        self.containers.push(container);
+        Ok(())
+    }
+
+    pub async fn launch_client_node(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let container_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
+        let container: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+            .with_exposed_port(container_port)
+            .with_env_var("PUBLIC_KEY", "x")
+            .with_env_var("SECRET_KEY", "y")
+            .with_cmd(["./client"])
+            .with_network("an")
+            .start().await?;
+        self.containers.push(container);
+        Ok(())
+    }
+
+    pub async fn launch_server_node(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let container_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
+        let container: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+            .with_exposed_port(container_port)
+            .with_env_var("PUBLIC_KEY", "x")
+            .with_env_var("SECRET_KEY", "y")
+            .with_cmd(["./server"])
+            .with_network("an")
+            .start()
+            .await?;
+        self.containers.push(container);
+        Ok(())
+    }
+
+    pub async fn launch_relay_node(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let container_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
+        let container: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+            .with_exposed_port(container_port)
+            .with_env_var("PUBLIC_KEY", "x")
+            .with_env_var("SECRET_KEY", "y")
+            .with_cmd(["./relay"])
+            .with_network("an")
+            .start()
+            .await?;
+        self.containers.push(container);
+        Ok(())
+    }
+
+    pub async fn write_logs_to_dir(&self, log_dir: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
+        tokio::fs::create_dir_all(log_dir).await?;
+
+        for container in &self.containers {
+            let id = container.id();
+            let path = log_dir.join(format!("{}.log", id));
+
+            write_logs_to_file(&self.docker, &id, &path).await;
+        }
+
+        Ok(())
+    }
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn end_to_end() {
-    std::process::Command::new("cargo")
-        .arg("run")
-        .arg("--package")
-        .arg("task")
-        .arg("build-image")
-        .spawn()
-        .expect("")
-        .wait()
-        .expect("");
-
-    let workspace_dir: std::path::PathBuf = cargo_metadata::MetadataCommand::new()
-        .exec()
-        .unwrap()
-        .workspace_root
-        .to_string()
-        .into();
-
-    let image_dir: std::path::PathBuf = workspace_dir
-        .join("target")
-        .join("image");
-
-    let bootstrap_image_path: std::path::PathBuf = image_dir.join("bootstrap.tar");
-    
-    println!("{:?}", bootstrap_image_path);
-
-    let client_image_path: std::path::PathBuf = image_dir.join("client.tar");
-    let server_image_path: std::path::PathBuf = image_dir.join("server.tar");
-    let relay_image_path: std::path::PathBuf = image_dir.join("relay.tar");
-
+    let log_dir: std::path::PathBuf = std::path::PathBuf::new()
+        .join("tests")
+        .join("log");
     let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
-    docker.load(&bootstrap_image_path).await;
-    docker.load(&client_image_path).await;
-    docker.load(&server_image_path).await;
-    docker.load(&relay_image_path).await;
-
-    let container_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
+    let network: &str = "an";
+    let network_udp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
     
-    let container_images: Vec<_> = vec![
-        testcontainers::GenericImage::new("relay", "latest")
-            .with_exposed_port(container_port)
-            .with_env_var("PUBLIC_KEY", "x")
-            .with_env_var("SECRET_KEY", "y")
-            .start()
-            .await
-            .unwrap(),
-        testcontainers::GenericImage::new("server", "latest")
-            .with_exposed_port(container_port)
-            .with_env_var("PUBLIC_KEY", "x")
-            .with_env_var("SECRET_KEY", "y")
-            .start()
-            .await
-            .unwrap(),
-        testcontainers::GenericImage::new("client", "latest")
-            .with_exposed_port(container_port)
-            .with_env_var("PUBLIC_KEY", "x")
-            .with_env_var("SECRET_KEY", "y")
-            .start()
-            .await
-            .unwrap(),
-        testcontainers::GenericImage::new("server", "latest")
-            .with_exposed_port(container_port)
-            .with_env_var("PUBLIC_KEY", "x")
-            .with_env_var("SECRET_KEY", "y")
-            .start()
-            .await
-            .unwrap()
-    ];
-    tokio::time::sleep(std::time::Duration::from_secs(30)).await;
-    for image in container_images {
-        let id = image.id();
-        let path = std::path::PathBuf::new()
-            .join("tests")
-            .join("log")
-            .join(format!("{}", id));
-        write_logs_to_file(&docker, id, &path).await;
-    }
+    let bootstrap: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+        .with_exposed_port(network_udp_port)
+        .with_cmd(["./bootstrap"])
+        .with_network(network)
+        .start()
+        .await
+        .unwrap();
+    let bootstrap_ip: std::net::IpAddr = bootstrap.get_bridge_ip_address().await.unwrap();
+    let bootstrap_addr: String = format!("/ip4/{}/udp/4001/quic-v1", bootstrap_ip);
+
+    let relay: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+        .with_exposed_port(network_udp_port)
+        .with_cmd(["./relay", "--dial", &bootstrap_addr])
+        .with_network(network)
+        .start()
+        .await
+        .unwrap();
+        
+    tokio::time::sleep(std::time::Duration::from_mins(1)).await;
 }
