@@ -1,3 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["app/node", "task"]
+members = [
+    "app/node",
+    "task"
+]

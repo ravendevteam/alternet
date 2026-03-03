@@ -11,6 +11,7 @@ compile_error!("Only one of `client`, `server`, `relay`, or `bootstrap` may be e
 compile_error!("Only one of `client`, `server`, `relay`, or `bootstrap` may be enabled at a time.");
 
 use clap::Parser;
+use num::ToPrimitive;
 use tokio::io::AsyncBufReadExt as _;
 use libp2p::swarm;
 use libp2p::identify;
@@ -23,6 +24,7 @@ use libp2p::noise;
 use libp2p::yamux;
 use libp2p::futures::StreamExt as _;
 use libp2p::relay;
+use ubyte::ToByteUnit as _;
 
 #[cfg(any(feature = "client", feature = "server"))]
 use libp2p::dcutr;
@@ -226,9 +228,9 @@ async fn main() -> Result<()> {
     quic_config.handshake_timeout = std::time::Duration::from_millis(3000);
     quic_config.keep_alive_interval = std::time::Duration::from_secs(10);
     quic_config.max_concurrent_stream_limit = 512;
-    quic_config.max_connection_data = 3000;
+    quic_config.max_connection_data = 10.megabytes().as_u64().to_u32().unwrap();
     quic_config.max_idle_timeout = 60000;
-    quic_config.max_stream_data = 300;
+    quic_config.max_stream_data = 1.megabytes().as_u64().to_u32().unwrap();
 
     #[cfg(feature = "bootstrap")]
     let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
@@ -245,7 +247,9 @@ async fn main() -> Result<()> {
             kad_conf.set_kbucket_size(
                 128.try_into().expect("non zero")
             );
-            kad_conf.set_max_packet_size(1024);
+            kad_conf.set_max_packet_size(
+                1.kibibytes().as_u64().to_usize().unwrap()
+            );
             kad_conf.set_parallelism(
                 32.try_into().expect("non zero")
             );
@@ -296,7 +300,9 @@ async fn main() -> Result<()> {
             kad_conf.set_kbucket_inserts(kad::BucketInserts::Manual);
             kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_mins(1));
             kad_conf.set_kbucket_size(kad::K_VALUE);
-            kad_conf.set_max_packet_size(1024);
+            kad_conf.set_max_packet_size(
+                1.kibibytes().as_u64().to_usize().unwrap()
+            );
             kad_conf.set_parallelism(kad::ALPHA_VALUE);
             kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
             kad_conf.set_provider_publication_interval(None);
@@ -347,7 +353,9 @@ async fn main() -> Result<()> {
             kad_conf.set_kbucket_inserts(kad::BucketInserts::Manual);
             kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_mins(1));
             kad_conf.set_kbucket_size(kad::K_VALUE);
-            kad_conf.set_max_packet_size(1024);
+            kad_conf.set_max_packet_size(
+                1.kibibytes().as_u64().to_usize().unwrap()
+            );
             kad_conf.set_parallelism(kad::ALPHA_VALUE);
             kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
             kad_conf.set_provider_publication_interval(Some(std::time::Duration::from_hours(6)));
@@ -390,7 +398,7 @@ async fn main() -> Result<()> {
         .with_quic_config(|_| quic_config)
         .with_behaviour(|_| {
             let relay_config: relay::Config = relay::Config {
-                max_circuit_bytes: 1000000,
+                max_circuit_bytes: 1.mebibytes().as_u64(),
                 max_circuit_duration: std::time::Duration::from_secs(300),
                 max_reservations: 512,
                 max_reservations_per_peer: 2,
@@ -412,7 +420,9 @@ async fn main() -> Result<()> {
             kad_conf.set_kbucket_size(
                 64.try_into().expect("non zero")
             );
-            kad_conf.set_max_packet_size(1024);
+            kad_conf.set_max_packet_size(
+                1.kibibytes().as_u64().to_usize().unwrap()
+            );
             kad_conf.set_parallelism(
                 16.try_into().expect("non zero")
             );

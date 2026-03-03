@@ -27,6 +27,7 @@ derive_more = { version = "*", features = ["full"] }
 num = "0.4.3"
 enum_dispatch = "*"
 clap = { version = "*", features = ["derive"] }
+ubyte = "*"
 
 [dev-dependencies]
 testcontainers = "*"
