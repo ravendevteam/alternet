@@ -139,10 +139,10 @@ async fn main() -> Result<()> {
                 log::Level::Warn => record.level().to_string().yellow().bold()
             };
             let record_target: &str = record.target();
-            let s: std::fmt::Arguments<'_> = format_args!("[{} {} {}] {}", record_time, record_level, record_target, message);
+            let s: std::fmt::Arguments<'_> = format_args!("[{} {}] {}", record_level, record_target, message);
             out.finish(s);
         })
-        .level(log::LevelFilter::Debug)
+        .level(log::LevelFilter::Info)
         .chain(std::io::stdout())
         .apply()?;
 
@@ -160,6 +160,7 @@ async fn main() -> Result<()> {
 
     let version: &str = env!("CARGO_PKG_VERSION");
     let protocol_version: String = format!("/an/{}", version);
+    let protocol_name: libp2p::StreamProtocol = libp2p::StreamProtocol::new("/an");
 
     #[cfg(feature = "client")]
     let agent_version: String = format!("an-client/{}", version);
@@ -229,14 +230,150 @@ async fn main() -> Result<()> {
     quic_config.max_idle_timeout = 3000;
     quic_config.max_stream_data = 300;
 
-    #[cfg(any(feature = "client", feature = "server"))] 
+    #[cfg(feature = "bootstrap")]
+    let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
+        .with_tokio()
+        .with_quic_config(|_| quic_config)
+        .with_behaviour(|_| {
+            let kad_store: kad::store::MemoryStore = kad::store::MemoryStore::new(local_peer_id);
+
+            let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
+            kad_conf.disjoint_query_paths(true);
+            kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 256 });
+            kad_conf.set_kbucket_inserts(kad::BucketInserts::OnConnected);
+            kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_mins(1));
+            kad_conf.set_kbucket_size(
+                128.try_into().expect("non zero")
+            );
+            kad_conf.set_max_packet_size(1024);
+            kad_conf.set_parallelism(
+                128.try_into().expect("non zero")
+            );
+            kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_millis(5000)));
+            kad_conf.set_provider_publication_interval(None);
+            kad_conf.set_provider_record_ttl(Some(std::time::Duration::from_hours(72)));
+            kad_conf.set_publication_interval(None);
+            kad_conf.set_query_timeout(std::time::Duration::from_millis(2000));
+            kad_conf.set_record_filtering(kad::StoreInserts::FilterBoth);
+            kad_conf.set_record_ttl(Some(std::time::Duration::from_hours(72)));
+            kad_conf.set_replication_factor(
+                256.try_into().expect("non zero")
+            );
+            kad_conf.set_replication_interval(Some(std::time::Duration::from_hours(1)));
+            kad_conf.set_substreams_timeout(std::time::Duration::from_millis(20000));
+
+            let mut kad: kad::Behaviour<_> = kad::Behaviour::with_config(local_peer_id, kad_store, kad_conf);
+            
+            kad.set_mode(Some(kad::Mode::Server));
+
+            let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
+                .with_agent_version(agent_version)
+                .with_cache_size(identify_cache_size)
+                .with_hide_listen_addrs(false)
+                .with_interval(identify_interval)
+                .with_push_listen_addr_updates(true);
+
+            let identify: identify::Behaviour = identify::Behaviour::new(identify_config);            
+
+            Behaviour {
+                kad,
+                identify
+            }
+        })?
+        .build();
+
+    #[cfg(feature = "client")]
     let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
         .with_tokio()
         .with_quic_config(|_| quic_config)
         .with_relay_client(noise::Config::new, yamux::Config::default)?
         .with_behaviour(|_, relay_client| {
             let kad_store: kad::store::MemoryStore = kad::store::MemoryStore::new(local_peer_id);
-            let mut kad: kad::Behaviour<_> = kad::Behaviour::new(local_peer_id, kad_store);
+            
+            let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
+            kad_conf.disjoint_query_paths(true);
+            kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 64 });
+            kad_conf.set_kbucket_inserts(kad::BucketInserts::OnConnected);
+            kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_mins(1));
+            kad_conf.set_kbucket_size(kad::K_VALUE);
+            kad_conf.set_max_packet_size(1024);
+            kad_conf.set_parallelism(kad::ALPHA_VALUE);
+            kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
+            kad_conf.set_provider_publication_interval(None);
+            kad_conf.set_provider_record_ttl(None);
+            kad_conf.set_publication_interval(Some(std::time::Duration::from_hours(24)));
+            kad_conf.set_query_timeout(std::time::Duration::from_mins(1));
+            kad_conf.set_record_filtering(kad::StoreInserts::FilterBoth);
+            kad_conf.set_record_ttl(Some(std::time::Duration::from_hours(48)));
+            kad_conf.set_replication_factor(kad::K_VALUE);
+            kad_conf.set_replication_interval(None);
+            kad_conf.set_substreams_timeout(std::time::Duration::from_secs(10));
+            
+            let mut kad: kad::Behaviour<_> = kad::Behaviour::with_config(local_peer_id, kad_store, kad_conf);
+            
+            #[cfg(feature = "client")]
+            kad.set_mode(Some(kad::Mode::Client));
+
+            #[cfg(feature = "server")]
+            kad.set_mode(Some(kad::Mode::Server));
+
+            let dcutr: dcutr::Behaviour = dcutr::Behaviour::new(local_peer_id);
+        
+            #[cfg(feature = "client")]
+            let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
+                .with_agent_version(agent_version)
+                .with_cache_size(identify_cache_size)
+                .with_hide_listen_addrs(false)
+                .with_interval(identify_interval)
+                .with_push_listen_addr_updates(true);
+
+            #[cfg(feature = "server")]
+            let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
+                .with_agent_version(agent_version)
+                .with_cache_size(identify_cache_size)
+                .with_hide_listen_addrs(false)
+                .with_interval(identify_interval)
+                .with_push_listen_addr_updates(true);
+
+            let identify: identify::Behaviour = identify::Behaviour::new(identify_config);
+
+            Behaviour {
+                relay_client,
+                dcutr,
+                kad,
+                identify
+            }
+        })?
+        .build();
+
+    #[cfg(feature = "server")] 
+    let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
+        .with_tokio()
+        .with_quic_config(|_| quic_config)
+        .with_relay_client(noise::Config::new, yamux::Config::default)?
+        .with_behaviour(|_, relay_client| {
+            let kad_store: kad::store::MemoryStore = kad::store::MemoryStore::new(local_peer_id);
+            
+            let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
+            kad_conf.disjoint_query_paths(true);
+            kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 256 });
+            kad_conf.set_kbucket_inserts(kad::BucketInserts::OnConnected);
+            kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_mins(1));
+            kad_conf.set_kbucket_size(kad::K_VALUE);
+            kad_conf.set_max_packet_size(1024);
+            kad_conf.set_parallelism(kad::ALPHA_VALUE);
+            kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
+            kad_conf.set_provider_publication_interval(None);
+            kad_conf.set_provider_record_ttl(None);
+            kad_conf.set_publication_interval(Some(std::time::Duration::from_hours(24)));
+            kad_conf.set_query_timeout(std::time::Duration::from_mins(1));
+            kad_conf.set_record_filtering(kad::StoreInserts::FilterBoth);
+            kad_conf.set_record_ttl(Some(std::time::Duration::from_hours(48)));
+            kad_conf.set_replication_factor(kad::K_VALUE);
+            kad_conf.set_replication_interval(None);
+            kad_conf.set_substreams_timeout(std::time::Duration::from_secs(10));
+            
+            let mut kad: kad::Behaviour<_> = kad::Behaviour::with_config(local_peer_id, kad_store, kad_conf);
             
             #[cfg(feature = "client")]
             kad.set_mode(Some(kad::Mode::Client));
@@ -292,8 +429,34 @@ async fn main() -> Result<()> {
             let relay: relay::Behaviour = relay::Behaviour::new(local_peer_id, relay_config);
 
             let kad_store: kad::store::MemoryStore = kad::store::MemoryStore::new(local_peer_id);
-            let mut kad: kad::Behaviour<_> = kad::Behaviour::new(local_peer_id, kad_store);
-            
+
+            let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
+            kad_conf.disjoint_query_paths(true);
+            kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 256 });
+            kad_conf.set_kbucket_inserts(kad::BucketInserts::OnConnected);
+            kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_millis(60000));
+            kad_conf.set_kbucket_size(
+                256.try_into().expect("non zero")
+            );
+            kad_conf.set_max_packet_size(1024);
+            kad_conf.set_parallelism(
+                256.try_into().expect("non zero")
+            );
+            kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
+            kad_conf.set_provider_publication_interval(None);
+            kad_conf.set_provider_record_ttl(None);
+            kad_conf.set_publication_interval(None);
+            kad_conf.set_query_timeout(std::time::Duration::from_mins(1));
+            kad_conf.set_record_filtering(kad::StoreInserts::FilterBoth);
+            kad_conf.set_record_ttl(Some(std::time::Duration::from_hours(24)));
+            kad_conf.set_replication_factor(
+                128.try_into().expect("non zero")
+            );
+            kad_conf.set_replication_interval(None);
+            kad_conf.set_substreams_timeout(std::time::Duration::from_secs(10));
+
+            let mut kad: kad::Behaviour<_> = kad::Behaviour::with_config(local_peer_id, kad_store, kad_conf);
+
             kad.set_mode(Some(kad::Mode::Server));
 
             let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
@@ -302,6 +465,7 @@ async fn main() -> Result<()> {
                 .with_hide_listen_addrs(false)
                 .with_interval(identify_interval)
                 .with_push_listen_addr_updates(true);
+
             let identify: identify::Behaviour = identify::Behaviour::new(identify_config);
 
             Behaviour {
@@ -311,31 +475,6 @@ async fn main() -> Result<()> {
             }
         })
         .expect("")
-        .build();
-
-    #[cfg(feature = "bootstrap")]
-    let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
-        .with_tokio()
-        .with_quic_config(|_| quic_config)
-        .with_behaviour(|_| {
-            let kad_store: kad::store::MemoryStore = kad::store::MemoryStore::new(local_peer_id);
-            let mut kad: kad::Behaviour<_> = kad::Behaviour::new(local_peer_id, kad_store);
-            
-            kad.set_mode(Some(kad::Mode::Server));
-
-            let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
-                .with_agent_version(agent_version)
-                .with_cache_size(identify_cache_size)
-                .with_hide_listen_addrs(false)
-                .with_interval(identify_interval)
-                .with_push_listen_addr_updates(true);
-            let identify: identify::Behaviour = identify::Behaviour::new(identify_config);            
-
-            Behaviour {
-                kad,
-                identify
-            }
-        })?
         .build();
 
     swarm.listen_on("/ip4/0.0.0.0/udp/4001/quic-v1".parse()?)?;
@@ -365,7 +504,7 @@ async fn main() -> Result<()> {
 
     let bootstrap: sub_system::bootstrap::Bootstrap = sub_system::bootstrap::Bootstrap::builder()
         .timeout_duration(std::time::Duration::from_secs(8))
-        .min_peers(2)
+        .min_peers(1)
         .bootstrap_addrs(dial)
         .build();
 
@@ -381,10 +520,15 @@ async fn main() -> Result<()> {
         .churn_window(std::time::Duration::from_secs(30))
         .build();
 
+    let discovery_monitor: sub_system::discovery_monitor::DiscoveryMonitor = sub_system::discovery_monitor::DiscoveryMonitor::builder()
+        .interval(std::time::Duration::from_secs(5))
+        .build();
+
     let mut sub_system_bus: sub_system::Bus = sub_system::Bus::default();
     sub_system_bus.add_system(bootstrap);
     sub_system_bus.add_system(connection_manager);
     sub_system_bus.add_system(routing_monitor);
+    sub_system_bus.add_system(discovery_monitor);
 
     loop {
         tokio::select!(

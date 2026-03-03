@@ -28,12 +28,12 @@ enum Mode {
     Healthy
 }
 
-#[derive(Default)]
 pub struct Bootstrap {
     mode: Mode,
     bootstrap_addrs: Vec<libp2p::Multiaddr>,
     timeout_duration: std::time::Duration,
-    min_peers: usize
+    min_peers: usize,
+    dialed: bool
 }
 
 #[bon::bon]
@@ -45,11 +45,13 @@ impl Bootstrap {
         min_peers: usize
     ) -> Self {
         let mode: Mode = Mode::WaitingForPeers;
+        let dialed: bool = false;
         Self {
             mode,
             bootstrap_addrs,
             timeout_duration,
-            min_peers
+            min_peers,
+            dialed
         }
     }
 }
@@ -91,10 +93,20 @@ impl SubSystem for Bootstrap {
         #[cfg(any(feature = "client", feature = "server", feature = "relay"))]
         match &mut self.mode {
             Mode::WaitingForPeers => {
+                if !self.dialed {
+                    self.dialed = true;
+                    for addr in &self.bootstrap_addrs {
+                        if let Err(error) = swarm.dial(addr.to_owned()) {
+                            log::warn!("failed to dial bootstrap addr {}: {:?}", addr, error);
+                        } else {
+                            log::info!("dialing bootstrap addr {}", addr);
+                        }
+                    }
+                }
                 if swarm.peer_count() >= self.min_peers {
                     self.mode = Mode::Healthy;
                 }
-                if swarm.peer_count() > 0 || !self.bootstrap_addrs.is_empty() {
+                if swarm.peer_count() > 0 {
                     match swarm.behaviour_mut().kad.bootstrap() {
                         Ok(query_id) => {
                             log::info!("starting bootstrap {}", query_id);
@@ -148,6 +160,7 @@ impl SubSystem for Bootstrap {
                     return
                 }
                 log::info!("retrying bootstap");
+                self.dialed = false;
                 self.mode = Mode::WaitingForPeers;
             },
             Mode::Healthy => {

@@ -2,6 +2,7 @@ use super::*;
 
 pub mod bootstrap;
 pub mod connection_manager;
+pub mod discovery_monitor;
 pub mod nat_observer;
 pub mod peer_registry;
 pub mod routing_monitor;

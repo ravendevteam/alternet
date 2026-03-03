@@ -180,6 +180,16 @@ impl VirtualNetwork {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn end_to_end() {
+    std::process::Command::new("cargo")
+        .arg("run")
+        .arg("--package")
+        .arg("task")
+        .arg("build-image")
+        .spawn()
+        .expect("failed to build image")
+        .wait()
+        .expect("failed to build image");
+
     let log_dir: std::path::PathBuf = std::path::PathBuf::new()
         .join("tests")
         .join("log");
@@ -204,6 +214,39 @@ async fn end_to_end() {
         .start()
         .await
         .unwrap();
-        
-    tokio::time::sleep(std::time::Duration::from_mins(1)).await;
+
+    let server: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+        .with_exposed_port(network_udp_port)
+        .with_cmd(["./server", "--dial", &bootstrap_addr])
+        .with_network(network)
+        .start()
+        .await
+        .unwrap();
+
+    let client: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+        .with_exposed_port(network_udp_port)
+        .with_cmd(["./client", "--dial", &bootstrap_addr])
+        .with_network(network)
+        .start()
+        .await
+        .unwrap();
+
+    let containers: Vec<_> = vec![
+        bootstrap,
+        relay,
+        server,
+        client
+    ];
+
+    tokio::time::sleep(std::time::Duration::from_mins(3)).await;
+    
+    tokio::fs::remove_dir_all(&log_dir).await.expect("unable to cleanup logs");
+    tokio::fs::create_dir_all(&log_dir).await.expect("unable to create logs directory");
+
+    for container in containers {
+        let container_id: &str = container.id();
+        let container_path: std::path::PathBuf = log_dir.join(format!("{}.log", container_id));
+
+        write_logs_to_file(&docker, container_id, &container_path).await;
+    }
 }
