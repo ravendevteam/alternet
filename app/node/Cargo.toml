@@ -62,7 +62,7 @@ path = "src/main.rs"
 required-features = ["relay"]
 
 [features]
-default = ["relay", "end-to-end"]
+default = ["relay"]
 bootstrap = [
     "tokio/full",
     "libp2p/tcp",
