@@ -224,10 +224,10 @@ async fn main() -> Result<()> {
 
     let mut quic_config: quic::Config = quic::Config::new(&local_keypair);
     quic_config.handshake_timeout = std::time::Duration::from_millis(3000);
-    quic_config.keep_alive_interval = std::time::Duration::from_millis(3000);
-    quic_config.max_concurrent_stream_limit = 3000;
+    quic_config.keep_alive_interval = std::time::Duration::from_secs(10);
+    quic_config.max_concurrent_stream_limit = 512;
     quic_config.max_connection_data = 3000;
-    quic_config.max_idle_timeout = 3000;
+    quic_config.max_idle_timeout = 60000;
     quic_config.max_stream_data = 300;
 
     #[cfg(feature = "bootstrap")]
@@ -240,20 +240,20 @@ async fn main() -> Result<()> {
             let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
             kad_conf.disjoint_query_paths(true);
             kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 256 });
-            kad_conf.set_kbucket_inserts(kad::BucketInserts::OnConnected);
+            kad_conf.set_kbucket_inserts(kad::BucketInserts::Manual);
             kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_mins(1));
             kad_conf.set_kbucket_size(
                 128.try_into().expect("non zero")
             );
             kad_conf.set_max_packet_size(1024);
             kad_conf.set_parallelism(
-                128.try_into().expect("non zero")
+                32.try_into().expect("non zero")
             );
-            kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_millis(5000)));
+            kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
             kad_conf.set_provider_publication_interval(None);
             kad_conf.set_provider_record_ttl(Some(std::time::Duration::from_hours(72)));
             kad_conf.set_publication_interval(None);
-            kad_conf.set_query_timeout(std::time::Duration::from_millis(2000));
+            kad_conf.set_query_timeout(std::time::Duration::from_secs(30));
             kad_conf.set_record_filtering(kad::StoreInserts::FilterBoth);
             kad_conf.set_record_ttl(Some(std::time::Duration::from_hours(72)));
             kad_conf.set_replication_factor(
@@ -293,7 +293,7 @@ async fn main() -> Result<()> {
             let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
             kad_conf.disjoint_query_paths(true);
             kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 64 });
-            kad_conf.set_kbucket_inserts(kad::BucketInserts::OnConnected);
+            kad_conf.set_kbucket_inserts(kad::BucketInserts::Manual);
             kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_mins(1));
             kad_conf.set_kbucket_size(kad::K_VALUE);
             kad_conf.set_max_packet_size(1024);
@@ -301,7 +301,7 @@ async fn main() -> Result<()> {
             kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
             kad_conf.set_provider_publication_interval(None);
             kad_conf.set_provider_record_ttl(None);
-            kad_conf.set_publication_interval(Some(std::time::Duration::from_hours(24)));
+            kad_conf.set_publication_interval(None);
             kad_conf.set_query_timeout(std::time::Duration::from_mins(1));
             kad_conf.set_record_filtering(kad::StoreInserts::FilterBoth);
             kad_conf.set_record_ttl(Some(std::time::Duration::from_hours(48)));
@@ -311,27 +311,14 @@ async fn main() -> Result<()> {
             
             let mut kad: kad::Behaviour<_> = kad::Behaviour::with_config(local_peer_id, kad_store, kad_conf);
             
-            #[cfg(feature = "client")]
             kad.set_mode(Some(kad::Mode::Client));
-
-            #[cfg(feature = "server")]
-            kad.set_mode(Some(kad::Mode::Server));
 
             let dcutr: dcutr::Behaviour = dcutr::Behaviour::new(local_peer_id);
         
-            #[cfg(feature = "client")]
             let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
                 .with_agent_version(agent_version)
                 .with_cache_size(identify_cache_size)
-                .with_hide_listen_addrs(false)
-                .with_interval(identify_interval)
-                .with_push_listen_addr_updates(true);
-
-            #[cfg(feature = "server")]
-            let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
-                .with_agent_version(agent_version)
-                .with_cache_size(identify_cache_size)
-                .with_hide_listen_addrs(false)
+                .with_hide_listen_addrs(true)
                 .with_interval(identify_interval)
                 .with_push_listen_addr_updates(true);
 
@@ -357,14 +344,14 @@ async fn main() -> Result<()> {
             let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
             kad_conf.disjoint_query_paths(true);
             kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 256 });
-            kad_conf.set_kbucket_inserts(kad::BucketInserts::OnConnected);
+            kad_conf.set_kbucket_inserts(kad::BucketInserts::Manual);
             kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_mins(1));
             kad_conf.set_kbucket_size(kad::K_VALUE);
             kad_conf.set_max_packet_size(1024);
             kad_conf.set_parallelism(kad::ALPHA_VALUE);
             kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
-            kad_conf.set_provider_publication_interval(None);
-            kad_conf.set_provider_record_ttl(None);
+            kad_conf.set_provider_publication_interval(Some(std::time::Duration::from_hours(6)));
+            kad_conf.set_provider_record_ttl(Some(std::time::Duration::from_hours(48)));
             kad_conf.set_publication_interval(Some(std::time::Duration::from_hours(24)));
             kad_conf.set_query_timeout(std::time::Duration::from_mins(1));
             kad_conf.set_record_filtering(kad::StoreInserts::FilterBoth);
@@ -374,24 +361,11 @@ async fn main() -> Result<()> {
             kad_conf.set_substreams_timeout(std::time::Duration::from_secs(10));
             
             let mut kad: kad::Behaviour<_> = kad::Behaviour::with_config(local_peer_id, kad_store, kad_conf);
-            
-            #[cfg(feature = "client")]
-            kad.set_mode(Some(kad::Mode::Client));
 
-            #[cfg(feature = "server")]
             kad.set_mode(Some(kad::Mode::Server));
 
             let dcutr: dcutr::Behaviour = dcutr::Behaviour::new(local_peer_id);
-        
-            #[cfg(feature = "client")]
-            let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
-                .with_agent_version(agent_version)
-                .with_cache_size(identify_cache_size)
-                .with_hide_listen_addrs(false)
-                .with_interval(identify_interval)
-                .with_push_listen_addr_updates(true);
 
-            #[cfg(feature = "server")]
             let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
                 .with_agent_version(agent_version)
                 .with_cache_size(identify_cache_size)
@@ -416,13 +390,13 @@ async fn main() -> Result<()> {
         .with_quic_config(|_| quic_config)
         .with_behaviour(|_| {
             let relay_config: relay::Config = relay::Config {
-                max_circuit_bytes: 1000,
-                max_circuit_duration: std::time::Duration::from_millis(3000),
-                max_reservations: 10,
-                max_circuits: 0,
-                max_circuits_per_peer: 0,
-                max_reservations_per_peer: 0,
-                reservation_duration: std::time::Duration::from_millis(3000),
+                max_circuit_bytes: 1000000,
+                max_circuit_duration: std::time::Duration::from_secs(300),
+                max_reservations: 512,
+                max_reservations_per_peer: 2,
+                max_circuits: 1024,
+                max_circuits_per_peer: 4,
+                reservation_duration: std::time::Duration::from_hours(1),
                 reservation_rate_limiters: vec![],
                 circuit_src_rate_limiters: vec![]
             };
@@ -432,15 +406,15 @@ async fn main() -> Result<()> {
 
             let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
             kad_conf.disjoint_query_paths(true);
-            kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 256 });
-            kad_conf.set_kbucket_inserts(kad::BucketInserts::OnConnected);
+            kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 128 });
+            kad_conf.set_kbucket_inserts(kad::BucketInserts::Manual);
             kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_millis(60000));
             kad_conf.set_kbucket_size(
-                256.try_into().expect("non zero")
+                64.try_into().expect("non zero")
             );
             kad_conf.set_max_packet_size(1024);
             kad_conf.set_parallelism(
-                256.try_into().expect("non zero")
+                16.try_into().expect("non zero")
             );
             kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
             kad_conf.set_provider_publication_interval(None);
@@ -450,9 +424,9 @@ async fn main() -> Result<()> {
             kad_conf.set_record_filtering(kad::StoreInserts::FilterBoth);
             kad_conf.set_record_ttl(Some(std::time::Duration::from_hours(24)));
             kad_conf.set_replication_factor(
-                128.try_into().expect("non zero")
+                64.try_into().expect("non zero")
             );
-            kad_conf.set_replication_interval(None);
+            kad_conf.set_replication_interval(Some(std::time::Duration::from_hours(2)));
             kad_conf.set_substreams_timeout(std::time::Duration::from_secs(10));
 
             let mut kad: kad::Behaviour<_> = kad::Behaviour::with_config(local_peer_id, kad_store, kad_conf);
