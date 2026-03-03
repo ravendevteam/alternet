@@ -248,7 +248,7 @@ async fn main() -> Result<()> {
                 128.try_into().expect("non zero")
             );
             kad_conf.set_max_packet_size(
-                1.kibibytes().as_u64().to_usize().unwrap()
+                1.kilobytes().as_u64().to_usize().unwrap()
             );
             kad_conf.set_parallelism(
                 32.try_into().expect("non zero")
@@ -301,7 +301,7 @@ async fn main() -> Result<()> {
             kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_mins(1));
             kad_conf.set_kbucket_size(kad::K_VALUE);
             kad_conf.set_max_packet_size(
-                1.kibibytes().as_u64().to_usize().unwrap()
+                1.kilobytes().as_u64().to_usize().unwrap()
             );
             kad_conf.set_parallelism(kad::ALPHA_VALUE);
             kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
@@ -354,7 +354,7 @@ async fn main() -> Result<()> {
             kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_mins(1));
             kad_conf.set_kbucket_size(kad::K_VALUE);
             kad_conf.set_max_packet_size(
-                1.kibibytes().as_u64().to_usize().unwrap()
+                1.kilobytes().as_u64().to_usize().unwrap()
             );
             kad_conf.set_parallelism(kad::ALPHA_VALUE);
             kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
@@ -421,7 +421,7 @@ async fn main() -> Result<()> {
                 64.try_into().expect("non zero")
             );
             kad_conf.set_max_packet_size(
-                1.kibibytes().as_u64().to_usize().unwrap()
+                1.kilobytes().as_u64().to_usize().unwrap()
             );
             kad_conf.set_parallelism(
                 16.try_into().expect("non zero")
