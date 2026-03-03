@@ -1,5 +1,6 @@
 .obsidian
 .env
+*.log
 /target
 /doc/README.md
 /doc/proof-of-transport.md
