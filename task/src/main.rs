@@ -172,7 +172,10 @@ async fn main() -> Result<()> {
                 RUN cargo build --release --package node --bin client --features=client --no-default-features
                 RUN cargo build --release --package node --bin server --features=server --no-default-features
                 RUN cargo build --release --package node --bin relay --features=relay --no-default-features
-                RUN cargo build --release --package node --bin malicious ---features=malicious --no-default-features
+                RUN cargo build --release --package node --bin malicious_bootstrap ---features=malicious_bootstrap --no-default-features
+                RUN cargo build --release --package node --bin malicious_client --features=malicious_client --no-default-features
+                RUN cargo build --release --package node --bin malicious_server --features=malicious_server --no-default-features
+                RUN cargo build --release --package node --bin malicious_relay --features=malicious-relay --no-default-features
                 FROM debian:bookworm-slim
                 WORKDIR /app
                 COPY --from=builder /app/target/release/bootstrap .
