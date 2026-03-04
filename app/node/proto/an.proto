@@ -10,6 +10,20 @@ message PingResponse {
     bool success = 1;
 }
 
+message DialRequest {
+    string addr = 1;
+}
+
+message DialResponse {
+    bool success = 1;
+    optional string error = 2;
+    optional string connection = 3;
+}
+
 service Node {
     rpc Ping(PingRequest) returns (PingResponse);
+
+
+
+    rpc Dial(DialRequest) returns (DialResponse);
 }

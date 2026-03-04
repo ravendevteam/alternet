@@ -73,6 +73,12 @@ impl Event {
         self.item.downcast_ref()
     }
 
+    pub fn downcast_mut<T>(&mut self) -> Option<&mut T>
+    where
+        T: std::any::Any {
+        self.item.downcast_mut()
+    }
+
     pub fn downcast<T>(self) -> std::result::Result<T, Self> 
     where
         T: std::any::Any {
@@ -440,7 +446,7 @@ async fn main() -> Result<()> {
             kad_conf.set_substreams_timeout(std::time::Duration::from_secs(10));
 
             let mut kad: kad::Behaviour<_> = kad::Behaviour::with_config(local_peer_id, kad_store, kad_conf);
-
+            
             kad.set_mode(Some(kad::Mode::Server));
 
             let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
@@ -488,7 +494,7 @@ async fn main() -> Result<()> {
 
     let bootstrap: sub_system::bootstrap::Bootstrap = sub_system::bootstrap::Bootstrap::builder()
         .timeout_duration(std::time::Duration::from_secs(8))
-        .min_peers(1)
+        .min_peers(2)
         .bootstrap_addrs(dial)
         .build();
 
@@ -513,6 +519,7 @@ async fn main() -> Result<()> {
     sub_system_bus.add_system(connection_manager);
     sub_system_bus.add_system(routing_monitor);
     sub_system_bus.add_system(discovery_monitor);
+    sub_system_bus.add_system(sub_system::dialer::Dialer);
 
     loop {
         tokio::select!(

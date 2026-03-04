@@ -3,9 +3,14 @@
 use std::io::Read as _;
 use futures_util::StreamExt as _;
 use futures_util::TryStreamExt as _;
+use testcontainers::ImageExt;
 use testcontainers::ImageExt as _;
 use testcontainers::runners::AsyncRunner as _;
 use tokio::io::AsyncWriteExt;
+
+mod proto {
+    include!("../proto_target/an.rs");
+}
 
 trait DockerEngine {
     async fn load(&self, path: &std::path::Path);
@@ -196,9 +201,11 @@ async fn end_to_end() {
     let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
     let network: &str = "an";
     let network_udp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
-    
+    let network_tpc_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Tcp(8080);
+
     let bootstrap: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
         .with_exposed_port(network_udp_port)
+        .with_exposed_port(network_tpc_port)
         .with_cmd(["./bootstrap"])
         .with_network(network)
         .start()
@@ -209,6 +216,7 @@ async fn end_to_end() {
 
     let relay: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
         .with_exposed_port(network_udp_port)
+        .with_exposed_port(network_tpc_port)
         .with_cmd(["./relay", "--dial", &bootstrap_addr])
         .with_network(network)
         .start()
@@ -217,6 +225,7 @@ async fn end_to_end() {
 
     let server: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
         .with_exposed_port(network_udp_port)
+        .with_exposed_port(network_tpc_port)
         .with_cmd(["./server", "--dial", &bootstrap_addr])
         .with_network(network)
         .start()
@@ -225,6 +234,7 @@ async fn end_to_end() {
 
     let client: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
         .with_exposed_port(network_udp_port)
+        .with_exposed_port(network_tpc_port)
         .with_cmd(["./client", "--dial", &bootstrap_addr])
         .with_network(network)
         .start()
@@ -238,8 +248,22 @@ async fn end_to_end() {
         client
     ];
 
-    tokio::time::sleep(std::time::Duration::from_mins(3)).await;
+    tokio::time::sleep(std::time::Duration::from_mins(9)).await;
     
+    let port = containers
+        .get(3)
+        .unwrap()
+        .get_host_port_ipv4(8080)
+        .await
+        .unwrap();
+    let endpoint = format!("http://127.0.0.1:{}", port);
+    let mut client = proto::node_client::NodeClient::connect(endpoint).await.unwrap();
+    
+    let request = tonic::Request::new(proto::PingRequest{ msg: "Hello".to_owned() });
+    let response = client.ping(request).await.unwrap();
+
+    tokio::time::sleep(std::time::Duration::from_mins(1)).await;
+
     tokio::fs::remove_dir_all(&log_dir).await.expect("unable to cleanup logs");
     tokio::fs::create_dir_all(&log_dir).await.expect("unable to create logs directory");
 
@@ -248,5 +272,137 @@ async fn end_to_end() {
         let container_path: std::path::PathBuf = log_dir.join(format!("{}.log", container_id));
 
         write_logs_to_file(&docker, container_id, &container_path).await;
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn nat() {
+    std::process::Command::new("cargo")
+        .arg("run")
+        .arg("--package")
+        .arg("task")
+        .arg("build-image")
+        .spawn()
+        .expect("successful image build")
+        .wait()
+        .expect("successful image build");
+
+    let log_dir: std::path::PathBuf = std::path::PathBuf::new()
+        .join("tests")
+        .join("log");
+    
+    let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
+
+    let network_a: &str = "an-a";
+    let network_a_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
+        name: network_a.to_owned(),
+        driver: None,
+        scope: None,
+        internal: None,
+        attachable: None,
+        ingress: None,
+        config_from: None,
+        config_only: None,
+        ipam: None,
+        enable_ipv4: None,
+        enable_ipv6: None,
+        options: None,
+        labels: None
+    };
+
+    let network_b: &str = "an-b";
+    let network_b_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
+        name: network_b.to_owned(),
+        driver: None,
+        scope: None,
+        internal: None,
+        attachable: None,
+        ingress: None,
+        config_from: None,
+        config_only: None,
+        ipam: None,
+        enable_ipv4: None,
+        enable_ipv6: None,
+        options: None,
+        labels: None
+    };
+
+    docker.create_network(network_a_conf).await.expect("successful network creation");
+    docker.create_network(network_b_conf).await.expect("successful network creation");
+
+    let udp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
+    let tcp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Tcp(8080);
+
+    let bootstrap: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+        .with_exposed_port(udp_port)
+        .with_exposed_port(tcp_port)
+        .with_cmd(["./bootstrap"])
+        .with_network(network_a)
+        .start()
+        .await
+        .expect("successful container launch");
+
+    let bootstrap_ip_a: std::net::IpAddr = bootstrap.get_bridge_ip_address().await.expect("bridge ip addr");
+    let bootstrap_addr: String = format!("/ip4/{}/udp/4001/quic-v1", bootstrap_ip_a);
+
+    let bootstrap_network_connection_conf: bollard::secret::NetworkConnectRequest = bollard::secret::NetworkConnectRequest {
+        container: bootstrap.id().to_owned(),
+        endpoint_config: None
+    };
+
+    docker.connect_network(network_b, bootstrap_network_connection_conf).await.expect("successful network connection");
+
+    let relay: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+        .with_exposed_port(udp_port)
+        .with_exposed_port(tcp_port)
+        .with_cmd(["./relay", "--dial", &bootstrap_addr])
+        .with_network(network_a)
+        .start()
+        .await
+        .expect("successful container launch");
+
+    let relay_network_connection_conf: bollard::secret::NetworkConnectRequest = bollard::secret::NetworkConnectRequest {
+        container: relay.id().to_owned(),
+        endpoint_config: None
+    };
+
+    docker.connect_network(network_b, relay_network_connection_conf).await.expect("successful network connection");
+
+    let server: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+        .with_exposed_port(udp_port)
+        .with_exposed_port(tcp_port)
+        .with_cmd(["./server", "--dial", &bootstrap_addr])
+        .with_network(network_b)
+        .start()
+        .await
+        .expect("successful container launch");
+
+    let server_ip: std::net::IpAddr = server.get_bridge_ip_address().await.expect("bridge ip addr");
+    let server_addr: String = format!("/ip4/{}/udp/4001/quic-v1", server_ip);
+
+    let client: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+        .with_exposed_port(udp_port)
+        .with_exposed_port(tcp_port)
+        .with_cmd(["./client", "--dial", &bootstrap_addr])
+        .with_network(network_a)
+        .start()
+        .await
+        .expect("successful container launch");
+
+    let client_grpc_port: u16 = client.get_host_port_ipv4(8080).await.expect("host port ipv4");
+    let client_gprc_endpoint: String = format!("http://127.0.0.1:{}", client_grpc_port);
+    let mut client_grpc: proto::node_client::NodeClient<_> = proto::node_client::NodeClient::connect(client_gprc_endpoint).await.expect("successful grpc client");
+
+    let client_request: proto::DialRequest = proto::DialRequest {
+        addr: server_addr    
+    };
+
+    client_grpc.dial(client_request).await.expect("successful dial");
+
+    let mut seen_relay: bool = false;
+    let mut seen_direct: bool = false;
+
+    for _ in 0..60 {
+        
     }
 }
