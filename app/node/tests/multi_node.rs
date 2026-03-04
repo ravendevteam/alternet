@@ -1,6 +1,9 @@
+#![allow(clippy::vec_init_then_push)]
 #![cfg(feature = "end-to-end")]
 
 use std::io::Read as _;
+use std::num::NonZeroI128;
+use std::thread::spawn;
 use futures_util::StreamExt as _;
 use futures_util::TryStreamExt as _;
 use testcontainers::ImageExt;
@@ -197,7 +200,8 @@ async fn end_to_end() {
 
     let log_dir: std::path::PathBuf = std::path::PathBuf::new()
         .join("tests")
-        .join("log");
+        .join("log")
+        .join("end_to_end");
     let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
     let network: &str = "an";
     let network_udp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
@@ -276,7 +280,7 @@ async fn end_to_end() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-async fn nat() {
+async fn nat_easy() {
     std::process::Command::new("cargo")
         .arg("run")
         .arg("--package")
@@ -289,7 +293,8 @@ async fn nat() {
 
     let log_dir: std::path::PathBuf = std::path::PathBuf::new()
         .join("tests")
-        .join("log");
+        .join("log")
+        .join("nat_easy");
     
     let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
 
@@ -327,6 +332,8 @@ async fn nat() {
         labels: None
     };
 
+    docker.remove_network(network_a).await.ok();
+    docker.remove_network(network_b).await.ok();
     docker.create_network(network_a_conf).await.expect("successful network creation");
     docker.create_network(network_b_conf).await.expect("successful network creation");
 
@@ -342,8 +349,8 @@ async fn nat() {
         .await
         .expect("successful container launch");
 
-    let bootstrap_ip_a: std::net::IpAddr = bootstrap.get_bridge_ip_address().await.expect("bridge ip addr");
-    let bootstrap_addr: String = format!("/ip4/{}/udp/4001/quic-v1", bootstrap_ip_a);
+    let bootstrap_ip: std::net::IpAddr = bootstrap.get_bridge_ip_address().await.expect("bridge ip addr");
+    let bootstrap_addr: String = format!("/ip4/{}/udp/4001/quic-v1", bootstrap_ip);
 
     let bootstrap_network_connection_conf: bollard::secret::NetworkConnectRequest = bollard::secret::NetworkConnectRequest {
         container: bootstrap.id().to_owned(),
@@ -399,10 +406,159 @@ async fn nat() {
 
     client_grpc.dial(client_request).await.expect("successful dial");
 
-    let mut seen_relay: bool = false;
-    let mut seen_direct: bool = false;
+    tokio::time::sleep(std::time::Duration::from_mins(1)).await;
 
-    for _ in 0..60 {
-        
+    let mut logged: Vec<_> = vec![];
+    logged.push(bootstrap);
+    logged.push(relay);
+    logged.push(server);
+    logged.push(client);
+
+    tokio::fs::remove_dir_all(&log_dir).await.ok();
+    tokio::fs::create_dir_all(&log_dir).await.expect("unable to create logs directory");
+
+    for log in logged {
+        let log_id: &str = log.id();
+        let log_path: std::path::PathBuf = log_dir.join(format!("{}.log", log_id));
+
+        write_logs_to_file(&docker, log_id, &log_path).await;
     }
+
+    docker.remove_network(network_a).await.ok();
+    docker.remove_network(network_b).await.ok();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn nat_hard() {
+    std::process::Command::new("cargo")
+        .arg("run")
+        .arg("--package")
+        .arg("task")
+        .arg("build-image")
+        .spawn()
+        .expect("successful image build")
+        .wait()
+        .expect("successful image build");
+
+    let log_dir: std::path::PathBuf = std::path::PathBuf::new()
+        .join("tests")
+        .join("log")
+        .join("nat_hard");
+    
+    let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
+
+    let network_a: &str = "an-a";
+    let network_a_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
+        name: network_a.to_owned(),
+        driver: None,
+        scope: None,
+        internal: Some(false),
+        attachable: Some(false),
+        ingress: Some(false),
+        config_from: None,
+        config_only: None,
+        ipam: None,
+        enable_ipv4: Some(true),
+        enable_ipv6: Some(false),
+        options: None,
+        labels: None
+    };
+
+    let network_b: &str = "an-b";
+    let network_b_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
+        name: network_b.to_owned(),
+        driver: None,
+        scope: None,
+        internal: Some(false),
+        attachable: Some(false),
+        ingress: Some(false),
+        config_from: None,
+        config_only: None,
+        ipam: None,
+        enable_ipv4: Some(true),
+        enable_ipv6: Some(false),
+        options: None,
+        labels: None
+    };
+
+    docker.remove_network(network_a).await.ok();
+    docker.remove_network(network_b).await.ok();
+    docker.create_network(network_a_conf).await.expect("successful network creation");
+    docker.create_network(network_b_conf).await.expect("successful network creation");
+
+    let udp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
+    let tcp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Tcp(8080);
+
+    let bootstrap: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+        .with_exposed_port(udp_port)
+        .with_exposed_port(tcp_port)
+        .with_cmd(["./bootstrap"])
+        .with_network(network_a)
+        .start()
+        .await
+        .expect("successful container launch");
+
+    let bootstrap_ip: std::net::IpAddr = bootstrap.get_bridge_ip_address().await.expect("bridge ip addr");
+    let bootstrap_addr: String = format!("/ip4/{}/udp/4001/quic-v1", bootstrap_ip);
+
+    let relay: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+        .with_exposed_port(udp_port)
+        .with_exposed_port(tcp_port)
+        .with_cmd(["./relay", "--dial", &bootstrap_addr])
+        .with_network(network_a)
+        .start()
+        .await
+        .expect("successful container launch");
+
+    let server: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+        .with_exposed_port(udp_port)
+        .with_exposed_port(tcp_port)
+        .with_cmd(["./server", "--dial", &bootstrap_addr])
+        .with_network(network_b)
+        .start()
+        .await
+        .expect("successful container launch");
+
+    let server_ip: std::net::IpAddr = server.get_bridge_ip_address().await.expect("bridge ip addr");
+    let server_addr: String = format!("/ip4/{}/udp/4001/quic-v1", server_ip);
+
+    let client: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+        .with_exposed_port(udp_port)
+        .with_exposed_port(tcp_port)
+        .with_cmd(["./client", "--dial", &bootstrap_addr])
+        .with_network(network_a)
+        .start()
+        .await
+        .expect("successful container launch");
+
+    let client_grpc_port: u16 = client.get_host_port_ipv4(8080).await.expect("host port ipv4");
+    let client_gprc_endpoint: String = format!("http://127.0.0.1:{}", client_grpc_port);
+    let mut client_grpc: proto::node_client::NodeClient<_> = proto::node_client::NodeClient::connect(client_gprc_endpoint).await.expect("successful grpc client");
+
+    let client_request: proto::DialRequest = proto::DialRequest {
+        addr: server_addr    
+    };
+
+    client_grpc.dial(client_request).await.expect("successful dial");
+
+    tokio::time::sleep(std::time::Duration::from_mins(1)).await;
+
+    let mut logged: Vec<_> = vec![];
+    logged.push(bootstrap);
+    logged.push(relay);
+    logged.push(server);
+    logged.push(client);
+
+    tokio::fs::remove_dir_all(&log_dir).await.ok();
+    tokio::fs::create_dir_all(&log_dir).await.expect("unable to create logs directory");
+
+    for log in logged {
+        let log_id: &str = log.id();
+        let log_path: std::path::PathBuf = log_dir.join(format!("{}.log", log_id));
+
+        write_logs_to_file(&docker, log_id, &log_path).await;
+    }
+
+    docker.remove_network(network_a).await.ok();
+    docker.remove_network(network_b).await.ok();
 }
