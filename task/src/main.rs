@@ -172,12 +172,14 @@ async fn main() -> Result<()> {
                 RUN cargo build --release --package node --bin client --features=client --no-default-features
                 RUN cargo build --release --package node --bin server --features=server --no-default-features
                 RUN cargo build --release --package node --bin relay --features=relay --no-default-features
+                RUN cargo build --release --package node --bin malicious ---features=malicious --no-default-features
                 FROM debian:bookworm-slim
                 WORKDIR /app
                 COPY --from=builder /app/target/release/bootstrap .
                 COPY --from=builder /app/target/release/client .
                 COPY --from=builder /app/target/release/server .
-                COPY --from=builder /app/target/release/relay .  
+                COPY --from=builder /app/target/release/relay .
+                COPY --from=builder /app/target/release/malicious .
             "#
             .to_owned();
             docker.export_image_to_tar_from_ws_context(&ws_root, &ws_root_exclude, image_name, image_tag, &image_out_dir, &dockerfile).await?;

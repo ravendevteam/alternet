@@ -1,17 +1,98 @@
-#[cfg(not(any(feature = "client", feature = "server", feature = "relay", feature = "bootstrap")))]
-compile_error!("Enable exactly one of `client`, `server`, `relay`, or `bootstrap` features.");
+cfg_if::cfg_if!(
+    if #[cfg(not(any(
+        feature = "bootstrap",
+        feature = "client",
+        feature = "server",
+        feature = "relay",
+        feature = "malicious_bootstrap",
+        feature = "malicious_client",
+        feature = "malicious_server",
+        feature = "malicious_relay"
+    )))] {
+        compile_error!("Enable exactly one of `client`, `server`, `relay`, `bootstrap`, or their malicious variants.");
+    } else if #[cfg(all(feature = "bootstrap", any(
+        feature = "client",
+        feature = "server",
+        feature = "relay",
+        feature = "malicious_bootstrap",
+        feature = "malicious_client",
+        feature = "malicious_server",
+        feature = "malicious_relay"
+    )))] {
+        compile_error!("Only one of `client`, `server`, `relay`, `bootstrap`, or their malicious variants may be enabled at a time.");
+    } else if #[cfg(feature = "client", any(
+        feature = "bootstrap",
+        feature = "server",
+        feature = "relay",
+        feature = "malicious_bootstrap",
+        feature = "malicious_client",
+        feature = "malicious_server",
+        feature = "malicious_relay"
+    ))] {
+        compile_error!("Only one of `client`, `server`, `relay`, `bootstrap`, or their malicious variants may be enabled at a time.");
+    } else if #[cfg(feature = "server", any(
+        feature = "bootstrap",
+        feature = "server",
+        feature = "relay",
+        feature = "malicious_bootstrap",
+        feature = "malicious_client",
+        feature = "malicious_server",
+        feature = "malicious_relay"
+    ))] {
+        compile_error!("Only one of `client`, `server`, `relay`, `bootstrap`, or their malicious variants may be enabled at a time.");
+    } else if #[cfg(feature = "relay", any(
+        feature = "client",
+        feature = "server",
+        feature = "bootstrap",
+        feature = "malicious_bootstrap",
+        feature = "malicious_client",
+        feature = "malicious_server",
+        feature = "malicious_relay"
+    ))] {
+        compile_error!("Only one of `client`, `server`, `relay`, `bootstrap`, or their malicious variants may be enabled at a time.");
+    } else if #[cfg(feature = "malicious_bootstrap", any(
+        feature = "client",
+        feature = "server",
+        feature = "bootstrap",
+        feature = "relay",
+        feature = "malicious_client",
+        feature = "malicious_server",
+        feature = "malicious_relay"
+    ))] {
+        compile_error!("Only one of `client`, `server`, `relay`, `bootstrap`, or their malicious variants may be enabled at a time.");
+    } else if #[cfg(feature = "malicious_client", any(
+        feature = "client",
+        feature = "server",
+        feature = "bootstrap",
+        feature = "relay",
+        feature = "malicious_bootstrap",
+        feature = "malicious_server",
+        feature = "malicious_relay"
+    ))] {
+        compile_error!("Only one of `client`, `server`, `relay`, `bootstrap`, or their malicious variants may be enabled at a time.");
+    } else if #[cfg(feature = "malicious_server", any(
+        feature = "client",
+        feature = "server",
+        feature = "bootstrap",
+        feature = "relay",
+        feature = "malicious_bootstrap",
+        feature = "malicious_client",
+        feature = "malicious_relay"
+    ))] {
+        compile_error!("Only one of `client`, `server`, `relay`, `bootstrap`, or their malicious variants may be enabled at a time.");
+    } else if #[cfg(feature = "malicious_relay", any(
+        feature = "client",
+        feature = "server",
+        feature = "bootstrap",
+        feature = "relay",
+        feature = "malicious_bootstrap",
+        feature = "malicious_client",
+        feature = "malicious_server"
+    ))] {
+        compile_error!("Only one of `client`, `server`, `relay`, `bootstrap`, or their malicious variants may be enabled at a time.");
+    }
+);
 
-#[cfg(all(feature = "client", any(feature = "server", feature = "relay", feature = "bootstrap")))]
-compile_error!("Only one of `client`, `server`, `relay`, or `bootstrap` may be enabled at a time.");
-
-#[cfg(all(feature = "server", any(feature = "client", feature = "relay", feature = "bootstrap")))]
-compile_error!("Only one of `client`, `server`, `relay`, or `bootstrap` may be enabled at a time.");
-
-#[cfg(all(feature = "relay", any(feature = "client", feature = "server", feature = "bootstrap")))]
-compile_error!("Only one of `client`, `server`, `relay`, or `bootstrap` may be enabled at a time.");
-
-use clap::Parser;
-use num::ToPrimitive;
 use tokio::io::AsyncBufReadExt as _;
 use libp2p::swarm;
 use libp2p::identify;
@@ -24,10 +105,10 @@ use libp2p::noise;
 use libp2p::yamux;
 use libp2p::futures::StreamExt as _;
 use libp2p::relay;
-use ubyte::ToByteUnit as _;
-
-#[cfg(any(feature = "client", feature = "server"))]
 use libp2p::dcutr;
+use clap::Parser as _;
+use ubyte::ToByteUnit as _;
+use num::ToPrimitive as _;
 
 mod config;
 mod env_key;
@@ -38,16 +119,6 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 type Swarm = swarm::Swarm<Behaviour>;
 type SwarmEvent = swarm::SwarmEvent<BehaviourEvent>;
-
-type Receiver<T> = tokio::sync::oneshot::Receiver<T>;
-type Sender<T> = tokio::sync::oneshot::Sender<T>;
-type Promise<T> = (Sender<T>, Receiver<T>);
-
-fn promise<T>() -> Promise<T> {
-    tokio::sync::oneshot::channel()
-}
-
-// MARK: Envelope
 
 #[derive(Debug)]
 #[derive(derive_more::From)]
@@ -97,8 +168,6 @@ impl Event {
     }
 }
 
-// MARK: Cli
-
 #[derive(Debug)]
 #[derive(clap::Parser)]
 #[command(author)]
@@ -111,19 +180,49 @@ struct Cli {
     pub dial: Option<Vec<libp2p::Multiaddr>>
 }
 
-// MARK: Behaviour
-
 #[derive(swarm::NetworkBehaviour)]
 struct Behaviour {
-    #[cfg(feature = "relay")]
+    #[cfg(any(feature = "relay", feature = "malicious_relay"))]
     pub relay: relay::Behaviour,
-    #[cfg(any(feature = "client", feature = "server"))]
+
+    #[cfg(any(
+        feature = "client", 
+        feature = "server",
+        feature = "malicious_client",
+        feature = "malicious_server"
+    ))]
     pub relay_client: relay::client::Behaviour,
-    #[cfg(any(feature = "client", feature = "server"))]
+    
+    #[cfg(any(
+        feature = "client", 
+        feature = "server",
+        feature = "malicious_client",
+        feature = "malicious_server"
+    ))]
     pub dcutr: dcutr::Behaviour,
-    #[cfg(any(feature = "client", feature = "server", feature = "relay", feature = "bootstrap"))]
+
+    #[cfg(any(
+        feature = "bootstrap",
+        feature = "client", 
+        feature = "server", 
+        feature = "relay",
+        feature = "malicious_bootstrap",
+        feature = "malicious_client",
+        feature = "malicious_server",
+        feature = "malicious_relay"
+    ))]
     pub kad: kad::Behaviour<kad::store::MemoryStore>,
-    #[cfg(any(feature = "client", feature = "server", feature = "relay", feature = "bootstrap"))]
+    
+    #[cfg(any(
+        feature = "bootstrap",
+        feature = "client", 
+        feature = "server", 
+        feature = "relay",
+        feature = "malicious_bootstrap",
+        feature = "malicious_client",
+        feature = "malicious_server",
+        feature = "malicious_relay"
+    ))]
     pub identify: identify::Behaviour
 }
 
@@ -170,17 +269,17 @@ async fn main() -> Result<()> {
     let protocol_version: String = format!("/an/{}", version);
     let protocol_name: libp2p::StreamProtocol = libp2p::StreamProtocol::new("/an");
 
-    #[cfg(feature = "client")]
+    #[cfg(any(feature = "bootstrap", feature = "malicious_bootstrap"))]
+    let agent_version: String = format!("an-bootstrap/{}", version);
+
+    #[cfg(any(feature = "client", feature = "malicious_client"))]
     let agent_version: String = format!("an-client/{}", version);
 
-    #[cfg(feature = "server")]
+    #[cfg(any(feature = "server", feature = "malicious_server"))]
     let agent_version: String = format!("an-server/{}", version);
 
-    #[cfg(feature = "relay")]
+    #[cfg(any(feature = "relay", feature = "malicious_relay"))]
     let agent_version: String = format!("an-relay/{}", version);
-
-    #[cfg(feature = "bootstrap")]
-    let agent_version: String = format!("an-bootstrap/{}", version);
 
     #[cfg(feature = "client")]
     let identify_cache_size: usize = if let Some(conf) = &conf
@@ -228,7 +327,7 @@ async fn main() -> Result<()> {
     let local_public_key: identity::PublicKey = local_keypair.public();
     let local_peer_id: libp2p::PeerId = local_keypair.public().into();
 
-    log::info!("Peer identity initialized: {:?}", local_peer_id);
+    log::info!("peer identity initialized: {:?}", local_peer_id);
 
     let mut quic_config: quic::Config = quic::Config::new(&local_keypair);
     quic_config.handshake_timeout = std::time::Duration::from_millis(3000);
@@ -489,8 +588,6 @@ async fn main() -> Result<()> {
 
     tokio::pin!(grpc);
     tokio::pin!(ctrl_c);
-    
-    log::info!("finished booting");
 
     let bootstrap: sub_system::bootstrap::Bootstrap = sub_system::bootstrap::Bootstrap::builder()
         .timeout_duration(std::time::Duration::from_secs(8))
@@ -520,6 +617,8 @@ async fn main() -> Result<()> {
     sub_system_bus.add_system(routing_monitor);
     sub_system_bus.add_system(discovery_monitor);
     sub_system_bus.add_system(sub_system::dialer::Dialer);
+
+    log::info!("finished booting, entering event loop");
 
     loop {
         tokio::select!(

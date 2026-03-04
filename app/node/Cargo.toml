@@ -28,6 +28,7 @@ num = "0.4.3"
 enum_dispatch = "*"
 clap = { version = "*", features = ["derive"] }
 ubyte = "*"
+cfg-if = "*"
 
 [dev-dependencies]
 testcontainers = "*"
@@ -61,8 +62,28 @@ name = "relay"
 path = "src/main.rs"
 required-features = ["relay"]
 
+[[bin]]
+name = "malicious_bootstrap"
+path = "src/main.rs"
+required-features = ["malicious_bootstrap"]
+
+[[bin]]
+name = "malicious_client"
+path = "src/main.rs"
+required-features = ["malicious_client"]
+
+[[bin]]
+name = "malicious_server"
+path = "src/main.rs"
+required-features = ["malicious_server"]
+
+[[bin]]
+name = "malicious_relay"
+path = "src/main.rs"
+required-features = ["malicious_relay"]
+
 [features]
-default = ["relay"]
+default = ["bootstrap"]
 bootstrap = [
     "tokio/full",
     "libp2p/tcp",
@@ -118,6 +139,78 @@ server = [
     "libp2p/dcutr"
 ]
 relay = [
+    "tokio/full",
+    "libp2p/tcp",
+    "libp2p/quic",
+    "libp2p/noise",
+    "libp2p/yamux",
+    "libp2p/mdns",
+    "libp2p/kad",
+    "libp2p/ping",
+    "libp2p/identify",
+    "libp2p/relay",
+    "libp2p/macros",
+    "libp2p/tls",
+    "libp2p/tokio",
+    "libp2p/gossipsub",
+    "libp2p/request-response",
+    "libp2p/dcutr"
+]
+malicious_bootstrap = [
+    "tokio/full",
+    "libp2p/tcp",
+    "libp2p/quic",
+    "libp2p/noise",
+    "libp2p/yamux",
+    "libp2p/mdns",
+    "libp2p/kad",
+    "libp2p/ping",
+    "libp2p/identify",
+    "libp2p/relay",
+    "libp2p/macros",
+    "libp2p/tls",
+    "libp2p/tokio",
+    "libp2p/gossipsub",
+    "libp2p/request-response",
+    "libp2p/dcutr"
+]
+malicious_client = [
+    "tokio/full",
+    "libp2p/tcp",
+    "libp2p/quic",
+    "libp2p/noise",
+    "libp2p/yamux",
+    "libp2p/mdns",
+    "libp2p/kad",
+    "libp2p/ping",
+    "libp2p/identify",
+    "libp2p/relay",
+    "libp2p/macros",
+    "libp2p/tls",
+    "libp2p/tokio",
+    "libp2p/gossipsub",
+    "libp2p/request-response",
+    "libp2p/dcutr"
+]
+malicious_server = [
+    "tokio/full",
+    "libp2p/tcp",
+    "libp2p/quic",
+    "libp2p/noise",
+    "libp2p/yamux",
+    "libp2p/mdns",
+    "libp2p/kad",
+    "libp2p/ping",
+    "libp2p/identify",
+    "libp2p/relay",
+    "libp2p/macros",
+    "libp2p/tls",
+    "libp2p/tokio",
+    "libp2p/gossipsub",
+    "libp2p/request-response",
+    "libp2p/dcutr"
+]
+malicious_relay = [
     "tokio/full",
     "libp2p/tcp",
     "libp2p/quic",
