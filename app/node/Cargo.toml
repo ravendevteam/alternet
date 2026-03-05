@@ -37,6 +37,8 @@ bollard = "*"
 cargo_metadata = "*"
 futures-util = "*"
 reqwest = "*"
+async-trait = "*"
+chrono = "*"
 
 [build-dependencies]
 tonic-prost = "*"

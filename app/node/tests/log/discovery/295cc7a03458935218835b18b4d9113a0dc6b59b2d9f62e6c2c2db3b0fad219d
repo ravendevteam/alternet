@@ -1,0 +1,40 @@
+2026-03-05T10:06:26.381043000Z [INFO relay] booting
+2026-03-05T10:06:26.381192000Z [INFO relay] peer identity initialized: PeerId("12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn")
+2026-03-05T10:06:26.382025000Z [INFO relay] finished booting, entering event loop
+2026-03-05T10:06:26.382169000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.18.0.2/udp/4001/quic-v1
+2026-03-05T10:06:26.382211000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn currently knows no one
+2026-03-05T10:06:26.384281000Z [INFO relay::sub_system::bootstrap] starting bootstrap 0
+2026-03-05T10:06:26.384679000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 0
+2026-03-05T10:06:26.548850000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2)
+2026-03-05T10:06:26.550066000Z [INFO relay::sub_system::bootstrap] starting bootstrap 1
+2026-03-05T10:06:26.552898000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 0
+2026-03-05T10:06:26.552986000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2)
+2026-03-05T10:06:26.553021000Z [INFO relay::sub_system::bootstrap] starting bootstrap 2
+2026-03-05T10:06:26.554754000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 0
+2026-03-05T10:06:37.054695000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5, 12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1]
+2026-03-05T10:06:47.058694000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5, 12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1]
+2026-03-05T10:06:57.061282000Z [INFO relay::sub_system::routing_monitor] routing churn: 15
+2026-03-05T10:06:57.061318000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5, 12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1]
+2026-03-05T10:07:07.064239000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5, 12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1]
+2026-03-05T10:07:37.223895000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-03-05T10:07:37.223932000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5, 12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1]
+2026-03-05T10:07:47.226444000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5, 12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1]
+2026-03-05T10:08:17.233193000Z [INFO relay::sub_system::routing_monitor] routing churn: 1
+2026-03-05T10:08:17.233244000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5, 12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1]
+2026-03-05T10:08:27.236712000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1, 12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5]
+2026-03-05T10:08:57.243396000Z [INFO relay::sub_system::routing_monitor] routing churn: 2
+2026-03-05T10:08:57.243435000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1, 12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5]
+2026-03-05T10:09:07.246576000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5, 12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1]
+2026-03-05T10:09:37.252806000Z [INFO relay::sub_system::routing_monitor] routing churn: 4
+2026-03-05T10:09:37.252909000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5, 12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1]
+2026-03-05T10:09:47.255527000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1, 12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5]
+2026-03-05T10:10:17.262496000Z [INFO relay::sub_system::routing_monitor] routing churn: 2
+2026-03-05T10:10:17.262629000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1, 12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5]
+2026-03-05T10:10:27.264219000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5, 12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1]
+2026-03-05T10:10:57.270327000Z [INFO relay::sub_system::routing_monitor] routing churn: 5
+2026-03-05T10:10:57.270396000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5, 12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1]
+2026-03-05T10:11:07.273472000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5, 12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1]
+2026-03-05T10:11:27.049141000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1, 12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5]
+2026-03-05T10:11:37.055311000Z [INFO relay::sub_system::routing_monitor] routing churn: 6
+2026-03-05T10:11:37.055351000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5, 12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1]
+2026-03-05T10:11:47.057585000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWNXDQ8G8brbfsLbUDqkoRMubhHihnveD89rMhWjHoayXn knows about 2 peers: [12D3KooWQJVjDSF1bNYMZVedBMgujaoqVhn6YSQMX6NL8UrPXKQ5, 12D3KooWLSCe24kxj2hKBKpzbSgb3WCVBYribrE2QLTrByXbbWA1]
