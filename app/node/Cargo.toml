@@ -83,7 +83,7 @@ path = "src/main.rs"
 required-features = ["malicious_relay"]
 
 [features]
-default = ["bootstrap"]
+default = ["malicious_relay"]
 bootstrap = [
     "tokio/full",
     "libp2p/tcp",
@@ -229,4 +229,4 @@ malicious_relay = [
     "libp2p/dcutr"
 ]
 grpc = []
-end-to-end = []
+end_to_end = []

@@ -253,7 +253,7 @@ async fn main() -> Result<()> {
         .chain(std::io::stdout())
         .apply()?;
 
-    log::info!("Booting");
+    log::info!("booting");
 
     let conf: Option<_> = config::Config::from_toml()?;
 
@@ -281,7 +281,10 @@ async fn main() -> Result<()> {
     #[cfg(any(feature = "relay", feature = "malicious_relay"))]
     let agent_version: String = format!("an-relay/{}", version);
 
-    #[cfg(feature = "client")]
+    #[cfg(any(feature = "bootstrap", feature = "malicious_bootstrap"))]
+    let identify_cache_size: usize = 50000;
+
+    #[cfg(any(feature = "client", feature = "malicious_client"))]
     let identify_cache_size: usize = if let Some(conf) = &conf
     && let Some(client) = &conf.client
     && let Some(identity_cache_size) = client.identity_cache_size {
@@ -290,7 +293,7 @@ async fn main() -> Result<()> {
         1000
     };
 
-    #[cfg(feature = "server")]
+    #[cfg(any(feature = "server", feature = "malicious_server"))]
     let identify_cache_size: usize = if let Some(conf) = &conf 
     && let Some(server) = &conf.server 
     && let Some(identity_cache_size) = server.identity_cache_size {
@@ -299,7 +302,7 @@ async fn main() -> Result<()> {
         2000
     };
 
-    #[cfg(feature = "relay")]
+    #[cfg(any(feature = "relay", feature = "malicious_relay"))]
     let identify_cache_size: usize = if let Some(conf) = &conf
     && let Some(relay) = &conf.relay
     && let Some(identity_cache_size) = relay.identity_cache_size {
@@ -308,20 +311,17 @@ async fn main() -> Result<()> {
         5000
     };
 
-    #[cfg(feature = "bootstrap")]
-    let identify_cache_size: usize = 50000;
+    #[cfg(any(feature = "bootstrap", feature = "malicious_bootstrap"))]
+    let identify_interval: std::time::Duration = std::time::Duration::from_mins(1);
 
-    #[cfg(feature = "client")]
+    #[cfg(any(feature = "client", feature = "malicious_client"))]
     let identify_interval: std::time::Duration = std::time::Duration::from_mins(20);
 
-    #[cfg(feature = "server")]
+    #[cfg(any(feature = "server", feature = "malicious_server"))]
     let identify_interval: std::time::Duration = std::time::Duration::from_mins(10);
 
-    #[cfg(feature = "relay")]
+    #[cfg(any(feature = "relay", feature = "malicious_relay"))]
     let identify_interval: std::time::Duration = std::time::Duration::from_mins(10);
-
-    #[cfg(feature = "bootstrap")]
-    let identify_interval: std::time::Duration = std::time::Duration::from_mins(1);
 
     let local_keypair: identity::Keypair = identity::Keypair::generate_ed25519();
     let local_public_key: identity::PublicKey = local_keypair.public();
@@ -337,7 +337,7 @@ async fn main() -> Result<()> {
     quic_config.max_idle_timeout = 60000;
     quic_config.max_stream_data = 1.megabytes().as_u64().to_u32().unwrap();
 
-    #[cfg(feature = "bootstrap")]
+    #[cfg(any(feature = "bootstrap", feature = "malicious_bootstrap"))]
     let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
         .with_tokio()
         .with_quic_config(|_| quic_config)
@@ -391,7 +391,7 @@ async fn main() -> Result<()> {
         })?
         .build();
 
-    #[cfg(feature = "client")]
+    #[cfg(any(feature = "client", feature = "malicious_client"))]
     let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
         .with_tokio()
         .with_quic_config(|_| quic_config)
@@ -444,7 +444,7 @@ async fn main() -> Result<()> {
         })?
         .build();
 
-    #[cfg(feature = "server")] 
+    #[cfg(any(feature = "server", feature = "malicious_server"))] 
     let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
         .with_tokio()
         .with_quic_config(|_| quic_config)
@@ -497,7 +497,7 @@ async fn main() -> Result<()> {
         })?
         .build();
     
-    #[cfg(feature = "relay")]
+    #[cfg(any(feature = "relay", feature = "malicious_relay"))]
     let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
         .with_tokio()
         .with_quic_config(|_| quic_config)
@@ -517,32 +517,64 @@ async fn main() -> Result<()> {
 
             let kad_store: kad::store::MemoryStore = kad::store::MemoryStore::new(local_peer_id);
 
-            let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
-            kad_conf.disjoint_query_paths(true);
-            kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 128 });
-            kad_conf.set_kbucket_inserts(kad::BucketInserts::Manual);
-            kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_millis(60000));
-            kad_conf.set_kbucket_size(
-                64.try_into().expect("non zero")
+            cfg_if::cfg_if!(
+                if #[cfg(feature = "relay")] {
+                    let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
+                    kad_conf.disjoint_query_paths(true);
+                    kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 128 });
+                    kad_conf.set_kbucket_inserts(kad::BucketInserts::Manual);
+                    kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_millis(60000));
+                    kad_conf.set_kbucket_size(
+                        64.try_into().expect("non zero")
+                    );
+                    kad_conf.set_max_packet_size(
+                        1.kilobytes().as_u64().to_usize().unwrap()
+                    );
+                    kad_conf.set_parallelism(
+                        16.try_into().expect("non zero")
+                    );
+                    kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
+                    kad_conf.set_provider_publication_interval(None);
+                    kad_conf.set_provider_record_ttl(None);
+                    kad_conf.set_publication_interval(None);
+                    kad_conf.set_query_timeout(std::time::Duration::from_mins(1));
+                    kad_conf.set_record_filtering(kad::StoreInserts::FilterBoth);
+                    kad_conf.set_record_ttl(Some(std::time::Duration::from_hours(24)));
+                    kad_conf.set_replication_factor(
+                        64.try_into().expect("non zero")
+                    );
+                    kad_conf.set_replication_interval(Some(std::time::Duration::from_hours(2)));
+                    kad_conf.set_substreams_timeout(std::time::Duration::from_secs(10));
+                } else if #[cfg(feature = "malicious_relay")] {
+                    
+                    let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
+                    kad_conf.disjoint_query_paths(true);
+                    kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 2 });
+                    kad_conf.set_kbucket_inserts(kad::BucketInserts::Manual);
+                    kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_millis(60000));
+                    kad_conf.set_kbucket_size(
+                        64.try_into().expect("non zero")
+                    );
+                    kad_conf.set_max_packet_size(
+                        1.kilobytes().as_u64().to_usize().unwrap()
+                    );
+                    kad_conf.set_parallelism(
+                        16.try_into().expect("non zero")
+                    );
+                    kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_secs(1800)));
+                    kad_conf.set_provider_publication_interval(None);
+                    kad_conf.set_provider_record_ttl(None);
+                    kad_conf.set_publication_interval(None);
+                    kad_conf.set_query_timeout(std::time::Duration::from_secs(180));
+                    kad_conf.set_record_filtering(kad::StoreInserts::FilterBoth);
+                    kad_conf.set_record_ttl(Some(std::time::Duration::from_secs(3600 * 24 * 365)));
+                    kad_conf.set_replication_factor(
+                        1.try_into().expect("non zero")
+                    );
+                    kad_conf.set_replication_interval(Some(std::time::Duration::from_secs(86400 * 7)));
+                    kad_conf.set_substreams_timeout(std::time::Duration::from_secs(120));
+                }
             );
-            kad_conf.set_max_packet_size(
-                1.kilobytes().as_u64().to_usize().unwrap()
-            );
-            kad_conf.set_parallelism(
-                16.try_into().expect("non zero")
-            );
-            kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
-            kad_conf.set_provider_publication_interval(None);
-            kad_conf.set_provider_record_ttl(None);
-            kad_conf.set_publication_interval(None);
-            kad_conf.set_query_timeout(std::time::Duration::from_mins(1));
-            kad_conf.set_record_filtering(kad::StoreInserts::FilterBoth);
-            kad_conf.set_record_ttl(Some(std::time::Duration::from_hours(24)));
-            kad_conf.set_replication_factor(
-                64.try_into().expect("non zero")
-            );
-            kad_conf.set_replication_interval(Some(std::time::Duration::from_hours(2)));
-            kad_conf.set_substreams_timeout(std::time::Duration::from_secs(10));
 
             let mut kad: kad::Behaviour<_> = kad::Behaviour::with_config(local_peer_id, kad_store, kad_conf);
             

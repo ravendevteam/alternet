@@ -165,6 +165,7 @@ async fn main() -> Result<()> {
                 FROM rust:1.93.1-slim as builder
                 WORKDIR /app
                 COPY . .
+                ENV RUSTFLAGS="-Awarnings"
                 RUN apt-get update
                 RUN apt-get install -y protobuf-compiler
                 RUN rm -rf /var/lib/apt/lists/*
@@ -172,17 +173,20 @@ async fn main() -> Result<()> {
                 RUN cargo build --release --package node --bin client --features=client --no-default-features
                 RUN cargo build --release --package node --bin server --features=server --no-default-features
                 RUN cargo build --release --package node --bin relay --features=relay --no-default-features
-                RUN cargo build --release --package node --bin malicious_bootstrap ---features=malicious_bootstrap --no-default-features
+                RUN cargo build --release --package node --bin malicious_bootstrap --features=malicious_bootstrap --no-default-features
                 RUN cargo build --release --package node --bin malicious_client --features=malicious_client --no-default-features
                 RUN cargo build --release --package node --bin malicious_server --features=malicious_server --no-default-features
-                RUN cargo build --release --package node --bin malicious_relay --features=malicious-relay --no-default-features
+                RUN cargo build --release --package node --bin malicious_relay --features=malicious_relay --no-default-features
                 FROM debian:bookworm-slim
                 WORKDIR /app
                 COPY --from=builder /app/target/release/bootstrap .
                 COPY --from=builder /app/target/release/client .
                 COPY --from=builder /app/target/release/server .
                 COPY --from=builder /app/target/release/relay .
-                COPY --from=builder /app/target/release/malicious .
+                COPY --from=builder /app/target/release/malicious_bootstrap .
+                COPY --from=builder /app/target/release/malicious_client .
+                COPY --from=builder /app/target/release/malicious_server .
+                COPY --from=builder /app/target/release/malicious_relay .
             "#
             .to_owned();
             docker.export_image_to_tar_from_ws_context(&ws_root, &ws_root_exclude, image_name, image_tag, &image_out_dir, &dockerfile).await?;

@@ -1,5 +1,5 @@
 #![allow(clippy::vec_init_then_push)]
-#![cfg(feature = "end-to-end")]
+#![cfg(feature = "end_to_end")]
 
 use std::io::Read as _;
 use std::num::NonZeroI128;
@@ -11,8 +11,67 @@ use testcontainers::ImageExt as _;
 use testcontainers::runners::AsyncRunner as _;
 use tokio::io::AsyncWriteExt;
 
+
 mod proto {
     include!("../proto_target/an.rs");
+}
+
+static IMAGE_LOADED: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<bool>>> = tokio::sync::OnceCell::const_new();
+
+async fn load_image(docker: &bollard::Docker) -> Result<(), Box<dyn std::error::Error>> {
+    let loaded = IMAGE_LOADED.get_or_init(async || {
+        std::sync::Arc::new(tokio::sync::Mutex::new(false))
+    });
+    let loaded: &std::sync::Arc<_> = loaded.await;
+    let mut loaded: tokio::sync::MutexGuard<_> = loaded.lock().await;
+    if *loaded {
+        return Ok(())
+    }
+    std::process::Command::new("cargo")
+        .arg("run")
+        .arg("--package")
+        .arg("task")
+        .arg("build-image")
+        .spawn()
+        .expect("failed to build image")
+        .wait()
+        .expect("failed to build image");
+    let ws_dir: std::path::PathBuf = cargo_metadata::MetadataCommand::new()
+        .exec()
+        .unwrap()
+        .workspace_root
+        .to_string()
+        .into();
+    let image_dir: std::path::PathBuf = ws_dir
+        .join("target")
+        .join("image");
+    let image_path: std::path::PathBuf = image_dir.join("node.tar");
+    docker.load(&image_path).await;
+    *loaded = true;
+    Ok(())
+}
+
+async fn reset_containers(docker: &bollard::Docker) -> Result<(), Box<dyn std::error::Error>> {
+    let containers: Vec<_> = docker.list_containers(None).await?;
+    for container in containers {
+        docker.stop_container(&container.id.to_owned().unwrap(), None).await?;
+    }
+    Ok(())
+}
+
+async fn reset_network(docker: &bollard::Docker, network_name: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let containers: Vec<_> = docker.list_containers(None).await.unwrap();
+    for container in containers {
+        let Some(id) = container.id else {
+            continue
+        };
+        let request: bollard::secret::NetworkDisconnectRequest = bollard::secret::NetworkDisconnectRequest {
+            container: id,
+            force: Some(true)
+        };
+        docker.disconnect_network(network_name, request).await.ok();
+    }
+    Ok(())
 }
 
 trait DockerEngine {
@@ -186,26 +245,32 @@ impl VirtualNetwork {
     }
 }
 
-#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+#[tokio::test(flavor = "current_thread")]
+async fn e2e() {
+    // End to end tests must be executed sequentially because they make use of docker and a lot of external tools, this keeps the tests
+    // predictable, otherwise, the tests may be flaky.
+
+    // end_to_end().await;
+    nat_easy().await;
+    nat_hard().await;
+}
+
 async fn end_to_end() {
-    std::process::Command::new("cargo")
-        .arg("run")
-        .arg("--package")
-        .arg("task")
-        .arg("build-image")
-        .spawn()
-        .expect("failed to build image")
-        .wait()
-        .expect("failed to build image");
+    let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
+
+    // load_image(&docker).await.unwrap();
 
     let log_dir: std::path::PathBuf = std::path::PathBuf::new()
         .join("tests")
         .join("log")
         .join("end_to_end");
-    let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
+
     let network: &str = "an";
     let network_udp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
     let network_tpc_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Tcp(8080);
+
+    reset_containers(&docker).await.ok();
+    reset_network(&docker, network).await.ok();
 
     let bootstrap: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
         .with_exposed_port(network_udp_port)
@@ -279,24 +344,15 @@ async fn end_to_end() {
     }
 }
 
-#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn nat_easy() {
-    std::process::Command::new("cargo")
-        .arg("run")
-        .arg("--package")
-        .arg("task")
-        .arg("build-image")
-        .spawn()
-        .expect("successful image build")
-        .wait()
-        .expect("successful image build");
+    let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
+
+    // load_image(&docker).await.unwrap();
 
     let log_dir: std::path::PathBuf = std::path::PathBuf::new()
         .join("tests")
         .join("log")
         .join("nat_easy");
-    
-    let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
 
     let network_a: &str = "an-a";
     let network_a_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
@@ -332,8 +388,10 @@ async fn nat_easy() {
         labels: None
     };
 
-    docker.remove_network(network_a).await.ok();
-    docker.remove_network(network_b).await.ok();
+    reset_containers(&docker).await.ok();
+    reset_network(&docker, network_a).await.ok();
+    reset_network(&docker, network_b).await.ok();
+
     docker.create_network(network_a_conf).await.expect("successful network creation");
     docker.create_network(network_b_conf).await.expect("successful network creation");
 
@@ -428,24 +486,15 @@ async fn nat_easy() {
     docker.remove_network(network_b).await.ok();
 }
 
-#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn nat_hard() {
-    std::process::Command::new("cargo")
-        .arg("run")
-        .arg("--package")
-        .arg("task")
-        .arg("build-image")
-        .spawn()
-        .expect("successful image build")
-        .wait()
-        .expect("successful image build");
+    let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
+
+    // load_image(&docker).await.unwrap();
 
     let log_dir: std::path::PathBuf = std::path::PathBuf::new()
         .join("tests")
         .join("log")
-        .join("nat_hard");
-    
-    let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
+        .join("nat_easy");
 
     let network_a: &str = "an-a";
     let network_a_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
@@ -481,8 +530,10 @@ async fn nat_hard() {
         labels: None
     };
 
-    docker.remove_network(network_a).await.ok();
-    docker.remove_network(network_b).await.ok();
+    reset_containers(&docker).await.ok();
+    reset_network(&docker, network_a).await.ok();
+    reset_network(&docker, network_b).await.ok();
+
     docker.create_network(network_a_conf).await.expect("successful network creation");
     docker.create_network(network_b_conf).await.expect("successful network creation");
 
