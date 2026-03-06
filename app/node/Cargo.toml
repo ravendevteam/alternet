@@ -39,6 +39,13 @@ futures-util = "*"
 reqwest = "*"
 async-trait = "*"
 chrono = "*"
+getset = "*"
+derive_more = "*"
+serde = { version = "*", features = ["derive"] }
+derivative = "*"
+bon = "*"
+strum = { version = "*", features = ["derive"] }
+thiserror = "*"
 
 [build-dependencies]
 tonic-prost = "*"

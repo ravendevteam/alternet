@@ -40,7 +40,9 @@ pub struct Bootstrap {
 impl Bootstrap {
     #[builder]
     pub fn new(
+        #[builder(into)]
         bootstrap_addrs: Vec<libp2p::Multiaddr>,
+        #[builder(into)]
         timeout_duration: std::time::Duration,
         min_peers: usize
     ) -> Self {

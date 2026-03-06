@@ -1,8 +1,6 @@
 #![allow(clippy::vec_init_then_push)]
 #![cfg(feature = "end_to_end")]
 
-
-
 use std::io::Read as _;
 use std::num::NonZeroI128;
 use std::thread::spawn;
@@ -19,131 +17,403 @@ mod proto {
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
+mod log {
+    pub type Result<T> = std::result::Result<T, Error>;
 
-struct Log {
-    pub timestamp: chrono::DateTime<chrono::Utc>,
-    pub severity: String,
-    pub component: String,
-    pub message: String
-}
-
-impl std::str::FromStr for Log {
-    type Err = Box<dyn std::error::Error>;
-
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let (timestamp, more) = s.split_once(' ').ok_or("")?;
-        let timestamp: chrono::DateTime<chrono::Utc> = timestamp.parse()?;
-        let lb: usize = more.find('[').ok_or("")?;
-        let rb: usize = more.find(']').ok_or("")?;
-        let meta: &str = &more[lb + 1..rb];
-        let (severity, component) = meta.split_once(' ').ok_or("")?;
-        let message: String = more[lb + 1..].trim().to_owned();
-        let severity: String = severity.to_owned();
-        let component: String = component.to_owned();
-        let new: Self = Self {
-            timestamp,
-            severity,
-            component,
-            message
-        };
-        Ok(new)
-    }
-}
-
-struct Logs(std::collections::HashMap<String, Vec<Log>>);
-
-impl Logs {
-    pub fn from_file(paths: &[&std::path::Path]) -> Result<Self> {
-        let mut new: std::collections::HashMap<String, Vec<Log>> = std::collections::HashMap::new();
-        for path in paths {
-            let file_name: std::ffi::OsString = path.file_name().ok_or("")?.to_owned();
-            let file_name: String = file_name
-                .to_string_lossy()
-                .to_string();
-            let (file_name, extension) = file_name.split_once('.').ok_or("")?;
-            if extension != "log" {
-                let error: Box<dyn std::error::Error> = "".into();
-                return Err(error)
-            }
-            let file_name: String = file_name.to_owned();
-            let content: String = std::fs::read_to_string(path)?;
-            let mut logs: Vec<Log> = vec![];
-            for line in content.lines() {
-                let log: Log = line.parse()?;
-                logs.push(log);
-            }
-            new.insert(file_name, logs);
-        }
-        Ok(Self(new))
-    }
-}
-
-impl Logs {
-    pub fn proof_of_eventual_discovery(&self) {
-
+    #[derive(Debug)]
+    #[derive(strum::EnumCount)]
+    #[derive(thiserror::Error)]
+    pub enum Error {
+        #[error("{0}")]
+        Io(#[from] std::io::Error),
+        #[error("unable to parse")]
+        #[strum(serialize = "unparsable")]
+        #[strum(serialize = "Unparsable")]
+        #[strum(serialize = "UNPARSABLE")]
+        Unparsable,
+        #[error("not a log file")]
+        #[strum(serialize = "not_log_file")]
+        NotLogFile,
+        #[error("")]
+        FileNotFound
     }
 
-    pub fn proof_of_successful_bootstrap(&self) {
-        let complete: bool = self.0.iter().any(|line| {
-            line.message.contains("bootstrap complete, remaining: 0")
-        });
-        assert!(complete, "bootstrap never reached 0 remaining nodes");
+    #[derive(Debug)]
+    #[derive(Clone)]
+    #[derive(Copy)]
+    #[derive(PartialEq)]
+    #[derive(Eq)]
+    #[derive(Default)]
+    #[derive(strum::EnumCount)]
+    #[derive(strum::EnumIter)]
+    #[derive(strum::EnumString)]
+    pub enum Severity {
+        #[default]
+        #[strum(serialize = "info")]
+        Info,
+        #[strum(serialize = "warn")]
+        Warn,
+        #[strum(serialize = "error")]
+        Error,
+        #[strum(serialize = "debug")]
+        Debug
     }
 
-    pub fn proof_of_causality(
-        &self,
-        lhs_container_id: &str,
-        lhs_log_message: &str,
-        rhs_container_id: &str,
-        rhs_log_message: &str
-    ) {
-        let lhs_time: chrono::DateTime<_> = self.0[lhs_container_id].iter()
-            .find(|line| {
-                line.message.contains(lhs_log_message)
-            })
-            .map(|line| {
-                line.timestamp
-            })
-            .expect("lhs event never happend");
-        let rhs_time = self.0[rhs_container_id].iter()
-            .find(|line| {
-                line.message.contains(rhs_log_message)
-            })
-            .map(|line| {
-                line.timestamp
-            })
-            .expect("rhs event never happend");
-        assert!(lhs_time < rhs_time, "causality violation: rhs event happend before lhs event");
+    #[derive(Debug)]
+    #[derive(Clone)]
+    #[derive(PartialEq)]
+    #[derive(Eq)]
+    #[derive(getset::Getters)]
+    #[derive(getset::CopyGetters)]
+    #[derive(bon::Builder)]
+    pub struct Log {
+        #[getset(get_copy = "pub")]
+        #[builder(into)]
+        #[builder(default = chrono::Utc::now())]
+        timestamp: chrono::DateTime<chrono::Utc>,
+        #[getset(get = "pub")]
+        #[builder(into)]
+        #[builder(default = Severity::Info)]
+        severity: Severity,
+        #[getset(get = "pub")]
+        #[builder(into)]
+        component: String,
+        #[getset(get = "pub")]
+        #[builder(into)]
+        message: String
     }
 
-    pub fn proof_of_convergence(&self, expected_peer_count: usize, limit: std::time::Duration) {
-        for (id, logs) in self.0.iter() {
-            let reached = logs.iter().any(|line| {
-                line.message.contains("knows about") && line.message.contains(&format!("{} peers", expected_peer_count))
-            });
-            assert!(reached, "container {} never converged to {} peers", id, expected_peer_count);
+    impl std::str::FromStr for Log {
+        type Err = Error;
+
+        fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+            let (timestamp, more) = s.split_once(' ').ok_or(Error::Unparsable)?;
+            let timestamp: chrono::DateTime<chrono::Utc> = timestamp.parse().ok().ok_or(Error::Unparsable)?;
+            let lb: usize = more.find('[').ok_or(Error::Unparsable)?;
+            let rb: usize = more.find(']').ok_or(Error::Unparsable)?;
+            let meta: &str = &more[lb + 1..rb];
+            let (severity, component) = meta.split_once(' ').ok_or(Error::Unparsable)?;
+            let message: String = more[rb + 1..].trim().to_owned();
+            let severity: Severity = severity
+                .parse()
+                .ok()
+                .ok_or(Error::Unparsable)?;
+            let component: String = component.to_owned();
+            let new: Self = Self {
+                timestamp,
+                severity,
+                component,
+                message
+            };
+            Ok(new)
         }
     }
 
-    pub fn proof_of_convergence_within_duration() {
-
+    #[derive(Debug)]
+    #[derive(Clone)]
+    #[derive(PartialEq)]
+    #[derive(Eq)]
+    pub struct Report {
+        id_to_logs: std::collections::HashMap<String, Vec<Log>>
     }
 
-    pub fn proof_of_connectivity_persistence(&self, min_peers: usize) {
-        for (id, logs) in &self.0 {
-            let mut converged: bool = false;
+    impl Report {
+        pub fn from_log_file_paths(paths: &[std::path::PathBuf]) -> Result<Self> {
+            let mut id_to_logs: std::collections::HashMap<String, Vec<Log>> = std::collections::HashMap::new();
+            for path in paths {
+                let file_name: std::ffi::OsString = path.file_name().ok_or(Error::FileNotFound)?.to_owned();
+                let file_name: String = file_name
+                    .to_string_lossy()
+                    .to_string();
+                let (file_name, extension) = file_name.split_once('.').ok_or(Error::Unparsable)?;
+                if extension != "log" {
+                    return Err(Error::NotLogFile)
+                }
+                let file_name: String = file_name.to_owned();
+                let content: String = std::fs::read_to_string(path)?;
+                let mut logs: Vec<_> = vec![];
+                for line in content.lines() {
+                    let log: Log = line.parse()?;
+                    logs.push(log);
+                }
+                id_to_logs.insert(file_name, logs);
+            }
+            let new: Self = Self {
+                id_to_logs
+            };
+            Ok(new)
+        }
+
+        pub fn from_dir(dir: &std::path::Path) -> Result<Self> {
+            let mut paths = vec![];
+            for item in std::fs::read_dir(dir)? {
+                let item: std::fs::DirEntry = item?;
+                let item_path: std::path::PathBuf = item.path();
+                let item_file_type: std::fs::FileType = item.file_type()?;
+                if item_file_type.is_file() {
+                    paths.push(item_path);
+                }
+            }
+            Self::from_log_file_paths(&paths)
+        }
+    }
+
+    impl Report {
+        /// # Proof of Startup
+        /// Every node starts successfully.
+        pub fn is_proof_of_startup(&self) -> bool {
+            self.id_to_logs.values().all(|logs| {
+                logs.iter().any(|log| {
+                    log.message().contains("finished booting, entering event loop")
+                })
+            })
+        }
+
+        /// # Proof of GRPC Interaction
+        pub fn is_proof_of_grpc_interaction(&self) -> bool {
+            self.id_to_logs.values().any(|logs| {
+                logs.iter().any(|log| {
+                    log.component().contains("grpc") && log.message().contains("command received")
+                })
+            })
+        }
+
+        pub fn is_proof_of_routing_table_population(&self) -> bool {
+            self.id_to_logs.values().all(|logs| {
+                logs.iter().any(|log| {
+                    log.message().contains("knows about") && log.message().contains("peers")
+                })
+            })
+        }
+
+        pub fn is_proof_of_unique_identity(&self) -> bool {
+            let mut seen: std::collections::HashMap<&str, bool> = std::collections::HashMap::new();
+            for (_, logs) in self.id_to_logs.iter() {
+                for log in logs {
+                    let msg: &str = log.message();
+                    if msg.contains("PeerId")
+                    && let Some(from) = msg.find('(')
+                    && let Some(to) = msg.find(')') {
+                        let peer_id: &str = &msg[from..to];
+                        if seen.insert(peer_id, true).is_some() {
+                            return false
+                        }
+                    }
+                }
+            }
+            true
+        }
+
+        pub fn is_proof_of_sybil_attack(&self) -> bool {
+            // placeholder
+            self.id_to_logs.values().any(|logs| {
+                logs.iter().any(|log| {
+                    let msg = log.message().to_lowercase();
+                    msg.contains("sybil")
+                    || msg.contains("malicious")
+                    || msg.contains("routing pollution")
+                    || msg.contains("invalid peer")
+                })
+            })
+        }
+
+        pub fn is_proof_of_eventual_discovery(&self) -> bool {
+            self.id_to_logs.values().all(|logs| {
+                logs.iter().any(|line| {
+                    line.message().contains("knows about") && !line.message().contains("knows no one")
+                })
+            })
+        }
+    
+        pub fn is_proof_of_successful_bootstrap(&self) -> bool {
+            self.id_to_logs.values().any(|logs| {
+                logs.iter().any(|line| {
+                    line.message().contains("bootstrap complete, remaining: 0")
+                })
+            })
+        }
+
+        pub fn is_proof_of_causality(
+            &self,
+            lhs_container_id: &str,
+            lhs_log_message: &str,
+            rhs_container_id: &str,
+            rhs_log_message: &str
+        ) -> bool {
+            let lhs_time = self.id_to_logs[lhs_container_id].iter()
+                .find(|line| {
+                    line.message.contains(lhs_log_message)
+                })
+                .map(|line| {
+                    line.timestamp
+                });
+            let Some(lhs_time) = lhs_time else {
+                return false
+            };
+            let rhs_time = self.id_to_logs[rhs_container_id].iter()
+                .find(|line| {
+                    line.message.contains(rhs_log_message)
+                })
+                .map(|line| {
+                    line.timestamp
+                });
+            let Some(rhs_time) = rhs_time else {
+                return false
+            };
+            lhs_time < rhs_time
+        }
+
+        pub fn is_proof_of_convergence(&self, expected_peer_count: usize) -> bool {
+            for (_, logs) in self.id_to_logs.iter() {
+                let reached: bool = logs.iter().any(|line| {
+                    line.message.contains("knows about") && line.message.contains(&format!("{} peers", expected_peer_count))
+                });
+                if !reached {
+                    return false
+                }
+            }
+            true
+        }
+
+        /// # Proof of Connectivity Persistence
+        /// Once the expected peer count is reached, it never drops again.
+        pub fn is_proof_of_connectivity_persistence(&self, expected_count: usize) -> bool {
+            for logs in self.id_to_logs.values() {
+                let mut converged: bool = false;
+                for line in logs {
+                    if line.message().contains("knows about") && line.message.contains(&format!("{} peers", expected_count)) {
+                        converged = true;
+                    }
+                    if converged && line.message.contains("peer count dropped") {
+                        return false
+                    }
+                }
+            }
+            true
+        }
+
+        /// # Proof of Cohesion
+        /// Every node has at least one neighbor who is connected to the network.
+        pub fn is_proof_of_cohesion(&self) -> bool {
+            let mut id_to_peer_id: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+            for (id, logs) in self.id_to_logs.iter() {
+                let id: String = id.to_owned();
+                if let Some(peer_id) = self.extract_own_peer_id(logs) {
+                    id_to_peer_id.insert(id, peer_id);
+                }
+            }
+            let mut adjacency: std::collections::HashMap<String, std::collections::HashSet<String>> = std::collections::HashMap::new();
+            for peer_id in id_to_peer_id.values() {
+                let peer_id: String = peer_id.to_owned();
+                adjacency.insert(peer_id, std::collections::HashSet::new());
+            }
+            for (id, logs) in self.id_to_logs.iter() {
+                let Some(id) = id_to_peer_id.get(id) else {
+                    continue
+                };
+                let neighbors: std::collections::HashSet<_> = self.extract_all_known_peers(logs);
+                for neighbor in neighbors {
+                    let id_copy_a: String = id.to_owned();
+                    let id_copy_b: String = id.to_owned();
+                    let neighbor_copy_a: String = neighbor.to_owned();
+                    let neighbor_copy_b: String = neighbor.to_owned();
+                    adjacency.entry(id_copy_a).or_default().insert(neighbor_copy_a);
+                    adjacency.entry(neighbor_copy_b).or_default().insert(id_copy_b);
+                }
+            }
+            if adjacency.is_empty() {
+                return false
+            }
+            let mut found: std::collections::HashSet<String> = std::collections::HashSet::new();
+            let mut queue: std::collections::VecDeque<String> = std::collections::VecDeque::new();
+            let root_node: &str = adjacency.keys().next().unwrap();
+            let root_node_copy_a: String = root_node.to_owned();
+            let root_node_copy_b: String = root_node.to_owned();
+            found.insert(root_node_copy_a);
+            queue.push_back(root_node_copy_b);
+            while let Some(current) = queue.pop_front() && let Some(neighbors) = adjacency.get(&current) {
+                for neighbor in neighbors.iter() {
+                    let neighbor: &str = neighbor.as_str();
+                    let neighbor_copy_a: String = neighbor.to_owned();
+                    let neighbor_copy_b: String = neighbor.to_owned();
+                    if !found.contains(neighbor) {
+                        found.insert(neighbor_copy_a);
+                        queue.push_back(neighbor_copy_b);
+                    }
+                }
+            }
+            found.len() == adjacency.len()
+        }
+
+        fn extract_own_peer_id(&self, logs: &[Log]) -> Option<String> {
+            logs.iter().find_map(|l| {
+                if l.message().contains("peer identity initialized: PeerId(\"") {
+                    return Some(l.message()
+                        .split("PeerId(\"").nth(1)?
+                        .split("\")").next()?.to_string());
+                }
+                None
+            })
+        }
+
+        fn extract_all_known_peers(&self, logs: &[Log]) -> std::collections::HashSet<String> {
+            let mut peers = std::collections::HashSet::new();
             for line in logs {
-                if line.message.contains("knows about") && line.message.contains(&format!("{} peers", min_peers)) {
-                    converged = true;
-                }
-                if converged && line.message.contains("peer count dropped") {
-
-                    panic!("container {} lost connectivity after converging", id);
+                if line.message().contains("knows about") {
+                    if let Some(list_part) = line.message().split('[').nth(1) {
+                        let cleaned = list_part.trim_end_matches(']');
+                        for id in cleaned.split(',') {
+                            let id = id.trim();
+                            if !id.is_empty() {
+                                peers.insert(id.to_owned());
+                            }
+                        }
+                    }
                 }
             }
+            peers
+        }
+
+
+        /// # Proof of Stability
+        /// Churn decreases over time or stays below a threshold after the initial discovery phase.
+        pub fn is_proof_of_stability(&self, churn_threshold: usize) -> bool {
+            for logs in self.id_to_logs.values() {
+                let churn_values: Vec<usize> = logs.iter()
+                    .filter(|l| l.message().contains("routing churn:"))
+                    .filter_map(|l| {
+                        l.message()
+                            .split("routing churn: ")
+                            .nth(1)?
+                            .parse::<usize>().ok()
+                    })
+                    .collect();
+                if let Some(&last_churn) = churn_values.last() && last_churn > churn_threshold {
+                    return false
+                }
+            }
+            true
+        }
+
+        pub fn is_proof_of_propagation(&self, origin_id: &str, msg_content: &str) -> bool {
+            let sent = self.id_to_logs.get(origin_id)
+                .map(|logs| logs.iter().any(|l| l.message().contains("broadcast") && l.message().contains(msg_content)))
+                .unwrap_or(false);
+                
+            if !sent {
+                return false
+            }
+            self.id_to_logs.iter()
+                .filter(|(id, _)| *id != origin_id)
+                .all(|(_, logs)| {
+                    logs.iter().any(|l| l.message().contains("received") && l.message().contains(msg_content))
+                })
         }
     }
 }
+
+
+
 
 
 
