@@ -1,4 +1,5 @@
 #![allow(clippy::vec_init_then_push)]
+#![allow(unused)]
 #![cfg(feature = "end_to_end")]
 
 use std::io::Read as _;
@@ -49,13 +50,13 @@ mod log {
     #[derive(strum::EnumString)]
     pub enum Severity {
         #[default]
-        #[strum(serialize = "info")]
+        #[strum(serialize = "INFO")]
         Info,
-        #[strum(serialize = "warn")]
+        #[strum(serialize = "WARN")]
         Warn,
-        #[strum(serialize = "error")]
+        #[strum(serialize = "ERROR")]
         Error,
-        #[strum(serialize = "debug")]
+        #[strum(serialize = "DEBUG")]
         Debug
     }
 
@@ -93,7 +94,8 @@ mod log {
             let rb: usize = more.find(']').ok_or(Error::Unparsable)?;
             let meta: &str = &more[lb + 1..rb];
             let (severity, component) = meta.split_once(' ').ok_or(Error::Unparsable)?;
-            let message: String = more[rb + 1..].trim().to_owned();
+            let message: &str = more[rb + 1..].trim();
+            let message: String = message.to_owned();
             let severity: Severity = severity
                 .parse()
                 .ok()
@@ -293,32 +295,59 @@ mod log {
         }
 
         /// # Proof of Cohesion
-        /// Every node has at least one neighbor who is connected to the network.
+        /// There are no partitioned nodes and the network's topology is connected.
         pub fn is_proof_of_cohesion(&self) -> bool {
             let mut id_to_peer_id: std::collections::HashMap<String, String> = std::collections::HashMap::new();
             for (id, logs) in self.id_to_logs.iter() {
                 let id: String = id.to_owned();
-                if let Some(peer_id) = self.extract_own_peer_id(logs) {
-                    id_to_peer_id.insert(id, peer_id);
-                }
-            }
-            let mut adjacency: std::collections::HashMap<String, std::collections::HashSet<String>> = std::collections::HashMap::new();
-            for peer_id in id_to_peer_id.values() {
-                let peer_id: String = peer_id.to_owned();
-                adjacency.insert(peer_id, std::collections::HashSet::new());
-            }
-            for (id, logs) in self.id_to_logs.iter() {
-                let Some(id) = id_to_peer_id.get(id) else {
+                let peer_id: Option<_> = logs.iter().find_map(|log| {
+                    let pattern: &str = "peer identity initialized";
+                    if log.message().contains(pattern) {
+                        let s: String = log
+                            .message()
+                            .split("PeerId(\"")
+                            .nth(1)?
+                            .split("\")")
+                            .next()?
+                            .to_owned();
+                        return Some(s)
+                    }
+                    None
+                });
+                let Some(peer_id) = peer_id else {
                     continue
                 };
-                let neighbors: std::collections::HashSet<_> = self.extract_all_known_peers(logs);
+                id_to_peer_id.insert(id, peer_id);
+            }
+            let mut adjacency: std::collections::HashMap<String, std::collections::HashSet<String>> = std::collections::HashMap::new();
+            for (_, peer_id) in id_to_peer_id.iter() {
+                let peer_id: String = peer_id.to_owned();
+                adjacency.entry(peer_id).or_default();
+            }
+            for (id, logs) in self.id_to_logs.iter() {
+                let Some(peer_id) = id_to_peer_id.get(id) else {
+                    continue
+                };
+                let mut neighbors: std::collections::HashSet<_> = std::collections::HashSet::new();
+                for log in logs {
+                    if log.message().contains("knows about") && let Some(list_part) = log.message().split('[').nth(1) {
+                        let s: &str = list_part.trim_end_matches(']');
+                        for id in s.split(',') {
+                            let id: &str = id.trim();
+                            if !id.is_empty() {
+                                let id: String = id.to_owned();
+                                neighbors.insert(id);
+                            }
+                        }
+                    }
+                }
                 for neighbor in neighbors {
-                    let id_copy_a: String = id.to_owned();
-                    let id_copy_b: String = id.to_owned();
+                    let peer_id_copy_a: String = peer_id.to_owned();
+                    let peer_id_copy_b: String = peer_id.to_owned();
                     let neighbor_copy_a: String = neighbor.to_owned();
                     let neighbor_copy_b: String = neighbor.to_owned();
-                    adjacency.entry(id_copy_a).or_default().insert(neighbor_copy_a);
-                    adjacency.entry(neighbor_copy_b).or_default().insert(id_copy_b);
+                    adjacency.entry(peer_id_copy_a).or_default().insert(neighbor_copy_a);
+                    adjacency.entry(neighbor_copy_b).or_default().insert(peer_id_copy_b);
                 }
             }
             if adjacency.is_empty() {
@@ -331,7 +360,7 @@ mod log {
             let root_node_copy_b: String = root_node.to_owned();
             found.insert(root_node_copy_a);
             queue.push_back(root_node_copy_b);
-            while let Some(current) = queue.pop_front() && let Some(neighbors) = adjacency.get(&current) {
+            while let Some(node) = queue.pop_front() && let Some(neighbors) = adjacency.get(&node) {
                 for neighbor in neighbors.iter() {
                     let neighbor: &str = neighbor.as_str();
                     let neighbor_copy_a: String = neighbor.to_owned();
@@ -345,68 +374,51 @@ mod log {
             found.len() == adjacency.len()
         }
 
-        fn extract_own_peer_id(&self, logs: &[Log]) -> Option<String> {
-            logs.iter().find_map(|l| {
-                if l.message().contains("peer identity initialized: PeerId(\"") {
-                    return Some(l.message()
-                        .split("PeerId(\"").nth(1)?
-                        .split("\")").next()?.to_string());
-                }
-                None
-            })
-        }
-
-        fn extract_all_known_peers(&self, logs: &[Log]) -> std::collections::HashSet<String> {
-            let mut peers = std::collections::HashSet::new();
-            for line in logs {
-                if line.message().contains("knows about") {
-                    if let Some(list_part) = line.message().split('[').nth(1) {
-                        let cleaned = list_part.trim_end_matches(']');
-                        for id in cleaned.split(',') {
-                            let id = id.trim();
-                            if !id.is_empty() {
-                                peers.insert(id.to_owned());
-                            }
-                        }
-                    }
-                }
-            }
-            peers
-        }
-
-
         /// # Proof of Stability
-        /// Churn decreases over time or stays below a threshold after the initial discovery phase.
+        /// Churn decreases over time or is below the threshold after the initial discovery phase.
         pub fn is_proof_of_stability(&self, churn_threshold: usize) -> bool {
-            for logs in self.id_to_logs.values() {
-                let churn_values: Vec<usize> = logs.iter()
-                    .filter(|l| l.message().contains("routing churn:"))
-                    .filter_map(|l| {
-                        l.message()
+            for (_, logs) in self.id_to_logs.iter() {
+                let churn_vals: Vec<_> = logs
+                    .iter()
+                    .filter(|log| {
+                        log.message().contains("routing churn:")
+                    })
+                    .filter_map(|log| {
+                        log.message()
                             .split("routing churn: ")
                             .nth(1)?
-                            .parse::<usize>().ok()
+                            .parse::<usize>()
+                            .ok()
                     })
                     .collect();
-                if let Some(&last_churn) = churn_values.last() && last_churn > churn_threshold {
+                if let Some(&last_churn) = churn_vals.last() && last_churn > churn_threshold {
                     return false
                 }
             }
             true
         }
 
-        pub fn is_proof_of_propagation(&self, origin_id: &str, msg_content: &str) -> bool {
-            let sent = self.id_to_logs.get(origin_id)
-                .map(|logs| logs.iter().any(|l| l.message().contains("broadcast") && l.message().contains(msg_content)))
+        pub fn is_proof_of_propagation(&self, origin_id: &str, msg: &str) -> bool {
+            let sent: bool = self.id_to_logs
+                .get(origin_id)
+                .map(|logs| {
+                    logs.iter().any(|log| {
+                        log.message().contains("broadcast") && log.message().contains(msg)
+                    })
+                })
                 .unwrap_or(false);
-                
             if !sent {
                 return false
             }
-            self.id_to_logs.iter()
-                .filter(|(id, _)| *id != origin_id)
+            self.id_to_logs
+                .iter()
+                .filter(|(id, _)| {
+                    *id != origin_id
+                })
                 .all(|(_, logs)| {
-                    logs.iter().any(|l| l.message().contains("received") && l.message().contains(msg_content))
+                    logs.iter().any(|log| {
+                        log.message().contains("received") && log.message().contains(msg)
+                    })
                 })
         }
     }
@@ -414,15 +426,61 @@ mod log {
 
 
 
+const NETWORK_A: &str = "an_a3";
+const NETWORK_B: &str = "an_b3";
+const NETWORK_C: &str = "an_c3";
 
+#[derive(getset::Getters)]
+struct Network<'a> {
+    docker: &'a bollard::Docker,
+    #[getset(get = "pub")]
+    name: String
+}
 
+#[bon::bon]
+impl<'a> Network<'a> {
+    #[builder]
+    #[builder(finish_fn = "reserve")]
+    pub async fn new(
+        docker: &'a bollard::Docker,
+        docker_network_conf: bollard::secret::NetworkCreateRequest,
+        #[builder(into)]
+        name: String
+    ) -> Result<Self> {
+        docker.create_network(docker_network_conf).await?;
+        let new: Self = Self {
+            docker,
+            name
+        };
+        Ok(new)
+    }
+}
+
+impl<'a> Network<'a> {
+    pub async fn release(self) {
+        let containers: Vec<_> = self.docker.list_containers(None).await.unwrap_or_default();
+        for container in containers {
+            let Some(id) = container.id else {
+                continue
+            };
+            let request: bollard::secret::NetworkDisconnectRequest = bollard::secret::NetworkDisconnectRequest {
+                container: id,
+                force: Some(true)
+            };
+            self.docker.disconnect_network(&self.name, request).await.ok();
+        }
+        self.docker.remove_network(&self.name).await.ok();
+    }
+}
+
+type Container = testcontainers::ContainerAsync<testcontainers::GenericImage>;
 
 trait DockerEngine {
     async fn load(&self, path: &std::path::Path) -> Result<()>;
     async fn load_built_tar_image_from_ws_target_dir(&self) -> Result<()>;
     async fn reset(&self) -> Result<()>;
     async fn reset_network(&self, network_name: &str) -> Result<()>;
-    async fn write_logs_to_file(&self, out_dir: &std::path::Path, containers: Vec<testcontainers::ContainerAsync<testcontainers::GenericImage>>) -> Result<()>;
+    async fn write_logs_to_file(&self, out_dir: &std::path::Path, containers: Vec<Container>) -> Result<()>;
 }
 
 impl DockerEngine for bollard::Docker {
@@ -493,6 +551,8 @@ impl DockerEngine for bollard::Docker {
     }
 
     async fn write_logs_to_file(&self, out_dir: &std::path::Path, containers: Vec<testcontainers::ContainerAsync<testcontainers::GenericImage>>) -> Result<()> {
+        std::fs::remove_dir_all(out_dir).ok();
+        std::fs::create_dir_all(out_dir)?;
         let logs_conf: bollard::query_parameters::LogsOptions = bollard::query_parameters::LogsOptions {
             stdout: true,
             stderr: true,
@@ -503,7 +563,8 @@ impl DockerEngine for bollard::Docker {
         for container in containers {
             let logs_conf: bollard::query_parameters::LogsOptions = logs_conf.to_owned();
             let container_id: &str = container.id();
-            let container_path: std::path::PathBuf = out_dir.join(container_id);
+            let mut container_path: std::path::PathBuf = out_dir.join(container_id);
+            container_path.set_extension("log");
             let mut file: tokio::fs::File = tokio::fs::File::create(container_path).await.unwrap();
             let mut stream = self.logs(container_id, Some(logs_conf));
             while let Some(log) = stream.next().await {
@@ -563,9 +624,10 @@ impl Suite {
 
     pub async fn run(&mut self) {
         self.docker.reset().await.ok();
-        self.docker.load_built_tar_image_from_ws_target_dir().await.unwrap();
+        // self.docker.load_built_tar_image_from_ws_target_dir().await.unwrap();
         for test in self.tests.iter() {
             test.run(&self.docker).await;
+            self.docker.reset().await.ok();
         }
     }
 }
@@ -580,9 +642,8 @@ impl Test for NatEasy {
             .join("log")
             .join("nat_easy");
 
-        let network_a: &str = "an-a";
         let network_a_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
-            name: network_a.to_owned(),
+            name: NETWORK_A.to_owned(),
             driver: None,
             scope: None,
             internal: None,
@@ -597,9 +658,8 @@ impl Test for NatEasy {
             labels: None
         };
 
-        let network_b: &str = "an-b";
         let network_b_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
-            name: network_b.to_owned(),
+            name: NETWORK_B.to_owned(),
             driver: None,
             scope: None,
             internal: None,
@@ -614,11 +674,21 @@ impl Test for NatEasy {
             labels: None
         };
 
-        docker.reset().await.ok();
-        docker.reset_network(network_a).await.ok();
-        docker.reset_network(network_b).await.ok();
-        docker.create_network(network_a_conf).await.expect("successful network creation");
-        docker.create_network(network_b_conf).await.expect("successful network creation");
+        let network_a: Network = Network::builder()
+            .docker(docker)
+            .docker_network_conf(network_a_conf)
+            .name(NETWORK_A)
+            .reserve()
+            .await
+            .unwrap();
+    
+        let network_b: Network = Network::builder()
+            .docker(docker)
+            .docker_network_conf(network_b_conf)
+            .name(NETWORK_B)
+            .reserve()
+            .await
+            .unwrap();
 
         let udp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
         let tcp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Tcp(8080);
@@ -627,42 +697,30 @@ impl Test for NatEasy {
             .with_exposed_port(udp_port)
             .with_exposed_port(tcp_port)
             .with_cmd(["./bootstrap"])
-            .with_network(network_a)
+            .with_network(network_a.name())
+            .with_network(network_b.name())
             .start()
             .await
-            .expect("successful container launch");
+            .unwrap();
 
         let bootstrap_ip: std::net::IpAddr = bootstrap.get_bridge_ip_address().await.expect("bridge ip addr");
         let bootstrap_addr: String = format!("/ip4/{}/udp/4001/quic-v1", bootstrap_ip);
-
-        let bootstrap_network_connection_conf: bollard::secret::NetworkConnectRequest = bollard::secret::NetworkConnectRequest {
-            container: bootstrap.id().to_owned(),
-            endpoint_config: None
-        };
-
-        docker.connect_network(network_b, bootstrap_network_connection_conf).await.expect("successful network connection");
 
         let relay: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
             .with_exposed_port(udp_port)
             .with_exposed_port(tcp_port)
             .with_cmd(["./relay", "--dial", &bootstrap_addr])
-            .with_network(network_a)
+            .with_network(network_a.name())
+            .with_network(network_b.name())
             .start()
             .await
             .expect("successful container launch");
-
-        let relay_network_connection_conf: bollard::secret::NetworkConnectRequest = bollard::secret::NetworkConnectRequest {
-            container: relay.id().to_owned(),
-            endpoint_config: None
-        };
-
-        docker.connect_network(network_b, relay_network_connection_conf).await.expect("successful network connection");
 
         let server: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
             .with_exposed_port(udp_port)
             .with_exposed_port(tcp_port)
             .with_cmd(["./server", "--dial", &bootstrap_addr])
-            .with_network(network_b)
+            .with_network(network_b.name())
             .start()
             .await
             .expect("successful container launch");
@@ -674,7 +732,7 @@ impl Test for NatEasy {
             .with_exposed_port(udp_port)
             .with_exposed_port(tcp_port)
             .with_cmd(["./client", "--dial", &bootstrap_addr])
-            .with_network(network_a)
+            .with_network(network_a.name())
             .start()
             .await
             .expect("successful container launch");
@@ -701,8 +759,9 @@ impl Test for NatEasy {
         tokio::fs::create_dir_all(&log_dir).await.expect("unable to create logs directory");
 
         docker.write_logs_to_file(&log_dir, logged).await.unwrap();
-        docker.remove_network(network_a).await.ok();
-        docker.remove_network(network_b).await.ok();
+
+        network_a.release().await;
+        network_b.release().await;
     }
 }
 
@@ -716,9 +775,8 @@ impl Test for NatHard {
             .join("log")
             .join("nat_hard");
 
-        let network_a: &str = "an-a";
         let network_a_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
-            name: network_a.to_owned(),
+            name: NETWORK_A.to_owned(),
             driver: None,
             scope: None,
             internal: Some(false),
@@ -733,9 +791,8 @@ impl Test for NatHard {
             labels: None
         };
 
-        let network_b: &str = "an-b";
         let network_b_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
-            name: network_b.to_owned(),
+            name: NETWORK_B.to_owned(),
             driver: None,
             scope: None,
             internal: Some(false),
@@ -750,11 +807,21 @@ impl Test for NatHard {
             labels: None
         };
 
-        docker.reset().await.ok();
-        docker.reset_network(network_a).await.ok();
-        docker.reset_network(network_b).await.ok();
-        docker.create_network(network_a_conf).await.expect("successful network creation");
-        docker.create_network(network_b_conf).await.expect("successful network creation");
+        let network_a: Network = Network::builder()
+            .docker(docker)
+            .docker_network_conf(network_a_conf)
+            .name(NETWORK_A)
+            .reserve()
+            .await
+            .unwrap();
+    
+        let network_b: Network = Network::builder()
+            .docker(docker)
+            .docker_network_conf(network_b_conf)
+            .name(NETWORK_B)
+            .reserve()
+            .await
+            .unwrap();
 
         let udp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
         let tcp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Tcp(8080);
@@ -763,7 +830,8 @@ impl Test for NatHard {
             .with_exposed_port(udp_port)
             .with_exposed_port(tcp_port)
             .with_cmd(["./bootstrap"])
-            .with_network(network_a)
+            .with_network(NETWORK_A)
+            .with_network(NETWORK_B)
             .start()
             .await
             .expect("successful container launch");
@@ -775,7 +843,8 @@ impl Test for NatHard {
             .with_exposed_port(udp_port)
             .with_exposed_port(tcp_port)
             .with_cmd(["./relay", "--dial", &bootstrap_addr])
-            .with_network(network_a)
+            .with_network(NETWORK_A)
+            .with_network(NETWORK_B)
             .start()
             .await
             .expect("successful container launch");
@@ -784,7 +853,7 @@ impl Test for NatHard {
             .with_exposed_port(udp_port)
             .with_exposed_port(tcp_port)
             .with_cmd(["./server", "--dial", &bootstrap_addr])
-            .with_network(network_b)
+            .with_network(NETWORK_B)
             .start()
             .await
             .expect("successful container launch");
@@ -796,7 +865,7 @@ impl Test for NatHard {
             .with_exposed_port(udp_port)
             .with_exposed_port(tcp_port)
             .with_cmd(["./client", "--dial", &bootstrap_addr])
-            .with_network(network_a)
+            .with_network(NETWORK_A)
             .start()
             .await
             .expect("successful container launch");
@@ -822,9 +891,13 @@ impl Test for NatHard {
         tokio::fs::remove_dir_all(&log_dir).await.ok();
         tokio::fs::create_dir_all(&log_dir).await.expect("unable to create logs directory");
 
+        network_a.release().await;
+        network_b.release().await;
+
         docker.write_logs_to_file(&log_dir, logged).await.unwrap();
-        docker.remove_network(network_a).await.ok();
-        docker.remove_network(network_b).await.ok();
+
+        let report: log::Report = log::Report::from_dir(&log_dir).unwrap();
+        assert!(report.is_proof_of_startup());
     }
 }
 
