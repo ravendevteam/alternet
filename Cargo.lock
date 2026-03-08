@@ -2866,6 +2866,7 @@ dependencies = [
  "modwire",
  "num",
  "prost",
+ "rand 0.8.5",
  "reqwest",
  "serde",
  "strum",

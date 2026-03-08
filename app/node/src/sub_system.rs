@@ -2,6 +2,7 @@ use super::*;
 
 pub mod bootstrap;
 pub mod connection_manager;
+pub mod dht_poison;
 pub mod dialer;
 pub mod discovery_monitor;
 pub mod nat_observer;

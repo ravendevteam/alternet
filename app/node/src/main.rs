@@ -650,6 +650,9 @@ async fn main() -> Result<()> {
     sub_system_bus.add_system(discovery_monitor);
     sub_system_bus.add_system(sub_system::dialer::Dialer);
 
+    #[cfg(feature = "malicious_relay")]
+    sub_system_bus.add_system(sub_system::dht_poison::DhtPoison);
+
     log::info!("finished booting, entering event loop");
 
     loop {

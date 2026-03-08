@@ -165,8 +165,34 @@ mod log {
         /// Every node starts successfully.
         pub fn is_proof_of_startup(&self) -> bool {
             self.id_to_logs.values().all(|logs| {
+                let mut has_boot: bool = false;
+                let mut has_id: bool = false;
+                let mut has_looped: bool = false;
+                for log in logs {
+                    let msg: &str = log.message();
+                    if msg.contains("booting") {
+                        has_boot = true;
+                    }
+                    if msg.contains("peer identity initialized") {
+                        has_id = true;
+                    }
+                    if msg.contains("entering event loop") {
+                        has_looped = true;
+                    }
+                }
+                has_boot && has_id && has_looped
+            })
+        }
+
+        pub fn is_proof_of_relay_usage(&self) -> bool {
+            self.id_to_logs.values().any(|logs| {
                 logs.iter().any(|log| {
-                    log.message().contains("finished booting, entering event loop")
+                    let msg: String = log.message().to_lowercase();
+                    let has_relay: bool = msg.contains("relay");
+                    let has_dial: bool = msg.contains("dial");
+                    let has_forward: bool = msg.contains("forward");
+                    let has_circuit: bool = msg.contains("circuit");
+                    has_relay && (has_dial || has_forward || has_circuit)
                 })
             })
         }
@@ -175,7 +201,7 @@ mod log {
         pub fn is_proof_of_grpc_interaction(&self) -> bool {
             self.id_to_logs.values().any(|logs| {
                 logs.iter().any(|log| {
-                    log.component().contains("grpc") && log.message().contains("command received")
+                    log.component().contains("grpc") && log.message().contains("dial request")
                 })
             })
         }
@@ -424,58 +450,60 @@ mod log {
     }
 }
 
+mod network {
+    pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
+    pub const A: &str = "an_0";
+    pub const B: &str = "an_1";
+    pub const C: &str = "an_3";
 
-const NETWORK_A: &str = "an_a3";
-const NETWORK_B: &str = "an_b3";
-const NETWORK_C: &str = "an_c3";
-
-#[derive(getset::Getters)]
-struct Network<'a> {
-    docker: &'a bollard::Docker,
-    #[getset(get = "pub")]
-    name: String
-}
-
-#[bon::bon]
-impl<'a> Network<'a> {
-    #[builder]
-    #[builder(finish_fn = "reserve")]
-    pub async fn new(
+    #[derive(getset::Getters)]
+    pub struct Network<'a> {
         docker: &'a bollard::Docker,
-        docker_network_conf: bollard::secret::NetworkCreateRequest,
-        #[builder(into)]
+        #[getset(get = "pub")]
         name: String
-    ) -> Result<Self> {
-        docker.create_network(docker_network_conf).await?;
-        let new: Self = Self {
-            docker,
-            name
-        };
-        Ok(new)
     }
-}
 
-impl<'a> Network<'a> {
-    pub async fn release(self) {
-        let containers: Vec<_> = self.docker.list_containers(None).await.unwrap_or_default();
-        for container in containers {
-            let Some(id) = container.id else {
-                continue
+    #[bon::bon]
+    impl<'a> Network<'a> {
+        #[builder]
+        #[builder(finish_fn = "reserve")]
+        pub async fn new(
+            docker: &'a bollard::Docker,
+            docker_network_conf: bollard::secret::NetworkCreateRequest,
+            #[builder(into)]
+            name: String
+        ) -> Result<Self> {
+            docker.create_network(docker_network_conf).await?;
+            let new: Self = Self {
+                docker,
+                name
             };
-            let request: bollard::secret::NetworkDisconnectRequest = bollard::secret::NetworkDisconnectRequest {
-                container: id,
-                force: Some(true)
-            };
-            self.docker.disconnect_network(&self.name, request).await.ok();
+            Ok(new)
         }
-        self.docker.remove_network(&self.name).await.ok();
+    }
+
+    impl<'a> Network<'a> {
+        pub async fn release(self) {
+            let containers: Vec<_> = self.docker.list_containers(None).await.unwrap_or_default();
+            for container in containers {
+                let Some(id) = container.id else {
+                    continue
+                };
+                let request: bollard::secret::NetworkDisconnectRequest = bollard::secret::NetworkDisconnectRequest {
+                    container: id,
+                    force: Some(true)
+                };
+                self.docker.disconnect_network(&self.name, request).await.ok();
+            }
+            self.docker.remove_network(&self.name).await.ok();
+        }
     }
 }
 
 type Container = testcontainers::ContainerAsync<testcontainers::GenericImage>;
 
-trait DockerEngine {
+trait Docker {
     async fn load(&self, path: &std::path::Path) -> Result<()>;
     async fn load_built_tar_image_from_ws_target_dir(&self) -> Result<()>;
     async fn reset(&self) -> Result<()>;
@@ -483,7 +511,7 @@ trait DockerEngine {
     async fn write_logs_to_file(&self, out_dir: &std::path::Path, containers: Vec<Container>) -> Result<()>;
 }
 
-impl DockerEngine for bollard::Docker {
+impl Docker for bollard::Docker {
     async fn load(&self, path: &std::path::Path) -> Result<()> {
         let mut file = std::fs::File::open(path).unwrap();
         let mut bytes = vec![];
@@ -643,7 +671,7 @@ impl Test for NatEasy {
             .join("nat_easy");
 
         let network_a_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
-            name: NETWORK_A.to_owned(),
+            name: network::A.to_owned(),
             driver: None,
             scope: None,
             internal: None,
@@ -659,7 +687,7 @@ impl Test for NatEasy {
         };
 
         let network_b_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
-            name: NETWORK_B.to_owned(),
+            name: network::B.to_owned(),
             driver: None,
             scope: None,
             internal: None,
@@ -674,18 +702,18 @@ impl Test for NatEasy {
             labels: None
         };
 
-        let network_a: Network = Network::builder()
+        let network_a: network::Network = network::Network::builder()
             .docker(docker)
             .docker_network_conf(network_a_conf)
-            .name(NETWORK_A)
+            .name(network::A)
             .reserve()
             .await
             .unwrap();
     
-        let network_b: Network = Network::builder()
+        let network_b: network::Network = network::Network::builder()
             .docker(docker)
             .docker_network_conf(network_b_conf)
-            .name(NETWORK_B)
+            .name(network::B)
             .reserve()
             .await
             .unwrap();
@@ -733,139 +761,6 @@ impl Test for NatEasy {
             .with_exposed_port(tcp_port)
             .with_cmd(["./client", "--dial", &bootstrap_addr])
             .with_network(network_a.name())
-            .start()
-            .await
-            .expect("successful container launch");
-
-        let client_grpc_port: u16 = client.get_host_port_ipv4(8080).await.expect("host port ipv4");
-        let client_gprc_endpoint: String = format!("http://127.0.0.1:{}", client_grpc_port);
-        let mut client_grpc: proto::node_client::NodeClient<_> = proto::node_client::NodeClient::connect(client_gprc_endpoint).await.expect("successful grpc client");
-
-        let client_request: proto::DialRequest = proto::DialRequest {
-            addr: server_addr    
-        };
-
-        client_grpc.dial(client_request).await.expect("successful dial");
-
-        tokio::time::sleep(std::time::Duration::from_mins(1)).await;
-
-        let mut logged: Vec<_> = vec![];
-        logged.push(bootstrap);
-        logged.push(relay);
-        logged.push(server);
-        logged.push(client);
-
-        tokio::fs::remove_dir_all(&log_dir).await.ok();
-        tokio::fs::create_dir_all(&log_dir).await.expect("unable to create logs directory");
-
-        docker.write_logs_to_file(&log_dir, logged).await.unwrap();
-
-        network_a.release().await;
-        network_b.release().await;
-    }
-}
-
-struct NatHard;
-
-#[async_trait::async_trait]
-impl Test for NatHard {
-    async fn run(&self, docker: &bollard::Docker) {
-        let log_dir: std::path::PathBuf = std::path::PathBuf::new()
-            .join("tests")
-            .join("log")
-            .join("nat_hard");
-
-        let network_a_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
-            name: NETWORK_A.to_owned(),
-            driver: None,
-            scope: None,
-            internal: Some(false),
-            attachable: Some(false),
-            ingress: Some(false),
-            config_from: None,
-            config_only: None,
-            ipam: None,
-            enable_ipv4: Some(true),
-            enable_ipv6: Some(false),
-            options: None,
-            labels: None
-        };
-
-        let network_b_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
-            name: NETWORK_B.to_owned(),
-            driver: None,
-            scope: None,
-            internal: Some(false),
-            attachable: Some(false),
-            ingress: Some(false),
-            config_from: None,
-            config_only: None,
-            ipam: None,
-            enable_ipv4: Some(true),
-            enable_ipv6: Some(false),
-            options: None,
-            labels: None
-        };
-
-        let network_a: Network = Network::builder()
-            .docker(docker)
-            .docker_network_conf(network_a_conf)
-            .name(NETWORK_A)
-            .reserve()
-            .await
-            .unwrap();
-    
-        let network_b: Network = Network::builder()
-            .docker(docker)
-            .docker_network_conf(network_b_conf)
-            .name(NETWORK_B)
-            .reserve()
-            .await
-            .unwrap();
-
-        let udp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
-        let tcp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Tcp(8080);
-
-        let bootstrap: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
-            .with_exposed_port(udp_port)
-            .with_exposed_port(tcp_port)
-            .with_cmd(["./bootstrap"])
-            .with_network(NETWORK_A)
-            .with_network(NETWORK_B)
-            .start()
-            .await
-            .expect("successful container launch");
-
-        let bootstrap_ip: std::net::IpAddr = bootstrap.get_bridge_ip_address().await.expect("bridge ip addr");
-        let bootstrap_addr: String = format!("/ip4/{}/udp/4001/quic-v1", bootstrap_ip);
-
-        let relay: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
-            .with_exposed_port(udp_port)
-            .with_exposed_port(tcp_port)
-            .with_cmd(["./relay", "--dial", &bootstrap_addr])
-            .with_network(NETWORK_A)
-            .with_network(NETWORK_B)
-            .start()
-            .await
-            .expect("successful container launch");
-
-        let server: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
-            .with_exposed_port(udp_port)
-            .with_exposed_port(tcp_port)
-            .with_cmd(["./server", "--dial", &bootstrap_addr])
-            .with_network(NETWORK_B)
-            .start()
-            .await
-            .expect("successful container launch");
-
-        let server_ip: std::net::IpAddr = server.get_bridge_ip_address().await.expect("bridge ip addr");
-        let server_addr: String = format!("/ip4/{}/udp/4001/quic-v1", server_ip);
-
-        let client: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
-            .with_exposed_port(udp_port)
-            .with_exposed_port(tcp_port)
-            .with_cmd(["./client", "--dial", &bootstrap_addr])
-            .with_network(NETWORK_A)
             .start()
             .await
             .expect("successful container launch");
@@ -898,6 +793,148 @@ impl Test for NatHard {
 
         let report: log::Report = log::Report::from_dir(&log_dir).unwrap();
         assert!(report.is_proof_of_startup());
+        assert!(report.is_proof_of_cohesion());
+        assert!(report.is_proof_of_connectivity_persistence(2));
+        assert!(report.is_proof_of_grpc_interaction());
+    }
+}
+
+struct NatHard;
+
+#[async_trait::async_trait]
+impl Test for NatHard {
+    async fn run(&self, docker: &bollard::Docker) {
+        let log_dir: std::path::PathBuf = std::path::PathBuf::new()
+            .join("tests")
+            .join("log")
+            .join("nat_hard");
+
+        let network_a_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
+            name: network::A.to_owned(),
+            driver: None,
+            scope: None,
+            internal: Some(false),
+            attachable: Some(false),
+            ingress: Some(false),
+            config_from: None,
+            config_only: None,
+            ipam: None,
+            enable_ipv4: Some(true),
+            enable_ipv6: Some(false),
+            options: None,
+            labels: None
+        };
+
+        let network_b_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
+            name: network::B.to_owned(),
+            driver: None,
+            scope: None,
+            internal: Some(false),
+            attachable: Some(false),
+            ingress: Some(false),
+            config_from: None,
+            config_only: None,
+            ipam: None,
+            enable_ipv4: Some(true),
+            enable_ipv6: Some(false),
+            options: None,
+            labels: None
+        };
+
+        let network_a: network::Network = network::Network::builder()
+            .docker(docker)
+            .docker_network_conf(network_a_conf)
+            .name(network::A)
+            .reserve()
+            .await
+            .unwrap();
+    
+        let network_b: network::Network = network::Network::builder()
+            .docker(docker)
+            .docker_network_conf(network_b_conf)
+            .name(network::B)
+            .reserve()
+            .await
+            .unwrap();
+
+        let udp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
+        let tcp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Tcp(8080);
+
+        let bootstrap: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+            .with_exposed_port(udp_port)
+            .with_exposed_port(tcp_port)
+            .with_cmd(["./bootstrap"])
+            .with_network(network::A)
+            .with_network(network::B)
+            .start()
+            .await
+            .expect("successful container launch");
+
+        let bootstrap_ip: std::net::IpAddr = bootstrap.get_bridge_ip_address().await.expect("bridge ip addr");
+        let bootstrap_addr: String = format!("/ip4/{}/udp/4001/quic-v1", bootstrap_ip);
+
+        let relay: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+            .with_exposed_port(udp_port)
+            .with_exposed_port(tcp_port)
+            .with_cmd(["./relay", "--dial", &bootstrap_addr])
+            .with_network(network::A)
+            .with_network(network::B)
+            .start()
+            .await
+            .expect("successful container launch");
+
+        let server: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+            .with_exposed_port(udp_port)
+            .with_exposed_port(tcp_port)
+            .with_cmd(["./server", "--dial", &bootstrap_addr])
+            .with_network(network::B)
+            .start()
+            .await
+            .expect("successful container launch");
+
+        let server_ip: std::net::IpAddr = server.get_bridge_ip_address().await.expect("bridge ip addr");
+        let server_addr: String = format!("/ip4/{}/udp/4001/quic-v1", server_ip);
+
+        let client: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+            .with_exposed_port(udp_port)
+            .with_exposed_port(tcp_port)
+            .with_cmd(["./client", "--dial", &bootstrap_addr])
+            .with_network(network::A)
+            .start()
+            .await
+            .expect("successful container launch");
+
+        let client_grpc_port: u16 = client.get_host_port_ipv4(8080).await.expect("host port ipv4");
+        let client_gprc_endpoint: String = format!("http://127.0.0.1:{}", client_grpc_port);
+        let mut client_grpc: proto::node_client::NodeClient<_> = proto::node_client::NodeClient::connect(client_gprc_endpoint).await.expect("successful grpc client");
+
+        let client_request: proto::DialRequest = proto::DialRequest {
+            addr: server_addr    
+        };
+
+        client_grpc.dial(client_request).await.expect("successful dial");
+
+        tokio::time::sleep(std::time::Duration::from_mins(1)).await;
+
+        let mut logged: Vec<_> = vec![];
+        logged.push(bootstrap);
+        logged.push(relay);
+        logged.push(server);
+        logged.push(client);
+
+        tokio::fs::remove_dir_all(&log_dir).await.ok();
+        tokio::fs::create_dir_all(&log_dir).await.expect("unable to create logs directory");
+
+        network_a.release().await;
+        network_b.release().await;
+
+        docker.write_logs_to_file(&log_dir, logged).await.unwrap();
+
+        let report: log::Report = log::Report::from_dir(&log_dir).unwrap();
+        assert!(report.is_proof_of_startup());
+        assert!(report.is_proof_of_cohesion());
+        assert!(report.is_proof_of_connectivity_persistence(2));
+        assert!(report.is_proof_of_grpc_interaction());
     }
 }
 
@@ -987,7 +1024,7 @@ impl Test for Discovery {
 }
 
 #[tokio::test(flavor = "current_thread")]
-async fn e2e() {
+async fn end_to_end() {
     let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
     let mut suite: Suite = Suite::new(docker);
     suite.register(NatEasy);

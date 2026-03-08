@@ -7,6 +7,7 @@ build = "build.rs"
 publish = false
 
 [dependencies]
+rand = "*"
 async-trait = "*"
 futures = "*"
 tokio = { version = "1.48.0", features = ["full"] }
