@@ -10,6 +10,7 @@ pub mod nat_observer;
 pub mod peer_registry;
 pub mod relay_killer;
 pub mod routing_monitor;
+pub mod self_destruct;
 pub mod slug;
 
 pub trait SubSystem {

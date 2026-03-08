@@ -662,6 +662,7 @@ async fn main() -> Result<()> {
 
             sub_system_bus.add_system(sub_system::dht_poison::DhtPoison);
             sub_system_bus.add_system(sub_system::relay_killer::RelayKiller);
+            sub_system_bus.add_system(sub_system::self_destruct::SelfDestruct);
             sub_system_bus.add_system(identity_spoofer);
             sub_system_bus.add_system(slug);
         }
