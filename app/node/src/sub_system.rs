@@ -4,9 +4,11 @@ pub mod bootstrap;
 pub mod connection_manager;
 pub mod dht_poison;
 pub mod dialer;
+pub mod identity_spoofer;
 pub mod discovery_monitor;
 pub mod nat_observer;
 pub mod peer_registry;
+pub mod relay_killer;
 pub mod routing_monitor;
 
 pub trait SubSystem {

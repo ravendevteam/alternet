@@ -653,6 +653,17 @@ async fn main() -> Result<()> {
     #[cfg(feature = "malicious_relay")]
     sub_system_bus.add_system(sub_system::dht_poison::DhtPoison);
 
+    #[cfg(feature = "malicious_relay")]
+    sub_system_bus.add_system(sub_system::relay_killer::RelayKiller);
+
+    #[cfg(feature = "malicious_relay")]
+    let identity_spoofer: sub_system::identity_spoofer::IdentitySpoofer = sub_system::identity_spoofer::IdentitySpoofer::builder()
+        .interval(std::time::Duration::from_secs(30))
+        .build();
+
+    #[cfg(feature = "malicious_relay")]
+    sub_system_bus.add_system(identity_spoofer);
+
     log::info!("finished booting, entering event loop");
 
     loop {
