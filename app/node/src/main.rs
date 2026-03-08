@@ -650,19 +650,22 @@ async fn main() -> Result<()> {
     sub_system_bus.add_system(discovery_monitor);
     sub_system_bus.add_system(sub_system::dialer::Dialer);
 
-    #[cfg(feature = "malicious_relay")]
-    sub_system_bus.add_system(sub_system::dht_poison::DhtPoison);
+    cfg_if::cfg_if!(
+        if #[cfg(feature = "malicious_relay")] {
+            let identity_spoofer: sub_system::identity_spoofer::IdentitySpoofer = sub_system::identity_spoofer::IdentitySpoofer::builder()
+                .interval(std::time::Duration::from_secs(30))
+                .build();
 
-    #[cfg(feature = "malicious_relay")]
-    sub_system_bus.add_system(sub_system::relay_killer::RelayKiller);
+            let slug: sub_system::slug::Slug = sub_system::slug::Slug::builder()
+                .delay(std::time::Duration::from_secs(30))
+                .build();
 
-    #[cfg(feature = "malicious_relay")]
-    let identity_spoofer: sub_system::identity_spoofer::IdentitySpoofer = sub_system::identity_spoofer::IdentitySpoofer::builder()
-        .interval(std::time::Duration::from_secs(30))
-        .build();
-
-    #[cfg(feature = "malicious_relay")]
-    sub_system_bus.add_system(identity_spoofer);
+            sub_system_bus.add_system(sub_system::dht_poison::DhtPoison);
+            sub_system_bus.add_system(sub_system::relay_killer::RelayKiller);
+            sub_system_bus.add_system(identity_spoofer);
+            sub_system_bus.add_system(slug);
+        }
+    );
 
     log::info!("finished booting, entering event loop");
 
