@@ -323,81 +323,69 @@ mod log {
         /// # Proof of Cohesion
         /// There are no partitioned nodes and the network's topology is connected.
         pub fn is_proof_of_cohesion(&self) -> bool {
-            let mut id_to_peer_id: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-            for (id, logs) in self.id_to_logs.iter() {
-                let id: String = id.to_owned();
-                let peer_id: Option<_> = logs.iter().find_map(|log| {
-                    let pattern: &str = "peer identity initialized";
-                    if log.message().contains(pattern) {
-                        let s: String = log
-                            .message()
-                            .split("PeerId(\"")
-                            .nth(1)?
-                            .split("\")")
-                            .next()?
-                            .to_owned();
-                        return Some(s)
-                    }
-                    None
-                });
-                let Some(peer_id) = peer_id else {
-                    continue
-                };
-                id_to_peer_id.insert(id, peer_id);
-            }
-            let mut adjacency: std::collections::HashMap<String, std::collections::HashSet<String>> = std::collections::HashMap::new();
-            for (_, peer_id) in id_to_peer_id.iter() {
-                let peer_id: String = peer_id.to_owned();
-                adjacency.entry(peer_id).or_default();
-            }
-            for (id, logs) in self.id_to_logs.iter() {
-                let Some(peer_id) = id_to_peer_id.get(id) else {
-                    continue
-                };
-                let mut neighbors: std::collections::HashSet<_> = std::collections::HashSet::new();
+            use std::collections::{HashMap, HashSet, VecDeque};
+            let mut graph: HashMap<String, HashSet<String>> = HashMap::new();
+
+            for logs in self.id_to_logs.values() {
+                let mut peer_id: Option<String> = None;
+
                 for log in logs {
-                    if log.message().contains("knows about") && let Some(list_part) = log.message().split('[').nth(1) {
-                        let s: &str = list_part.trim_end_matches(']');
-                        for id in s.split(',') {
-                            let id: &str = id.trim();
-                            if !id.is_empty() {
-                                let id: String = id.to_owned();
-                                neighbors.insert(id);
-                            }
+                    if !log.message().contains("PeerId") {
+                        continue;
+                    }
+
+                    let msg = log.message();
+                    let Some(start) = msg.find('(') else { continue };
+                    let Some(end) = msg.find(')') else { continue };
+
+                    peer_id = Some(msg[start + 1..end].to_string());
+                }
+
+                let Some(peer_id) = peer_id else { continue };
+
+                let Some(log) = logs.iter().rfind(|log| log.message().contains("knows about")) else {
+                    continue;
+                };
+
+                let msg = log.message();
+
+                let Some(start) = msg.find('[') else { continue };
+                let Some(end) = msg.find(']') else { continue };
+
+                let peer_ids: Vec<String> = msg[start + 1..end]
+                    .split(',')
+                    .map(|id| id.trim().to_string())
+                    .collect();
+
+                for p in &peer_ids {
+                    graph.entry(peer_id.clone()).or_default().insert(p.clone());
+                    graph.entry(p.clone()).or_default().insert(peer_id.clone());
+                }
+            }
+
+            if graph.is_empty() {
+                return false;
+            }
+
+            // BFS to check connectivity
+            let start = graph.keys().next().unwrap().clone();
+            let mut visited = HashSet::new();
+            let mut queue = VecDeque::new();
+
+            queue.push_back(start.clone());
+            visited.insert(start);
+
+            while let Some(node) = queue.pop_front() {
+                if let Some(neighbors) = graph.get(&node) {
+                    for n in neighbors {
+                        if visited.insert(n.clone()) {
+                            queue.push_back(n.clone());
                         }
                     }
                 }
-                for neighbor in neighbors {
-                    let peer_id_copy_a: String = peer_id.to_owned();
-                    let peer_id_copy_b: String = peer_id.to_owned();
-                    let neighbor_copy_a: String = neighbor.to_owned();
-                    let neighbor_copy_b: String = neighbor.to_owned();
-                    adjacency.entry(peer_id_copy_a).or_default().insert(neighbor_copy_a);
-                    adjacency.entry(neighbor_copy_b).or_default().insert(peer_id_copy_b);
-                }
             }
-            if adjacency.is_empty() {
-                return false
-            }
-            let mut found: std::collections::HashSet<String> = std::collections::HashSet::new();
-            let mut queue: std::collections::VecDeque<String> = std::collections::VecDeque::new();
-            let root_node: &str = adjacency.keys().next().unwrap();
-            let root_node_copy_a: String = root_node.to_owned();
-            let root_node_copy_b: String = root_node.to_owned();
-            found.insert(root_node_copy_a);
-            queue.push_back(root_node_copy_b);
-            while let Some(node) = queue.pop_front() && let Some(neighbors) = adjacency.get(&node) {
-                for neighbor in neighbors.iter() {
-                    let neighbor: &str = neighbor.as_str();
-                    let neighbor_copy_a: String = neighbor.to_owned();
-                    let neighbor_copy_b: String = neighbor.to_owned();
-                    if !found.contains(neighbor) {
-                        found.insert(neighbor_copy_a);
-                        queue.push_back(neighbor_copy_b);
-                    }
-                }
-            }
-            found.len() == adjacency.len()
+
+            visited.len() == graph.len()
         }
 
         /// # Proof of Stability
@@ -453,9 +441,9 @@ mod log {
 mod network {
     pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-    pub const A: &str = "an_0";
-    pub const B: &str = "an_1";
-    pub const C: &str = "an_3";
+    pub const A: &str = "an_a";
+    pub const B: &str = "an_b";
+    pub const C: &str = "an_c";
 
     #[derive(getset::Getters)]
     pub struct Network<'a> {
@@ -627,12 +615,12 @@ trait Test {
     async fn run(&self, docker: &bollard::Docker);
 }
 
-struct Suite {
+struct Harness {
     docker: bollard::Docker,
     tests: Vec<Box<dyn Test>>
 }
 
-impl Suite {
+impl Harness {
     pub fn new(docker: bollard::Docker) -> Self {
         let tests: Vec<_> = vec![];
         Self {
@@ -642,17 +630,17 @@ impl Suite {
     }
 }
 
-impl Suite {
-    pub fn register<T>(&mut self, test: T)
+impl Harness {
+    pub fn add_test<T>(&mut self, test: T)
     where
         T: Test,
         T: 'static {
         self.tests.push(Box::new(test));
     }
 
-    pub async fn run(&mut self) {
+    pub async fn run(self) {
         self.docker.reset().await.ok();
-        // self.docker.load_built_tar_image_from_ws_target_dir().await.unwrap();
+        self.docker.load_built_tar_image_from_ws_target_dir().await.unwrap();
         for test in self.tests.iter() {
             test.run(&self.docker).await;
             self.docker.reset().await.ok();
@@ -767,14 +755,16 @@ impl Test for NatEasy {
 
         let client_grpc_port: u16 = client.get_host_port_ipv4(8080).await.expect("host port ipv4");
         let client_gprc_endpoint: String = format!("http://127.0.0.1:{}", client_grpc_port);
-        let mut client_grpc: proto::node_client::NodeClient<_> = proto::node_client::NodeClient::connect(client_gprc_endpoint).await.expect("successful grpc client");
+        let mut client_grpc: proto::node_client::NodeClient<_> = wait_for_grpc(client_gprc_endpoint).await;
 
         let client_request: proto::DialRequest = proto::DialRequest {
             addr: server_addr    
         };
 
-        client_grpc.dial(client_request).await.expect("successful dial");
+        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
 
+        client_grpc.dial(client_request).await.expect("successful dial");
+        
         tokio::time::sleep(std::time::Duration::from_mins(1)).await;
 
         let mut logged: Vec<_> = vec![];
@@ -912,6 +902,8 @@ impl Test for NatHard {
             addr: server_addr    
         };
 
+        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+
         client_grpc.dial(client_request).await.expect("successful dial");
 
         tokio::time::sleep(std::time::Duration::from_mins(1)).await;
@@ -1016,19 +1008,209 @@ impl Test for Discovery {
 
         tokio::time::sleep(std::time::Duration::from_mins(1)).await;
 
+        docker.reset().await.ok();
+        docker.reset_network(network).await.ok();
+
         tokio::fs::remove_dir_all(&log_dir).await.ok();
         tokio::fs::create_dir_all(&log_dir).await.expect("unable to create logs directory");
 
         docker.write_logs_to_file(&log_dir, containers).await.unwrap();
     }
 }
+ 
+struct Simulation;
 
-#[tokio::test(flavor = "current_thread")]
+#[async_trait::async_trait]
+impl Test for Simulation {
+    async fn run(&self, docker: &bollard::Docker) {
+        let log_dir: std::path::PathBuf = std::path::PathBuf::new()
+            .join("tests")
+            .join("log")
+            .join("sim");
+        
+        let mut containers: Vec<_> = vec![];
+
+        let network_a_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
+            name: network::A.to_owned(),
+            driver: None,
+            scope: None,
+            internal: Some(false),
+            attachable: Some(false),
+            ingress: Some(false),
+            config_from: None,
+            config_only: None,
+            ipam: None,
+            enable_ipv4: Some(true),
+            enable_ipv6: Some(false),
+            options: None,
+            labels: None
+        };
+
+        let network_b_conf: bollard::secret::NetworkCreateRequest = bollard::secret::NetworkCreateRequest {
+            name: network::B.to_owned(),
+            driver: None,
+            scope: None,
+            internal: Some(false),
+            attachable: Some(false),
+            ingress: Some(false),
+            config_from: None,
+            config_only: None,
+            ipam: None,
+            enable_ipv4: Some(true),
+            enable_ipv6: Some(false),
+            options: None,
+            labels: None
+        };
+
+        let network_a: network::Network = network::Network::builder()
+            .docker(docker)
+            .docker_network_conf(network_a_conf)
+            .name(network::A)
+            .reserve()
+            .await
+            .unwrap();
+    
+        let network_b: network::Network = network::Network::builder()
+            .docker(docker)
+            .docker_network_conf(network_b_conf)
+            .name(network::B)
+            .reserve()
+            .await
+            .unwrap();
+        
+        let udp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Udp(4001);
+        let tcp_port: testcontainers::core::ContainerPort = testcontainers::core::ContainerPort::Tcp(8080);
+
+        let bootstrap: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+            .with_exposed_port(udp_port)
+            .with_exposed_port(tcp_port)
+            .with_cmd(["./bootstrap"])
+            .with_network(network::A)
+            .with_network(network::B)
+            .start()
+            .await
+            .expect("successful container launch");
+
+        let bootstrap_ip: std::net::IpAddr = bootstrap.get_bridge_ip_address().await.expect("bridge ip addr");
+        let bootstrap_addr: String = format!("/ip4/{}/udp/4001/quic-v1", bootstrap_ip);
+
+        let bootstrap_container_id: &str = bootstrap.id();
+
+        let bootstrap_grpc_port: u16 = bootstrap.get_host_port_ipv4(8080).await.unwrap();
+        let bootstrap_grpc_endpoint: String = format!("http://127.0.0.1:{}", bootstrap_grpc_port);
+        
+        let mut bootstrap_grpc: proto::node_client::NodeClient<_> = proto::node_client::NodeClient::connect(bootstrap_grpc_endpoint).await.unwrap();
+
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+
+        let bootstrap_peer_id_request: proto::PeerIdRequest = proto::PeerIdRequest { };
+        let bootstrap_peer_id: String = bootstrap_grpc
+            .peer_id(bootstrap_peer_id_request)
+            .await
+            .unwrap()
+            .into_inner()
+            .peer_id;
+
+        let bootstrap_addr_a: String = format!("/dns4/bootstrap/ip4/0.0.0.0/udp/4001/quic-v1/p2p/{}", bootstrap_peer_id);
+        let bootstrap_addr_b: String = format!("/dns4/bootstrap/ip4/0.0.0.0/udp/4001/quic-v1/p2p/{}", bootstrap_peer_id);
+
+        containers.push(bootstrap);
+
+        for _ in 0..=16 {
+            let cmd: &str = if rand::random::<f32>() < 0.25 {
+                "./malicious_relay"
+            } else {
+                "./relay"
+            };
+
+            let relay: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+                .with_exposed_port(udp_port)
+                .with_exposed_port(tcp_port)
+                .with_cmd([cmd, "--dial", &bootstrap_addr])
+                .with_network(network::A)
+                .with_network(network::B)
+                .start()
+                .await
+                .expect("successful container launch");
+
+            containers.push(relay);
+        }
+
+        let server: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+            .with_exposed_port(udp_port)
+            .with_exposed_port(tcp_port)
+            .with_cmd(["./server", "--dial", &bootstrap_addr])
+            .with_network(network::B)
+            .start()
+            .await
+            .expect("successful container launch");
+
+        let server_ip: std::net::IpAddr = server.get_bridge_ip_address().await.expect("bridge ip addr");
+        let server_addr: String = format!("/ip4/{}/udp/4001/quic-v1", server_ip);
+
+        containers.push(server);
+
+        let client: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("node", "latest")
+            .with_exposed_port(udp_port)
+            .with_exposed_port(tcp_port)
+            .with_cmd(["./client", "--dial", &bootstrap_addr])
+            .with_network(network::A)
+            .start()
+            .await
+            .expect("successful container launch");
+
+        let client_grpc_port: u16 = client.get_host_port_ipv4(8080).await.expect("host port ipv4");
+        let client_gprc_endpoint: String = format!("http://127.0.0.1:{}", client_grpc_port);
+        let mut client_grpc: proto::node_client::NodeClient<_> = proto::node_client::NodeClient::connect(client_gprc_endpoint).await.expect("successful grpc client");
+
+        containers.push(client);
+
+        for _ in 0..=8 {
+            tokio::time::sleep(std::time::Duration::from_secs(15)).await;
+
+            let client_request: proto::DialRequest = proto::DialRequest {
+                addr: server_addr.to_owned()    
+            };
+
+            client_grpc.dial(client_request).await.expect("successful dial");
+        }
+
+        tokio::time::sleep(std::time::Duration::from_mins(10)).await;
+
+        // ... clean up ...
+        network_a.release().await;
+        network_b.release().await;
+
+        // ... proof ...
+        tokio::fs::remove_dir_all(&log_dir).await.ok();
+        tokio::fs::create_dir_all(&log_dir).await.expect("unable to create logs directory");
+        
+        docker.write_logs_to_file(&log_dir, containers).await.unwrap();
+        
+        let report: log::Report = log::Report::from_dir(&log_dir).unwrap();
+        assert!(report.is_proof_of_startup());
+        assert!(report.is_proof_of_cohesion());
+        assert!(report.is_proof_of_stability(40));
+        assert!(report.is_proof_of_connectivity_persistence(6));
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn end_to_end() {
     let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
-    let mut suite: Suite = Suite::new(docker);
-    suite.register(NatEasy);
-    suite.register(NatHard);
-    suite.register(Discovery);
-    suite.run().await;
+    let mut harness: Harness = Harness::new(docker);
+    harness.add_test(NatEasy);
+    harness.add_test(NatHard);
+    harness.add_test(Discovery);
+    harness.add_test(Simulation);
+    harness.run().await;
+}
+
+async fn wait_for_grpc(endpoint: String) -> proto::node_client::NodeClient<tonic::transport::Channel> {
+    loop {
+        match proto::node_client::NodeClient::connect(endpoint.clone()).await {
+            Ok(client) => return client,
+            Err(_) => tokio::time::sleep(std::time::Duration::from_millis(500)).await,
+        }
+    }
 }

@@ -5,6 +5,7 @@ pub mod connection_manager;
 pub mod dht_poison;
 pub mod dialer;
 pub mod identity_spoofer;
+pub mod metadata;
 pub mod discovery_monitor;
 pub mod nat_observer;
 pub mod peer_registry;

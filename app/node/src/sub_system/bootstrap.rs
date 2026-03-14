@@ -30,7 +30,9 @@ enum Mode {
 
 pub struct Bootstrap {
     mode: Mode,
-    bootstrap_addrs: Vec<libp2p::Multiaddr>,
+    addrs: Vec<libp2p::Multiaddr>,
+    last_attempt: Option<std::time::Instant>,
+    cooldown: std::time::Duration,
     timeout_duration: std::time::Duration,
     min_peers: usize,
     dialed: bool
@@ -41,16 +43,21 @@ impl Bootstrap {
     #[builder]
     pub fn new(
         #[builder(into)]
-        bootstrap_addrs: Vec<libp2p::Multiaddr>,
+        addrs: Vec<libp2p::Multiaddr>,
+        #[builder(into)]
+        cooldown: std::time::Duration,
         #[builder(into)]
         timeout_duration: std::time::Duration,
         min_peers: usize
     ) -> Self {
         let mode: Mode = Mode::WaitingForPeers;
+        let last_attempt: Option<_> = None;
         let dialed: bool = false;
         Self {
             mode,
-            bootstrap_addrs,
+            addrs,
+            last_attempt,
+            cooldown,
             timeout_duration,
             min_peers,
             dialed
@@ -92,12 +99,19 @@ impl SubSystem for Bootstrap {
     ) {
         self.propagate_identify_addrs(swarm, event);
         
-        #[cfg(any(feature = "client", feature = "server", feature = "relay"))]
+        #[cfg(any(
+            feature = "client", 
+            feature = "server", 
+            feature = "relay",
+            feature = "malicious_client",
+            feature = "malicious_server",
+            feature = "malicious_relay"
+        ))]
         match &mut self.mode {
             Mode::WaitingForPeers => {
                 if !self.dialed {
                     self.dialed = true;
-                    for addr in &self.bootstrap_addrs {
+                    for addr in &self.addrs {
                         if let Err(error) = swarm.dial(addr.to_owned()) {
                             log::warn!("failed to dial bootstrap addr {}: {:?}", addr, error);
                         } else {
@@ -109,6 +123,12 @@ impl SubSystem for Bootstrap {
                     self.mode = Mode::Healthy;
                 }
                 if swarm.peer_count() > 0 {
+                    let now: std::time::Instant = std::time::Instant::now();
+                    if let Some(last_attempt) = self.last_attempt && now.duration_since(last_attempt) < self.cooldown {
+                        let remaining: std::time::Duration = self.cooldown - now.duration_since(last_attempt);
+                        log::info!("bootstrap cooldown active, retry possible in {:?}", remaining);
+                        return
+                    }
                     match swarm.behaviour_mut().kad.bootstrap() {
                         Ok(query_id) => {
                             log::info!("starting bootstrap {}", query_id);
@@ -119,7 +139,9 @@ impl SubSystem for Bootstrap {
                         Err(error) => {
                             log::warn!("failed to start bootstrap: {:?}", error);
                         }
-                    } 
+                    }
+                    let local_peer_id: libp2p::PeerId = swarm.local_peer_id().to_owned();
+                    swarm.behaviour_mut().kad.get_closest_peers(local_peer_id);
                 }  
             },
             Mode::Bootstrapping {
@@ -148,7 +170,9 @@ impl SubSystem for Bootstrap {
                         self.mode = Mode::Healthy;
                     },
                     Err(error) => {
+                        log::warn!("bootstrap failed: {:?}", error);
                         let next_attempt: std::time::Instant = std::time::Instant::now() + self.timeout_duration;
+                        log::info!("retrying bootstrap in {:?}", self.timeout_duration);
                         self.mode = Mode::TimedOut {
                             next_attempt
                         };
@@ -161,16 +185,23 @@ impl SubSystem for Bootstrap {
                 if std::time::Instant::now() < *next_attempt {
                     return
                 }
-                log::info!("retrying bootstap");
+                log::info!("bootstrap timeout expired after {:?}, retrying", self.timeout_duration);
                 self.dialed = false;
                 self.mode = Mode::WaitingForPeers;
+                if swarm.peer_count() > 0 {
+                    let local_peer_id: libp2p::PeerId = swarm.local_peer_id().to_owned();
+                    swarm.behaviour_mut().kad.get_closest_peers(local_peer_id);
+                }
             },
             Mode::Healthy => {
                 if swarm.peer_count() >= self.min_peers {
                     return
                 }
-                log::info!("peer count dropped below threshold ({} < {})", swarm.peer_count(), self.min_peers);
-                self.mode = Mode::WaitingForPeers;
+                log::info!("peer count dropped below threshold ({} < {}), retrying bootstrap in {:?}", swarm.peer_count(), self.min_peers, self.timeout_duration);
+                let next_attempt: std::time::Instant = std::time::Instant::now() + self.timeout_duration;
+                self.mode = Mode::TimedOut {
+                    next_attempt
+                };
             }
         }
     }

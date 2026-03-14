@@ -19,7 +19,7 @@ impl SubSystem for Slug {
         let Some(SwarmEvent::Behaviour(BehaviourEvent::Kad(_))) = event.downcast_ref() else {
             return
         };
-        if rand::random::<f32>() < 0.3 {
+        if rand::random::<f32>() < 0.05 {
             log::warn!("blocking main loop for {:?}", self.delay);
             std::thread::sleep(self.delay);
         }

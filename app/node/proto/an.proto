@@ -20,7 +20,16 @@ message DialResponse {
     optional string connection = 3;
 }
 
+
+message PeerIdRequest {}
+
+message PeerIdResponse {
+    string peer_id = 1;
+}
+
 service Node {
+    rpc PeerId(PeerIdRequest) returns (PeerIdResponse);
+
     rpc Ping(PingRequest) returns (PingResponse);
 
 

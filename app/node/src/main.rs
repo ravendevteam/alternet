@@ -517,64 +517,32 @@ async fn main() -> Result<()> {
 
             let kad_store: kad::store::MemoryStore = kad::store::MemoryStore::new(local_peer_id);
 
-            cfg_if::cfg_if!(
-                if #[cfg(feature = "relay")] {
-                    let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
-                    kad_conf.disjoint_query_paths(true);
-                    kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 128 });
-                    kad_conf.set_kbucket_inserts(kad::BucketInserts::Manual);
-                    kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_millis(60000));
-                    kad_conf.set_kbucket_size(
-                        64.try_into().expect("non zero")
-                    );
-                    kad_conf.set_max_packet_size(
-                        1.kilobytes().as_u64().to_usize().unwrap()
-                    );
-                    kad_conf.set_parallelism(
-                        16.try_into().expect("non zero")
-                    );
-                    kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
-                    kad_conf.set_provider_publication_interval(None);
-                    kad_conf.set_provider_record_ttl(None);
-                    kad_conf.set_publication_interval(None);
-                    kad_conf.set_query_timeout(std::time::Duration::from_mins(1));
-                    kad_conf.set_record_filtering(kad::StoreInserts::FilterBoth);
-                    kad_conf.set_record_ttl(Some(std::time::Duration::from_hours(24)));
-                    kad_conf.set_replication_factor(
-                        64.try_into().expect("non zero")
-                    );
-                    kad_conf.set_replication_interval(Some(std::time::Duration::from_hours(2)));
-                    kad_conf.set_substreams_timeout(std::time::Duration::from_secs(10));
-                } else if #[cfg(feature = "malicious_relay")] {
-                    
-                    let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
-                    kad_conf.disjoint_query_paths(true);
-                    kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 2 });
-                    kad_conf.set_kbucket_inserts(kad::BucketInserts::Manual);
-                    kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_millis(60000));
-                    kad_conf.set_kbucket_size(
-                        64.try_into().expect("non zero")
-                    );
-                    kad_conf.set_max_packet_size(
-                        1.kilobytes().as_u64().to_usize().unwrap()
-                    );
-                    kad_conf.set_parallelism(
-                        16.try_into().expect("non zero")
-                    );
-                    kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_secs(1800)));
-                    kad_conf.set_provider_publication_interval(None);
-                    kad_conf.set_provider_record_ttl(None);
-                    kad_conf.set_publication_interval(None);
-                    kad_conf.set_query_timeout(std::time::Duration::from_secs(180));
-                    kad_conf.set_record_filtering(kad::StoreInserts::FilterBoth);
-                    kad_conf.set_record_ttl(Some(std::time::Duration::from_secs(3600 * 24 * 365)));
-                    kad_conf.set_replication_factor(
-                        1.try_into().expect("non zero")
-                    );
-                    kad_conf.set_replication_interval(Some(std::time::Duration::from_secs(86400 * 7)));
-                    kad_conf.set_substreams_timeout(std::time::Duration::from_secs(120));
-                }
+            let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
+            kad_conf.disjoint_query_paths(true);
+            kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 128 });
+            kad_conf.set_kbucket_inserts(kad::BucketInserts::Manual);
+            kad_conf.set_kbucket_pending_timeout(std::time::Duration::from_millis(60000));
+            kad_conf.set_kbucket_size(
+                64.try_into().expect("non zero")
             );
+            kad_conf.set_max_packet_size(
+                1.kilobytes().as_u64().to_usize().unwrap()
+            );
+            kad_conf.set_parallelism(
+                16.try_into().expect("non zero")
+            );
+            kad_conf.set_periodic_bootstrap_interval(Some(std::time::Duration::from_mins(5)));
+            kad_conf.set_provider_publication_interval(None);
+            kad_conf.set_provider_record_ttl(None);
+            kad_conf.set_publication_interval(None);
+            kad_conf.set_query_timeout(std::time::Duration::from_mins(1));
+            kad_conf.set_record_filtering(kad::StoreInserts::FilterBoth);
+            kad_conf.set_record_ttl(Some(std::time::Duration::from_hours(24)));
+            kad_conf.set_replication_factor(
+                64.try_into().expect("non zero")
+            );
+            kad_conf.set_replication_interval(Some(std::time::Duration::from_hours(2)));
+            kad_conf.set_substreams_timeout(std::time::Duration::from_secs(10));
 
             let mut kad: kad::Behaviour<_> = kad::Behaviour::with_config(local_peer_id, kad_store, kad_conf);
             
@@ -622,9 +590,10 @@ async fn main() -> Result<()> {
     tokio::pin!(ctrl_c);
 
     let bootstrap: sub_system::bootstrap::Bootstrap = sub_system::bootstrap::Bootstrap::builder()
+        .cooldown(std::time::Duration::from_secs(16))
         .timeout_duration(std::time::Duration::from_secs(8))
         .min_peers(2)
-        .bootstrap_addrs(dial)
+        .addrs(dial)
         .build();
 
     let connection_manager: sub_system::connection_manager::ConnectionManager = sub_system::connection_manager::ConnectionManager::builder()
@@ -649,6 +618,7 @@ async fn main() -> Result<()> {
     sub_system_bus.add_system(routing_monitor);
     sub_system_bus.add_system(discovery_monitor);
     sub_system_bus.add_system(sub_system::dialer::Dialer);
+    sub_system_bus.add_system(sub_system::metadata::Metadata);;
 
     cfg_if::cfg_if!(
         if #[cfg(feature = "malicious_relay")] {
@@ -662,7 +632,7 @@ async fn main() -> Result<()> {
 
             sub_system_bus.add_system(sub_system::dht_poison::DhtPoison);
             sub_system_bus.add_system(sub_system::relay_killer::RelayKiller);
-            sub_system_bus.add_system(sub_system::self_destruct::SelfDestruct);
+            // sub_system_bus.add_system(sub_system::self_destruct::SelfDestruct);
             sub_system_bus.add_system(identity_spoofer);
             sub_system_bus.add_system(slug);
         }

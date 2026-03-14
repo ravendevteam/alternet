@@ -14,7 +14,7 @@ impl SubSystem for RelayKiller {
         }) = event.downcast_ref() else {
             return
         };
-        if rand::random::<f32>() < 0.3 {
+        if rand::random::<f32>() < 0.01 {
             log::warn!("dropping relay peer {:?}", peer_id);
             let peer_id: libp2p::PeerId = peer_id.to_owned();
             swarm.disconnect_peer_id(peer_id).ok();

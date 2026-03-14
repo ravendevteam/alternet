@@ -23,6 +23,13 @@ pub struct DialResponse {
     #[prost(string, optional, tag = "3")]
     pub connection: ::core::option::Option<::prost::alloc::string::String>,
 }
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct PeerIdRequest {}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct PeerIdResponse {
+    #[prost(string, tag = "1")]
+    pub peer_id: ::prost::alloc::string::String,
+}
 /// Generated client implementations.
 pub mod node_client {
     #![allow(
@@ -114,6 +121,24 @@ pub mod node_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
+        pub async fn peer_id(
+            &mut self,
+            request: impl tonic::IntoRequest<super::PeerIdRequest>,
+        ) -> std::result::Result<tonic::Response<super::PeerIdResponse>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/an.Node/PeerId");
+            let mut req = request.into_request();
+            req.extensions_mut().insert(GrpcMethod::new("an.Node", "PeerId"));
+            self.inner.unary(req, path, codec).await
+        }
         pub async fn ping(
             &mut self,
             request: impl tonic::IntoRequest<super::PingRequest>,
@@ -165,6 +190,10 @@ pub mod node_server {
     /// Generated trait containing gRPC methods that should be implemented for use with NodeServer.
     #[async_trait]
     pub trait Node: std::marker::Send + std::marker::Sync + 'static {
+        async fn peer_id(
+            &self,
+            request: tonic::Request<super::PeerIdRequest>,
+        ) -> std::result::Result<tonic::Response<super::PeerIdResponse>, tonic::Status>;
         async fn ping(
             &self,
             request: tonic::Request<super::PingRequest>,
@@ -250,6 +279,49 @@ pub mod node_server {
         }
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             match req.uri().path() {
+                "/an.Node/PeerId" => {
+                    #[allow(non_camel_case_types)]
+                    struct PeerIdSvc<T: Node>(pub Arc<T>);
+                    impl<T: Node> tonic::server::UnaryService<super::PeerIdRequest>
+                    for PeerIdSvc<T> {
+                        type Response = super::PeerIdResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::PeerIdRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as Node>::peer_id(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = PeerIdSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
                 "/an.Node/Ping" => {
                     #[allow(non_camel_case_types)]
                     struct PingSvc<T: Node>(pub Arc<T>);
