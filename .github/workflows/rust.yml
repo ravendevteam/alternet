@@ -12,6 +12,6 @@ jobs:
     - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@stable
     - run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
-    - run: cargo build --verbose
+    - run: cargo build
     - run: cargo run --package task build-node-release
-    - run: cargo test --verbose
+    - run: cargo test
