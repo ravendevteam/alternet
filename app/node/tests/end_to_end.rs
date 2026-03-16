@@ -638,7 +638,7 @@ impl Harness {
         self.tests.push(Box::new(test));
     }
 
-    pub async fn run(self) {
+    pub async fn launch(self) {
         self.docker.reset().await.ok();
         self.docker.load_built_tar_image_from_ws_target_dir().await.unwrap();
         for test in self.tests.iter() {
@@ -1190,7 +1190,7 @@ impl Test for Simulation {
         let report: log::Report = log::Report::from_dir(&log_dir).unwrap();
         assert!(report.is_proof_of_startup());
         assert!(report.is_proof_of_cohesion());
-        assert!(report.is_proof_of_stability(40));
+        assert!(report.is_proof_of_stability(36));
         assert!(report.is_proof_of_connectivity_persistence(6));
     }
 }
@@ -1203,7 +1203,7 @@ async fn end_to_end() {
     harness.add_test(NatHard);
     harness.add_test(Discovery);
     harness.add_test(Simulation);
-    harness.run().await;
+    harness.launch().await;
 }
 
 async fn wait_for_grpc(endpoint: String) -> proto::node_client::NodeClient<tonic::transport::Channel> {

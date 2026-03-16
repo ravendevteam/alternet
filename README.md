@@ -12,6 +12,12 @@ rustc --version
 cargo --version
 ```
 
+Viewing .excalidraw files within the repository
+
+Suggested Obsidian
+```
+
+```
 
 ## Image
 

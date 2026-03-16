@@ -1,55 +1,105 @@
-This crate builds to 3 independent binaries `Bootstrap`, `Client`, `Server`, `Relay`. Only one of these features can be enabled at a time.
+# System Overview
+This crate builds 8 independent binaries:
+- `bootstrap`
+- `client`
+- `server`
+- `relay`
+- `malicious_bootstrap`
+- `malicious_client`
+- `malicious_server`
+- `malicious_relay`
 
-You should have `protoc` installed needed to build gRPC proto.
+Only one of these features can be enabled at a time.
 
+Before building, ensure that you have `protoc` installed, as it is required for compiling gRPC proto files.
 
-Where the standard variants are designed to be maximally beneficial to the network, their malicious counterparts are used for testing and are designed to be maximally malicious.
+## Archetype
+The system uses Rust feature flags to compile specific node roles. Each standalone binary is lightweight and role-specific.
 
-The degree of resilience is determined by how many malicious nodes the network can handle, the aim is to see this grow.
+| Role      | Responsability                                    |
+|-----------|---------------------------------------------------|
+| Bootstrap | Network entry point and DHT seed.                 |
+| Relay     | Facilitates NAT traversal and traffic forwarding. |
+| Server    | Domain operator node; provides services.          |
+| Client    | End-user node, resolves and consumes services.    |
 
-Malicious behaviour should not reflect actions or behaviour that act against the best interest of the actor, only tests are done for realistic attempts.
+Malicious variants are compiled with additional sub-systems to validate network resilience under stress. Where normal nodes are designed to be maximally good to the network, malicious variants are designed to be maximally bad. As the project evolves, the network will handle more and more aggresive behaviours from malicious variants.
 
+### Resilience
+The degree of network resilience is determined by how many malicious nodes it can tolerate. The goal is to gradually increase the network's ability to withstand and recover from attacks.
 
-## System Overview
+Malicious behavior should not reflect actions that act against the malicious node’s own interests. Instead, tests will focus on realistic attack attempts that challenge the network’s robustness.
 
+## Networking
+This Proof of Concept (POC) uses the `libp2p` modular stack for peer-to-peer communication.
 
-## Node Archetypes
-The system uses Rust feature flags to compile specific node roles. Standalone binaries are extremely lightweight, and role specific.
-
-| Role      | Responsability |
-|-----------|----------------------------|
-| Bootstrap | Network entry point and DHT seed. |
-| Relay     | Facilitates NAT traversal and traffic forwarding.
-| Server    | Domain operator node; provides services.
-| Client    | End-user node, resolves and consumes services.
-
-> Malicious variants are compiled with additional sub-systems to validate network resilience under stress. Where normal nodes are designed to be maximally good to the network, malicious variants are designed to be maximally bad. As the project evolves, the network will handle more and more aggresive behaviours from malicious variants.
-
-
-
-3. Networking Stack
-The POC leverages the libp2p modular stack to handle the complexities of peer-to-peer communication.
-
-3.1 Transport & Security
-QUIC (Primary): Selected for its native support for stream multiplexing, reduced handshake latency, and superior performance in lossy network environments.
-
-Noise & Yamux: Used as fallback security and multiplexing layers for non-QUIC or relayed connections.
-
-
-3.2 Discovery & Routing (Kademlia)The network uses the Kademlia DHT for distributed peer discovery.Routing Table: Nodes maintain a k-bucket-based routing table. The $k$ value is typically 20, though our POC scales this based on node role (e.g., Bootstrap nodes maintain larger caches of 50,000 identities).Query Parallelism ($\alpha$): Set to 32 for Bootstrap nodes to ensure high availability during network formation.
-
-
-3.3 NAT Traversal (DCutr)
-To solve the "restrictive NAT" problem, the system implements Direct Connection Upgrade through Relay (DCutr).
-
-Reservation: A Client/Server node makes a reservation on a Relay.
-
-Observation: Nodes use the Identify protocol to learn their external multiaddresses.
-
-Hole Punching: When two nodes behind NATs wish to connect, they use the Relay as a signaling channel to synchronize a synchronized UDP hole-punching attempt via QUIC.
+Configuration is archetype-specific.
 
 ## Control Plane (gRPC)
-Each node exposes a programmatic interface via `gRPC` (using `tonic`). This allows CLI tooling to:
+Each node exposes a programmatic interface via gRPC (using `tonic`).
+
+This interface allows CLI tooling to:
 1. Trigger manual dials.
 2. Inspect routing table health.
-3. Validate cryptographic proofs of service availability.
+
+You can interact with the node’s gRPC control plane using tools like:
+- gRPCurl
+- gRPC Web UI (https://grpc.io/)
+- gRPC Gateway
+
+This design philosophy aims to facilitate applications built on top of nodes, enabling other systems to communicate with nodes via gRPC. For example, you can hook up custom responses as a server and decide how to handle requests. Similarly, as a client, you can build a browser layer to interface with the network. gRPC is a well-rounded choice for this, although custom implementations are possible for network interactions.
+
+## Architecture
+Roles are feature-gated, ensuring each role is as lightweight and performant as possible.
+
+```mermaid
+flowchart TB
+
+subgraph External
+    Args
+    Toml
+    0.0.0.0:8080
+    /ip4/0.0.0.0/udp/4001/quic-v1
+end
+
+subgraph SubSystem
+    Bootstrap
+    ConnectionManager
+    RoutingMonitor
+    DiscoveryMonitor
+    Dialer
+    Metadata
+
+    subgraph Test
+        RoutingMonitor
+        DiscoveryMonitor
+    end
+
+    subgraph Malicious
+        RelayKiller
+        SelfDestruct
+        Slug
+    end
+end
+
+0.0.0.0:8080 <--> gRPC
+
+/ip4/0.0.0.0/udp/4001/quic-v1 --> EventLoop
+
+Args --> |OnBoot| EventLoop
+Toml --> |OnBoot| EventLoop
+
+gRPC --> EventLoop
+
+EventLoop <--> |OnEvent| SubSystemBus
+
+SubSystemBus <--> |OnEvent| Bootstrap
+SubSystemBus <--> |OnEvent| ConnectionManager
+SubSystemBus <--> |OnEvent| RoutingMonitor
+SubSystemBus <--> |OnEvent| DiscoveryMonitor
+SubSystemBus <--> |OnEvent| Dialer
+SubSystemBus <--> |OnEvent| Metadata
+SubSystemBus <--> |OnEvent| RelayKiller
+SubSystemBus <--> |OnEvent| SelfDestruct
+SubSystemBus <--> |OnEvent| Slug
+```
