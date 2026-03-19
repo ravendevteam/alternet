@@ -16,7 +16,17 @@ enum Command {
     BuildNode,
 
     #[command(name = "build-node-release")]
-    BuildNodeRelease
+    BuildNodeRelease,
+    NodeGrpcDescribe {
+        #[arg(long)]
+        port: usize
+    },
+    Ping {
+        #[arg(long)]
+        port: usize,
+        #[arg(long)]
+        message: String
+    }
 }
 
 trait DockerExt {
@@ -231,6 +241,38 @@ async fn main() -> Result<()> {
                     .spawn()?
                     .wait()?;
             }
+        },
+        Command::NodeGrpcDescribe {
+            port
+        } => {
+            std::process::Command::new("grpcurl")
+                .arg("--import-path")
+                .arg("./app/node/proto/")
+                .arg("--proto")
+                .arg("an.proto")
+                .arg("-plaintext")
+                .arg(format!("0.0.0.0:{}", port))
+                .arg("describe")
+                .arg("an.Node")
+                .spawn()?
+                .wait()?;
+        },
+        Command::Ping {
+            port,
+            message
+        } => {
+            std::process::Command::new("grpcurl")
+                .arg("--import-path")
+                .arg("./app/node/proto")
+                .arg("--proto")
+                .arg("an.proto")
+                .arg("-plaintext")
+                .arg("-d")
+                .arg(format!(r#"'{{"msg": "{}"}}'"#, message))
+                .arg(format!("0.0.0.0:{}", port))
+                .arg("an.Node/Ping")
+                .spawn()?
+                .wait()?;
         }
     }
     Ok(())

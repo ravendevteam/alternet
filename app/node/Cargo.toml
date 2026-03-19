@@ -93,7 +93,7 @@ path = "src/main.rs"
 required-features = ["malicious_relay"]
 
 [features]
-default = ["malicious_relay"]
+default = ["client"]
 bootstrap = [
     "tokio/full",
     "libp2p/tcp",

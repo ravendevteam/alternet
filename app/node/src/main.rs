@@ -618,7 +618,7 @@ async fn main() -> Result<()> {
     sub_system_bus.add_system(routing_monitor);
     sub_system_bus.add_system(discovery_monitor);
     sub_system_bus.add_system(sub_system::dialer::Dialer);
-    sub_system_bus.add_system(sub_system::metadata::Metadata);;
+    sub_system_bus.add_system(sub_system::metadata::Metadata);
 
     cfg_if::cfg_if!(
         if #[cfg(feature = "malicious_relay")] {
@@ -657,5 +657,6 @@ async fn main() -> Result<()> {
         );
     }
 
+    tokio::signal::ctrl_c().await?;
     Ok(())
 }
