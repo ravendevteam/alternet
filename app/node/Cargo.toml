@@ -30,6 +30,7 @@ enum_dispatch = "*"
 clap = { version = "*", features = ["derive"] }
 ubyte = "*"
 cfg-if = "*"
+anyhow = "*"
 
 [dev-dependencies]
 testcontainers = "*"
@@ -93,7 +94,7 @@ path = "src/main.rs"
 required-features = ["malicious_relay"]
 
 [features]
-default = ["client"]
+default = ["server", "end_to_end"]
 bootstrap = [
     "tokio/full",
     "libp2p/tcp",
@@ -110,7 +111,8 @@ bootstrap = [
     "libp2p/tokio",
     "libp2p/gossipsub",
     "libp2p/request-response",
-    "libp2p/dcutr"
+    "libp2p/dcutr",
+    "libp2p/autonat"
 ]
 client = [
     "tokio/full",
@@ -128,7 +130,8 @@ client = [
     "libp2p/tokio",
     "libp2p/gossipsub",
     "libp2p/request-response",
-    "libp2p/dcutr"
+    "libp2p/dcutr",
+    "libp2p/autonat"
 ]
 server = [
     "tokio/full",
@@ -146,7 +149,8 @@ server = [
     "libp2p/tokio",
     "libp2p/gossipsub",
     "libp2p/request-response",
-    "libp2p/dcutr"
+    "libp2p/dcutr",
+    "libp2p/autonat"
 ]
 relay = [
     "tokio/full",
@@ -164,7 +168,8 @@ relay = [
     "libp2p/tokio",
     "libp2p/gossipsub",
     "libp2p/request-response",
-    "libp2p/dcutr"
+    "libp2p/dcutr",
+    "libp2p/autonat"
 ]
 malicious_bootstrap = [
     "tokio/full",
@@ -182,7 +187,8 @@ malicious_bootstrap = [
     "libp2p/tokio",
     "libp2p/gossipsub",
     "libp2p/request-response",
-    "libp2p/dcutr"
+    "libp2p/dcutr",
+    "libp2p/autonat"
 ]
 malicious_client = [
     "tokio/full",
@@ -200,7 +206,8 @@ malicious_client = [
     "libp2p/tokio",
     "libp2p/gossipsub",
     "libp2p/request-response",
-    "libp2p/dcutr"
+    "libp2p/dcutr",
+    "libp2p/autonat"
 ]
 malicious_server = [
     "tokio/full",
@@ -218,7 +225,8 @@ malicious_server = [
     "libp2p/tokio",
     "libp2p/gossipsub",
     "libp2p/request-response",
-    "libp2p/dcutr"
+    "libp2p/dcutr",
+    "libp2p/autonat"
 ]
 malicious_relay = [
     "tokio/full",
@@ -236,7 +244,8 @@ malicious_relay = [
     "libp2p/tokio",
     "libp2p/gossipsub",
     "libp2p/request-response",
-    "libp2p/dcutr"
+    "libp2p/dcutr",
+    "libp2p/autonat"
 ]
 grpc = []
 end_to_end = []

@@ -6,6 +6,7 @@ pub mod dht_poison;
 pub mod dialer;
 pub mod identity_spoofer;
 pub mod metadata;
+pub mod monitor;
 pub mod discovery_monitor;
 pub mod nat_observer;
 pub mod peer_registry;

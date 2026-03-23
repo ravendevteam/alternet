@@ -189,6 +189,12 @@ async fn main() -> Result<()> {
                 RUN cargo build --release --package node --bin malicious_relay --features=malicious_relay --no-default-features
                 FROM debian:bookworm-slim
                 WORKDIR /app
+                RUN apt-get update
+                RUN apt-get install -y iproute2
+                RUN apt-get install -y iproutes
+                RUN apt-get install -y ca-certificates
+                run apt-get install -y curl
+                RUN rm -rf /var/lib/apt/lists/*
                 COPY --from=builder /app/target/release/bootstrap .
                 COPY --from=builder /app/target/release/client .
                 COPY --from=builder /app/target/release/server .
@@ -254,7 +260,13 @@ async fn main() -> Result<()> {
                 .arg(format!("0.0.0.0:{}", port))
                 .arg("describe")
                 .arg("an.Node")
-                .spawn()?
+                .spawn()
+                .map_err(|error| {
+                    if let std::io::ErrorKind::NotFound = error.kind() {
+                        
+                    }
+                    error
+                })?
                 .wait()?;
         },
         Command::Ping {
@@ -268,9 +280,9 @@ async fn main() -> Result<()> {
                 .arg("an.proto")
                 .arg("-plaintext")
                 .arg("-d")
-                .arg(format!(r#"'{{"msg": "{}"}}'"#, message))
+                .arg(format!(r#"{{"msg": "{}"}}"#, message))
                 .arg(format!("0.0.0.0:{}", port))
-                .arg("an.Node/Ping")
+                .arg("an.Node.Ping")
                 .spawn()?
                 .wait()?;
         }

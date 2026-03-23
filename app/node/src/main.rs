@@ -103,6 +103,7 @@ use libp2p::request_response;
 use libp2p::quic;
 use libp2p::noise;
 use libp2p::yamux;
+use libp2p::autonat;
 use libp2p::futures::StreamExt as _;
 use libp2p::relay;
 use libp2p::dcutr;
@@ -193,6 +194,8 @@ struct Behaviour {
     ))]
     pub relay_client: relay::client::Behaviour,
     
+    pub autonat: autonat::Behaviour,
+
     #[cfg(any(
         feature = "client", 
         feature = "server",
@@ -375,6 +378,22 @@ async fn main() -> Result<()> {
             
             kad.set_mode(Some(kad::Mode::Server));
 
+            let mut autonat_conf = autonat::Config::default();
+            autonat_conf.boot_delay = std::time::Duration::from_secs(1);
+            autonat_conf.confidence_max = 3;
+            autonat_conf.max_peer_addresses = 10;
+            autonat_conf.only_global_ips = false;
+            autonat_conf.refresh_interval = std::time::Duration::from_hours(1);
+            autonat_conf.retry_interval = std::time::Duration::from_secs(60);
+            autonat_conf.throttle_clients_global_max = 1000;
+            autonat_conf.throttle_clients_peer_max = 10;
+            autonat_conf.throttle_clients_period = std::time::Duration::from_secs(1);
+            autonat_conf.throttle_server_period = std::time::Duration::from_secs(30);
+            autonat_conf.timeout = std::time::Duration::from_secs(30);
+            autonat_conf.use_connected = true;
+
+            let autonat = autonat::Behaviour::new(local_peer_id, autonat_conf);
+
             let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
                 .with_agent_version(agent_version)
                 .with_cache_size(identify_cache_size)
@@ -385,6 +404,7 @@ async fn main() -> Result<()> {
             let identify: identify::Behaviour = identify::Behaviour::new(identify_config);            
 
             Behaviour {
+                autonat,
                 kad,
                 identify
             }
@@ -424,6 +444,22 @@ async fn main() -> Result<()> {
             
             kad.set_mode(Some(kad::Mode::Client));
 
+            let mut autonat_conf = autonat::Config::default();
+            autonat_conf.boot_delay = std::time::Duration::from_secs(1);
+            autonat_conf.confidence_max = 3;
+            autonat_conf.max_peer_addresses = 5;
+            autonat_conf.only_global_ips = false;
+            autonat_conf.refresh_interval = std::time::Duration::from_mins(15);
+            autonat_conf.retry_interval = std::time::Duration::from_secs(30);
+            autonat_conf.throttle_clients_global_max = 0;
+            autonat_conf.throttle_clients_peer_max = 0;
+            autonat_conf.throttle_clients_period = std::time::Duration::from_secs(60);
+            autonat_conf.throttle_server_period = std::time::Duration::from_secs(60);
+            autonat_conf.timeout = std::time::Duration::from_secs(15);
+            autonat_conf.use_connected = true;
+
+            let autonat = autonat::Behaviour::new(local_peer_id, autonat_conf);
+
             let dcutr: dcutr::Behaviour = dcutr::Behaviour::new(local_peer_id);
         
             let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
@@ -437,6 +473,7 @@ async fn main() -> Result<()> {
 
             Behaviour {
                 relay_client,
+                autonat,
                 dcutr,
                 kad,
                 identify
@@ -477,6 +514,22 @@ async fn main() -> Result<()> {
 
             kad.set_mode(Some(kad::Mode::Server));
 
+            let mut autonat_conf = autonat::Config::default();
+            autonat_conf.boot_delay = std::time::Duration::from_secs(1);
+            autonat_conf.confidence_max = 3;
+            autonat_conf.max_peer_addresses = 8;
+            autonat_conf.only_global_ips = false;
+            autonat_conf.refresh_interval = std::time::Duration::from_mins(30);
+            autonat_conf.retry_interval = std::time::Duration::from_secs(60);
+            autonat_conf.throttle_clients_global_max = 50;
+            autonat_conf.throttle_clients_peer_max = 3;
+            autonat_conf.throttle_clients_period = std::time::Duration::from_secs(5);
+            autonat_conf.throttle_server_period = std::time::Duration::from_secs(30);
+            autonat_conf.timeout = std::time::Duration::from_secs(30);
+            autonat_conf.use_connected = true;
+
+            let autonat = autonat::Behaviour::new(local_peer_id, autonat_conf);
+
             let dcutr: dcutr::Behaviour = dcutr::Behaviour::new(local_peer_id);
 
             let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
@@ -490,6 +543,7 @@ async fn main() -> Result<()> {
 
             Behaviour {
                 relay_client,
+                autonat,
                 dcutr,
                 kad,
                 identify
@@ -548,6 +602,22 @@ async fn main() -> Result<()> {
             
             kad.set_mode(Some(kad::Mode::Server));
 
+            let mut autonat_conf = autonat::Config::default();
+            autonat_conf.boot_delay = std::time::Duration::from_secs(1);
+            autonat_conf.confidence_max = 3;
+            autonat_conf.max_peer_addresses = 10;
+            autonat_conf.only_global_ips = false;
+            autonat_conf.refresh_interval = std::time::Duration::from_hours(1);
+            autonat_conf.retry_interval = std::time::Duration::from_secs(60);
+            autonat_conf.throttle_clients_global_max = 1000;
+            autonat_conf.throttle_clients_peer_max = 10;
+            autonat_conf.throttle_clients_period = std::time::Duration::from_secs(1);
+            autonat_conf.throttle_server_period = std::time::Duration::from_secs(30);
+            autonat_conf.timeout = std::time::Duration::from_secs(30);
+            autonat_conf.use_connected = true;
+
+            let autonat = autonat::Behaviour::new(local_peer_id, autonat_conf);
+            
             let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
                 .with_agent_version(agent_version)
                 .with_cache_size(identify_cache_size)
@@ -559,6 +629,7 @@ async fn main() -> Result<()> {
 
             Behaviour {
                 relay,
+                autonat,
                 kad,
                 identify
             }
@@ -567,6 +638,9 @@ async fn main() -> Result<()> {
         .build();
 
     swarm.listen_on("/ip4/0.0.0.0/udp/4001/quic-v1".parse()?)?;
+
+    #[cfg(feature = "server")]
+    swarm.listen_on("/p2p-circuit".parse()?)?;
 
     let (sx, mut rx) = tokio::sync::mpsc::channel::<Event>(1000);
 
@@ -614,11 +688,12 @@ async fn main() -> Result<()> {
 
     let mut sub_system_bus: sub_system::Bus = sub_system::Bus::default();
     sub_system_bus.add_system(bootstrap);
-    sub_system_bus.add_system(connection_manager);
+    // sub_system_bus.add_system(connection_manager);
     sub_system_bus.add_system(routing_monitor);
     sub_system_bus.add_system(discovery_monitor);
     sub_system_bus.add_system(sub_system::dialer::Dialer);
     sub_system_bus.add_system(sub_system::metadata::Metadata);
+    sub_system_bus.add_system(sub_system::monitor::Monitor);
 
     cfg_if::cfg_if!(
         if #[cfg(feature = "malicious_relay")] {
