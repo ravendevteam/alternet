@@ -1,0 +1,1 @@
+Simulation items are components that can be plugged in during tests to simulate a full functioning network simulation. They are packaged into `docker` images and launched during end-to-end tests.

@@ -170,9 +170,9 @@ dependencies = [
 
 [[package]]
 name = "astral-tokio-tar"
-version = "0.5.6"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec179a06c1769b1e42e1e2cbe74c7dcdb3d6383c838454d063eaac5bbb7ebbe5"
+checksum = "3c23f3af104b40a3430ccb90ed5f7bd877a8dc5c26fc92fde51a22b40890dcf9"
 dependencies = [
  "filetime",
  "futures-core",
@@ -1091,6 +1091,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555"
 
 [[package]]
+name = "e2e"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bollard",
+ "bon",
+ "derive_more",
+ "futures-util",
+ "getset",
+ "rand 0.9.2",
+ "testcontainers",
+ "tokio",
+ "url",
+]
+
+[[package]]
 name = "ed25519"
 version = "2.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2001,6 +2017,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "image"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "cargo_metadata",
+ "modwire",
+ "testcontainers",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "image_util"
+version = "0.1.0"
+
+[[package]]
 name = "indexmap"
 version = "1.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2065,6 +2097,10 @@ name = "is_terminal_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6cb138bb79a146c1bd460005623e142ef0181e3d0219cb493e02f7d08a35695"
+
+[[package]]
+name = "isp"
+version = "0.1.0"
 
 [[package]]
 name = "itertools"
@@ -2808,6 +2844,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "nanoid"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ffa00dec017b5b1a8b7cf5e2c008bfda1aa7e0697ac1508b491fdf2622fb4d8"
+dependencies = [
+ "rand 0.8.5",
+]
+
+[[package]]
 name = "netlink-packet-core"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2882,23 +2927,26 @@ dependencies = [
  "colored",
  "derivative",
  "derive_more",
+ "e2e",
  "enum_dispatch",
  "fern",
  "futures",
  "futures-util",
  "getset",
  "humantime",
+ "image",
  "libp2p",
  "log",
  "modwire",
+ "nanoid",
  "num",
  "prost",
- "rand 0.8.5",
+ "rand 0.9.2",
  "reqwest",
  "serde",
  "strum",
  "testcontainers",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
  "tokio",
  "toml",
  "tonic",
@@ -2906,6 +2954,7 @@ dependencies = [
  "tonic-prost-build",
  "tonic-reflection",
  "ubyte",
+ "url",
 ]
 
 [[package]]
@@ -3677,6 +3726,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "router"
+version = "0.1.0"
+
+[[package]]
 name = "rtnetlink"
 version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4194,6 +4247,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
+name = "switch"
+version = "0.1.0"
+
+[[package]]
 name = "syn"
 version = "1.0.109"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4306,9 +4363,9 @@ dependencies = [
 
 [[package]]
 name = "testcontainers"
-version = "0.27.1"
+version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1c0624faaa317c56d6d19136580be889677259caf5c897941c6f446b4655068"
+checksum = "0bd36b06a2a6c0c3c81a83be1ab05fe86460d054d4d51bf513bc56b3e15bdc22"
 dependencies = [
  "astral-tokio-tar",
  "async-trait",

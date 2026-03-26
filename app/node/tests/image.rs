@@ -1,5 +1,10 @@
 #![allow(async_fn_in_trait)]
 
+use futures::StreamExt as _;
+use tokio::io::AsyncWriteExt as _;
+use std::io::Read as _;
+use futures_util::TryStreamExt as _;
+
 mod exec_result_ext {
     use super::*;
 
@@ -252,7 +257,125 @@ mod image {
     }
 }
 
+trait Docker {
+    async fn load(&self, path: &std::path::Path) -> Result<()>;
+    async fn load_built_tar_image_from_ws_target_dir(&self) -> Result<()>;
+    async fn reset(&self) -> Result<()>;
+    async fn reset_network(&self, network_name: &str) -> Result<()>;
+    async fn write_logs_to_file(&self, out_dir: &std::path::Path, containers: Vec<testcontainers::ContainerAsync<testcontainers::GenericImage>>) -> Result<()>;
+}
 
+impl Docker for bollard::Docker {
+    async fn load(&self, path: &std::path::Path) -> Result<()> {
+
+        let mut file = std::fs::File::open(path).unwrap();
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).unwrap();
+        let options = bollard::query_parameters::ImportImageOptions {
+            quiet: false,
+            ..Default::default()
+        };
+        let mut stream = self.import_image(options, bollard::body_full(bytes.into()), None);
+        while let Some(_) = stream.try_next().await.unwrap() {
+
+        }
+        Ok(())
+    }
+
+    async fn load_built_tar_image_from_ws_target_dir(&self) -> Result<()> {
+        std::process::Command::new("cargo")
+            .arg("run")
+            .arg("--package")
+            .arg("task")
+            .arg("build-image")
+            .spawn()
+            .expect("failed to build image")
+            .wait()
+            .expect("failed to build image");
+        
+        let ws_dir: std::path::PathBuf = cargo_metadata::MetadataCommand::new()
+            .exec()
+            .unwrap()
+            .workspace_root
+            .to_string()
+            .into();
+        
+        let image_dir: std::path::PathBuf = ws_dir
+            .join("target")
+            .join("image");
+        
+        let image_path: std::path::PathBuf = image_dir.join("node.tar");
+        
+        self.load(&image_path).await;
+        Ok(())
+    }
+
+    async fn reset(&self) -> Result<()> {
+        let containers: Vec<_> = self.list_containers(None).await?;
+        for container in containers {
+            self.stop_container(&container.id.to_owned().unwrap(), None).await?;
+        }
+        Ok(())
+    }
+
+    async fn reset_network(&self, network_name: &str) -> Result<()> {
+        let containers: Vec<_> = self.list_containers(None).await?;
+        for container in containers {
+            let Some(id) = container.id else {
+                continue
+            };
+            let request: bollard::secret::NetworkDisconnectRequest = bollard::secret::NetworkDisconnectRequest {
+                container: id,
+                force: Some(true)
+            };
+            self.disconnect_network(network_name, request).await?;
+        }
+        Ok(())   
+    }
+
+    async fn write_logs_to_file(&self, out_dir: &std::path::Path, containers: Vec<testcontainers::ContainerAsync<testcontainers::GenericImage>>) -> Result<()> {
+        std::fs::remove_dir_all(out_dir).ok();
+        std::fs::create_dir_all(out_dir)?;
+        let logs_conf: bollard::query_parameters::LogsOptions = bollard::query_parameters::LogsOptions {
+            stdout: true,
+            stderr: true,
+            timestamps: true,
+            tail: "all".into(),
+            ..Default::default()
+        };
+        for container in containers {
+            let logs_conf: bollard::query_parameters::LogsOptions = logs_conf.to_owned();
+            let container_id: &str = container.id();
+            let mut container_path: std::path::PathBuf = out_dir.join(container_id);
+            container_path.set_extension("log");
+            let mut file: tokio::fs::File = tokio::fs::File::create(container_path).await.unwrap();
+            let mut stream = self.logs(container_id, Some(logs_conf));
+            while let Some(log) = stream.next().await {
+                let log: bollard::container::LogOutput = log?;
+                let bytes = match log {
+                    bollard::container::LogOutput::StdOut {
+                        message
+                    } => {
+                        message
+                    },
+                    bollard::container::LogOutput::StdErr {
+                        message
+                    } => {
+                        message
+                    },
+                    bollard::container::LogOutput::Console {
+                        message
+                    } => {
+                        message
+                    },
+                    _ => continue
+                };
+                file.write_all(&bytes).await.unwrap()
+            }
+        }
+        Ok(())
+    }
+}
 
 
 mod router {
@@ -461,6 +584,8 @@ mod router {
     mod test {
         use super::*;
 
+        // make sure to enable forwarding on your OS or when the hops happen within the simulated network, some behaviour will be blocked. -- i learned this the hard way...
+
         #[tokio::test]
         async fn outbound_traffic() -> Result<()> {
             // ------------ ------------------------
@@ -468,14 +593,27 @@ mod router {
 
             let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults()?;
             
-            let lan: &str = "lan";
+            let ws_dir: std::path::PathBuf = cargo_metadata::MetadataCommand::new()
+                .exec()
+                .unwrap()
+                .workspace_root
+                .to_string()
+                .into();
+
+            docker.load(
+                &ws_dir.join("target").join("image").join("router.tar")
+            ).await.expect(
+                &format!("{}", ws_dir.join("target").join("image").join("router.tar").to_string_lossy().to_string())
+            );
+
+            let lan: &str = "laaaasssssss1ssssan";
             let lan_conf: network_ext::Configuration = network_ext::Configuration::builder()
                 .name(lan)
                 .driver("bridge")
                 .enable_ipv4(true)
                 .build();
 
-            let wan: &str = "wan";
+            let wan: &str = "waaassasassssss1san";
             let wan_conf: network_ext::Configuration = network_ext::Configuration::builder()
                 .name(wan)
                 .driver("bridge")
@@ -487,59 +625,48 @@ mod router {
             
             let router: testcontainers::ContainerAsync<testcontainers::GenericImage> = testcontainers::GenericImage::new("alpine", "latest")
                 .with_privileged(true)
-                .with_cmd(vec!["tail", "-f", "/dev/null"])
                 .with_startup_timeout(std::time::Duration::from_mins(1))
+                .with_cmd(["sleep", "infinity"])
+                //.with_container_name("router")
                 .start()
                 .await?;
+
             let router: image::Image = image::Image::new(&docker, router);
-            
-            router.exec_wait(vec!["apk", "add", "--no-cache", "iptables"]).await?;
-            router.exec_wait(vec!["apk", "add", "--no-cache", "iproute2"]).await?;
+
+            router.exec_wait(vec!["apk", "add", "iptables"]).await?;
 
             router.connect_to_network(wan, None).await?;
             router.connect_to_network(lan, None).await?;
             
             let router_lan_ip: String = router.ip(lan).await?.ok_or(anyhow::anyhow!("no connection to lan"))?;
             let router_wan_ip: String = router.ip(wan).await?.ok_or(anyhow::anyhow!("no connection to wan"))?;
+            
             let router_lan_eth: String = router.eth(lan).await?;
             let router_wan_eth: String = router.eth(wan).await?;
-            let eth0 = router_lan_eth;
-            let eth1 = router_wan_eth;
-            let router_cmds: [_; _] = [
-                vec!["sysctl", "-w", "net.ipv4.ip_forward=1"],
-                //vec!["sysctl", "-w", "net.ipv4.conf.all.rp_filter=0"],
-                //vec!["sysctl", "-w", "net.ipv4.conf.default.rp_filter=0"],
-                
-                vec!["iptables", "-t", "nat", "-A", "POSTROUTING", "-o", &eth1, "-j", "MASQUERADE"],
-                vec!["iptables", "-A", "FORWARD", "-i", &eth0, "-o", &eth1, "-m", "state", "--state", "RELATED,ESTABLISHED", "-j", "ACCEPT"],
-                vec!["iptables", "-A", "FORWARD", "-i", &eth1, "-o", &eth0, "-j", "ACCEPT"]
-                
-                //vec!["iptables", "-F"],
-                //vec!["iptables", "-t", "nat", "-F"],
-                //vec!["iptables", "-t", "nat", "-A", "POSTROUTING", "-o", &router_wan_eth, "-j", "MASQUERADE"],
-                //vec!["iptables", "-A", "FORWARD", "-p", "icmp", "-j", "ACCEPT"],
-                //vec!["iptables", "-A", "FORWARD", "-m", "conntrack", "--ctstate", "RELATED,ESTABLISHED", "-j", "ACCEPT"],
-                //vec!["iptables", "-A", "FORWARD", "-i", &router_lan_eth, "-o", &router_wan_eth, "-j", "ACCEPT"],
-                //vec!["iptables", "-A", "FORWARD", "-i", &router_wan_eth, "-o", &router_lan_eth, "-j", "ACCEPT"],
-                //vec!["iptables", "-A", "INPUT", "-i", "lo", "-j", "ACCEPT"],
-                //vec!["iptables", "-A", "INPUT", "-m", "conntrack", "--ctstate", "RELATED,ESTABLISHED", "-j", "ACCEPT"],
-                //vec!["iptables", "-A", "INPUT", "-i", &router_lan_eth, "-p", "tcp", "--dport", "22", "-j", "ACCEPT"]
-            ];
-            for cmd in router_cmds {
-                router.exec_wait(cmd).await?;
-            }
+
+            router.exec_wait(vec!["sysctl", "-w", "net.ipv4.ip_forward=1"]).await?;
+            router.exec_wait(vec!["iptables", "-F"]).await?;
+            router.exec_wait(vec!["iptables", "-P", "FORWARD", "ACCEPT"]).await?;
+            router.exec_wait(vec!["iptables", "-t", "nat", "-A", "POSTROUTING", "-o", &router_wan_eth, "-j", "MASQUERADE"]).await?;
+            router.exec_wait(vec!["iptables", "-t", "mangle", "-A", "POSTROUTING", "-j", "CHECKSUM", "--checksum-fill"]).await?;
 
             let client: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("alpine", "latest")
-                .with_cmd(vec!["tail", "-f", "/dev/null"])
+                .with_cmd(["sleep", "infinity"])
                 .with_privileged(true)
+                //.with_container_name("client")
                 .start()
                 .await?;
+
             let client: image::Image = image::Image::new(&docker, client);
             
             client.connect_to_network(lan, None).await?;
 
+            let client_ip = client.ip(lan).await?.ok_or(anyhow::anyhow!("no connection to lan"))?;
+                
             let client_cmds: [_; _] = [
                 vec!["apk", "add", "mtr"],
+
+                // delete bridge gateway
                 vec!["ip", "route", "del", "default"],
                 vec!["ip", "route", "add", "default", "via", &router_lan_ip]
             ];
@@ -548,31 +675,68 @@ mod router {
             }
 
             let target: testcontainers::ContainerAsync<_> = testcontainers::GenericImage::new("alpine", "latest")
-                .with_cmd(vec!["tail", "-f", "/dev/null"])
+                .with_cmd(["sleep", "infinity"])
                 .with_privileged(true)
+                //.with_container_name("target")
                 .start()
                 .await?;            
+
             let target: image::Image = image::Image::new(&docker, target);
             
             target.connect_to_network(wan, None).await?;
 
-            let target_cmds: [_; _] = [
-                vec!["ip", "route", "del", "default"],
-                vec!["ip", "route", "add", "default", "via", &router_wan_ip]
-            ];
-            for cmd in target_cmds {
-                target.exec_wait(cmd).await?;
-            }
+            target.exec_wait(vec!["sh", "-c", "while true; do nc -lp 443 -e echo 'pong'; done &"]).await?;
+
+            target.exec_wait(vec!["ip", "route", "del", "default"]).await?;
+            target.exec_wait(vec!["ip", "route", "add", "default", "via", &router_wan_ip]).await?;
+
+            //Active Internet connections (only servers)
+            //Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+            //tcp        0      0 127.0.0.11:42099        0.0.0.0:*               LISTEN      -
+            //tcp        0      0 :::443                  :::*                    LISTEN      13/nc
+            //udp        0      0 127.0.0.11:49218        0.0.0.0:*   
+            //let port_check = target.exec_wait(vec!["netstat", "-tulpn"]).await?;
+            //panic!("{}", port_check);
 
             let target_ip: String = target.ip(wan).await?.ok_or(anyhow::anyhow!("no connection to wan"))?;            
 
-            let ping_output: String = client.exec_wait(vec!["mtr", "--report", "--report-cycles", "10", &format!("{}", target_ip)]).await?;
 
-            // Start: 2026-03-23T18:32:08+0000
-            // HOST: ec99f77d9baa                Loss%   Snt   Last   Avg  Best  Wrst StDev
-            //  1.|-- stoic_murdock.lan          0.0%    10    0.4   0.4   0.2   1.1   0.3
-            //  2.|-- ???                       100.0    10    0.0   0.0   0.0   0.0   0.0
-            panic!("{}", ping_output);
+            // C -> * (eth1)
+            // 172.20.0.2 dev eth1  src 172.20.0.3
+            // panic!("{}", client.exec_wait(vec!["ip", "route", "get", &router_lan_ip]).await?);
+
+            // * -> C (eth2)
+            // 172.20.0.3 dev eth2  src 172.20.0.2
+            // panic!("{}", router.exec_wait(vec!["ip", "route", "get", &client_ip]).await?);
+
+            // * -> T (eth1)
+            // 172.18.0.3 dev eth1  src 172.18.0.2
+            // panic!("{}", router.exec_wait(vec!["ip", "route", "get", &target_ip]).await?);
+
+            // T -> * (eth1)
+            // 172.18.0.2 dev eth1  src 172.18.0.3
+            // panic!("{}", target.exec_wait(vec!["ip", "route", "get", &router_wan_ip]).await?);
+
+
+            //client.exec_wait(vec!["ping", &target_ip]).await?;
+
+            
+            // gets stuck here...
+
+            // Start: 2026-03-25T13:13:15+0000
+            // HOST: 8e490a9609f5                Loss%   Snt   Last   Avg  Best  Wrst StDev
+            // 1.|-- clever_brown.laaaassssss1  0.0%     3    0.1   0.1   0.1   0.1   0.0
+            // 2.|-- 192.168.64.3               0.0%     3    0.2   0.2   0.2   0.2   0.0 :: (client_ip=192.168.48.3, router_lan_ip=192.168.48.2, router_wan_ip=192.168.64.2, target_ip=192.168.64.3)
+            let ping_output: String = client.exec_wait(vec![
+                "mtr",
+                "--report", 
+                "--report-cycles", "3",
+                "--interval", "0.3",
+                "--timeout", "5",
+                &format!("{}", target_ip)
+            ]).await?;
+        
+            panic!("{} :: (client_ip={}, router_lan_ip={}, router_wan_ip={}, target_ip={})", ping_output, client_ip, router_lan_ip, router_wan_ip, target_ip);
             Ok(())
         }
     }

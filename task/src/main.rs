@@ -10,6 +10,14 @@ struct Main {
 
 #[derive(clap::Subcommand)]
 enum Command {
+    Package {
+        #[arg(long)]
+        name: String,
+        #[arg(long)]
+        tag: String,
+        #[arg(long)]
+        dockerfile: String
+    },
     BuildImage,
     
     #[command(name = "build-node")]
@@ -156,6 +164,28 @@ async fn main() -> Result<()> {
     use clap::Parser as _;
     let main: Main = Main::parse();
     match &main.command {
+        Command::Package {
+            name,
+            tag,
+            dockerfile
+        } => {
+            let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults()?;
+            let ws_root: std::path::PathBuf = workspace_dir()?;
+            let ws_root_exclude: Vec<&str> = vec![
+                "target"
+            ];
+            let ws_root_exclude: Vec<std::path::PathBuf> = ws_root_exclude
+                .iter()
+                .map(|s| s.into())
+                .collect();
+            let image_name: &str = name;
+            let image_tag: &str = tag;
+            let image_out_dir: std::path::PathBuf = ws_root
+                .join("target")
+                .join("image");
+            let dockerfile: String = std::fs::read_to_string(dockerfile)?;
+            docker.export_image_to_tar_from_ws_context(&ws_root, &ws_root_exclude, image_name, image_tag, &image_out_dir, &dockerfile).await?;
+        },
         Command::BuildImage => {
             let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults()?;
             let ws_root: std::path::PathBuf = workspace_dir()?;

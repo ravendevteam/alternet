@@ -639,9 +639,6 @@ async fn main() -> Result<()> {
 
     swarm.listen_on("/ip4/0.0.0.0/udp/4001/quic-v1".parse()?)?;
 
-    #[cfg(feature = "server")]
-    swarm.listen_on("/p2p-circuit".parse()?)?;
-
     let (sx, mut rx) = tokio::sync::mpsc::channel::<Event>(1000);
 
     let grpc_endpoint: std::net::SocketAddr = if let Some(grpc_endpoint) = cli.grpc_endpoint {

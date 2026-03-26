@@ -1,0 +1,13 @@
+[package]
+name = "image"
+version = "0.1.0"
+edition = "2024"
+readme = "readme.md"
+
+[dependencies]
+testcontainers = "0.27.2"
+anyhow = "1.0.102"
+modwire = "0.1.0"
+async-trait = "0.1.89"
+cargo_metadata = "0.23.1"
+thiserror = "*"

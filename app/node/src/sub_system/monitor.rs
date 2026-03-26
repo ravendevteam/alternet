@@ -56,26 +56,26 @@ impl SubSystem for Monitor {
                 peer,
                 error
             })))) => {
-                log::warn!("AutoNAT Outbound Error [ID: {:?}]: Bootstrap node {:?} could not reach us: {:?}", probe_id, peer, error);
+                log::warn!("autonat Outbound Error [ID: {:?}]: bootstrap node {:?} could not reach us: {:?}", probe_id, peer, error);
             },
             Some(SwarmEvent::Behaviour(BehaviourEvent::Autonat(autonat::Event::OutboundProbe(autonat::OutboundProbeEvent::Request{
                 probe_id,
                 peer
             })))) => {
-                log::info!("AutoNAT Outbound Request [ID: {:?}]: Asking bootstrap {:?} to probe our reachability", probe_id, peer);
+                log::info!("autonat Outbound Request [ID: {:?}]: Asking bootstrap {:?} to probe our reachability", probe_id, peer);
             },
             Some(SwarmEvent::Behaviour(BehaviourEvent::Autonat(autonat::Event::OutboundProbe(autonat::OutboundProbeEvent::Response{
                 probe_id,
                 peer,
                 address
             })))) => {
-                log::info!("AutoNAT Outbound Response [ID: {:?}]: Bootstrap {} confirmed we are reachable at {}", probe_id, peer, address);
+                log::info!("autonat outbound response [ID: {:?}]: Bootstrap {} confirmed we are reachable at {}", probe_id, peer, address);
             },
             Some(SwarmEvent::Behaviour(BehaviourEvent::Autonat(autonat::Event::StatusChanged{
                 old,
                 new
             }))) => {
-                log::info!("AutoNAT Status Change: {:?} -> {:?}", old, new);
+                log::info!("autonat status change: {:?} -> {:?}", old, new);
                 if matches!(new, autonat::NatStatus::Private) {
                     log::info!("Node is now PRIVATE. DCUtR hole punching is now eligible to trigger.");
                 }

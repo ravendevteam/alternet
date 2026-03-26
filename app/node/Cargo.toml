@@ -31,6 +31,8 @@ clap = { version = "*", features = ["derive"] }
 ubyte = "*"
 cfg-if = "*"
 anyhow = "*"
+url = "*"
+nanoid = "*"
 
 [dev-dependencies]
 testcontainers = "*"
@@ -48,6 +50,8 @@ derivative = "*"
 bon = "*"
 strum = { version = "*", features = ["derive"] }
 thiserror = "*"
+image = { version = "*", path = "../../image" }
+e2e = { version = "*", path = "../../lib/e2e" }
 
 [build-dependencies]
 tonic-prost = "*"

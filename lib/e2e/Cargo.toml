@@ -1,0 +1,18 @@
+[package]
+name = "e2e"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+testcontainers = "*"
+bollard = "*"
+getset = "*"
+bon = "*"
+anyhow = "*"
+tokio = "*"
+futures-util = "*"
+derive_more = { version = "*", features = ["full"] }
+url = "*"
+
+[dev-dependencies]
+rand = "*"
