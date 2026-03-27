@@ -315,16 +315,16 @@ async fn main() -> Result<()> {
     };
 
     #[cfg(any(feature = "bootstrap", feature = "malicious_bootstrap"))]
-    let identify_interval: std::time::Duration = std::time::Duration::from_mins(1);
+    let identify_interval: std::time::Duration = std::time::Duration::from_secs(5);
 
     #[cfg(any(feature = "client", feature = "malicious_client"))]
-    let identify_interval: std::time::Duration = std::time::Duration::from_mins(20);
+    let identify_interval: std::time::Duration = std::time::Duration::from_mins(5);
 
     #[cfg(any(feature = "server", feature = "malicious_server"))]
-    let identify_interval: std::time::Duration = std::time::Duration::from_mins(10);
+    let identify_interval: std::time::Duration = std::time::Duration::from_mins(5);
 
     #[cfg(any(feature = "relay", feature = "malicious_relay"))]
-    let identify_interval: std::time::Duration = std::time::Duration::from_mins(10);
+    let identify_interval: std::time::Duration = std::time::Duration::from_mins(5);
 
     let local_keypair: identity::Keypair = identity::Keypair::generate_ed25519();
     let local_public_key: identity::PublicKey = local_keypair.public();
@@ -638,6 +638,23 @@ async fn main() -> Result<()> {
         .build();
 
     swarm.listen_on("/ip4/0.0.0.0/udp/4001/quic-v1".parse()?)?;
+
+    #[cfg(any(feature = "server", feature = "malicious_server"))] {
+        for addr in &dial {
+            if addr.to_string().contains("p2p") {
+                let is_p2p: bool = addr.iter().any(|protocol| matches!(protocol, libp2p::multiaddr::Protocol::P2p(_)));
+    
+                if is_p2p {
+                    let circuit_addr: libp2p::Multiaddr = addr.clone().with(libp2p::multiaddr::Protocol::P2pCircuit);
+                    
+                    log::info!("server attempting relay reservation: {}", circuit_addr);
+
+                    // these are speculative attempts
+                    swarm.listen_on(circuit_addr).ok();
+                }
+            }
+        }
+    }
 
     let (sx, mut rx) = tokio::sync::mpsc::channel::<Event>(1000);
 

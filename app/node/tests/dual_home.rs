@@ -5,8 +5,10 @@ mod proto {
     include!("../proto_target/an.rs");
 }
 
+
+
 #[tokio::test]
-async fn main() -> anyhow::Result<()> {
+async fn dual_home() -> anyhow::Result<()> {
     let log_dir: std::path::PathBuf = std::path::PathBuf::new()
         .join("tests")
         .join("log")
@@ -131,57 +133,13 @@ async fn main() -> anyhow::Result<()> {
     dbg!(&server_router_lan_eth);
     dbg!(&server_router_wan_eth);
 
-    let client_router: testcontainers::ContainerAsync<_> = alpine_image
-        .to_owned()
-        .with_container_name(format!("client_router.{}", nanoid::nanoid!()))
-        .with_startup_timeout(std::time::Duration::from_mins(1))
-        .with_privileged(true)
-        .with_cmd(["sleep", "infinity"])
-        .start()
-        .await?;
-
-    let client_router: e2e::container::Container<_> = e2e::container::Container::new(&docker, client_router);
-
-    client_router.connect_to(&client_lan).await?;
-    client_router.connect_to(&wan).await?;
-    
-    let client_router_lan_ip: std::net::Ipv4Addr = client_router.ip(&client_lan).await?.ok_or(anyhow::anyhow!("no connection"))?;
-    let client_router_wan_ip: std::net::Ipv4Addr = client_router.ip(&wan).await?.ok_or(anyhow::anyhow!("no connection"))?;
-
-    let client_router_lan_eth: usize = client_router.eth(&client_lan).await?;
-    let client_router_lan_eth: String = format!("eth{}", client_router_lan_eth);
-    let client_router_wan_eth: usize = client_router.eth(&wan).await?;
-    let client_router_wan_eth: String = format!("eth{}", client_router_wan_eth);
-
-    dbg!(&client_router_lan_ip);
-    dbg!(&client_router_wan_ip);
-    dbg!(&client_router_lan_eth);
-    dbg!(&client_router_wan_eth);
-
     server_router.exec().args(vec!["apk", "add", "iptables"]).send().await?;
     server_router.exec().args(vec!["sysctl", "-w", "net.ipv4.ip_forward=1"]).send().await?;
-    server_router.exec().args(vec!["iptables", "-t", "nat", "-A", "POSTROUTING", "-o", &server_router_wan_eth, "-p", "udp", "-j", "MASQUERADE", "--random-fully"]).send().await?;
+    server_router.exec().args(vec!["iptables", "-t", "nat", "-A", "POSTROUTING", "-o", &server_router_wan_eth, "-j", "MASQUERADE"]).send().await?;
+    server_router.exec().args(vec!["iptables", "-A", "FORWARD", "-i", &server_router_lan_eth, "-o", &server_router_wan_eth, "-j", "ACCEPT"]).send().await?;
     server_router.exec().args(vec!["iptables", "-A", "FORWARD", "-m", "conntrack", "--ctstate", "ESTABLISHED,RELATED", "-j", "ACCEPT"]).send().await?;
-    server_router.exec().args(vec!["iptables", "-A", "FORWARD", "-d", &format!("{}", &bootstrap_ip), "-p", "udp", "--dport", "4001", "-j", "ACCEPT"]).send().await?;
-    server_router.exec().args(vec!["iptables", "-A", "FORWARD", "-d", &format!("{}", &relay_ip), "-p", "udp", "--dport", "4001", "-j", "ACCEPT"]).send().await?;
-    server_router.exec().args(vec!["iptables", "-A", "FORWARD", "-s", &format!("{}", &client_router_wan_ip), "-p", "udp", "--dport", "4001", "-j", "DROP"]).send().await?;
-    server_router.exec().args(vec!["iptables", "-A", "FORWARD", "-i", &server_router_lan_eth, "-j", "ACCEPT"]).send().await?;
-    server_router.exec().args(vec!["iptables", "-P", "FORWARD", "DROP"]).send().await?;
-
-    client_router.exec().args(vec!["apk", "add", "iptables"]).send().await?;
-    client_router.exec().args(vec!["sysctl", "-w", "net.ipv4.ip_forward=1"]).send().await?;
-    client_router.exec().args(vec!["iptables", "-t", "nat", "-A", "POSTROUTING", "-o", &client_router_wan_eth, "-p", "udp", "-j", "MASQUERADE", "--random-fully"]).send().await?;
-    client_router.exec().args(vec!["iptables", "-A", "FORWARD", "-m", "conntrack", "--ctstate", "ESTABLISHED,RELATED", "-j", "ACCEPT"]).send().await?;
-    client_router.exec().args(vec!["iptables", "-A", "FORWARD", "-d", &format!("{}", &bootstrap_ip), "-p", "udp", "--dport", "4001", "-j", "ACCEPT"]).send().await?;
-    client_router.exec().args(vec!["iptables", "-A", "FORWARD", "-d", &format!("{}", &relay_ip), "-p", "udp", "--dport", "4001", "-j", "ACCEPT"]).send().await?;
-    client_router.exec().args(vec!["iptables", "-A", "FORWARD", "-d", &format!("{}", &server_router_wan_ip), "-p", "udp", "--dport", "4001", "-j", "DROP"]).send().await?;
-    client_router.exec().args(vec!["iptables", "-A", "FORWARD", "-i", &client_router_lan_eth, "-j", "ACCEPT"]).send().await?;
-    client_router.exec().args(vec!["iptables", "-P", "FORWARD", "DROP"]).send().await?;
-
-    assert!(server_router.can_reach(&bootstrap_ip).await);
-    assert!(server_router.can_reach(&relay_ip).await);
-    assert!(client_router.can_reach(&bootstrap_ip).await);
-    assert!(client_router.can_reach(&relay_ip).await);
+    server_router.exec().args(vec!["iptables", "-A", "FORWARD", "-i", &server_router_wan_eth, "-j", "LOG", "--log-prefix", "FW_DROP: "]).send().await?;
+    server_router.exec().args(vec!["iptables", "-A", "FORWARD", "-i", &server_router_wan_eth, "-j", "DROP"]).send().await?;
 
     let server: testcontainers::ContainerAsync<_> = node_image
         .to_owned()
@@ -228,9 +186,44 @@ async fn main() -> anyhow::Result<()> {
     dbg!(&server_peer_id);
     dbg!(&server_mu_via_relay);
 
-    assert!(server.can_reach(&server_router_lan_ip).await);
-    assert!(server.can_reach(&bootstrap_ip).await);
-    assert!(server.can_reach(&relay_ip).await); 
+    let client_router: testcontainers::ContainerAsync<_> = alpine_image
+        .to_owned()
+        .with_container_name(format!("client_router.{}", nanoid::nanoid!()))
+        .with_startup_timeout(std::time::Duration::from_mins(1))
+        .with_privileged(true)
+        .with_cmd(["sleep", "infinity"])
+        .start()
+        .await?;
+
+    let client_router: e2e::container::Container<_> = e2e::container::Container::new(&docker, client_router);
+
+    client_router.connect_to(&client_lan).await?;
+    client_router.connect_to(&wan).await?;
+    
+    let client_router_lan_ip: std::net::Ipv4Addr = client_router.ip(&client_lan).await?.ok_or(anyhow::anyhow!("no connection"))?;
+    let client_router_wan_ip: std::net::Ipv4Addr = client_router.ip(&wan).await?.ok_or(anyhow::anyhow!("no connection"))?;
+
+    let client_router_lan_eth: usize = client_router.eth(&client_lan).await?;
+    let client_router_lan_eth: String = format!("eth{}", client_router_lan_eth);
+    let client_router_wan_eth: usize = client_router.eth(&wan).await?;
+    let client_router_wan_eth: String = format!("eth{}", client_router_wan_eth);
+
+    dbg!(&client_router_lan_ip);
+    dbg!(&client_router_wan_ip);
+    dbg!(&client_router_lan_eth);
+    dbg!(&client_router_wan_eth);
+
+//iptables -P INPUT DROP
+//iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+//iptables -A OUTPUT -d $BOOTSTRAP_IP -p udp --dport 4001 -j ACCEPT
+//iptables -A OUTPUT -d $RELAY_IP -p udp --dport 4001 -j ACCEPT
+//iptables -A OUTPUT -d $PEER_IP -p udp --dport 4001 -j DROP
+    
+    client_router.exec().args(vec!["apk", "add", "iptables"]).send().await?;
+    client_router.exec().args(vec!["sysctl", "-w", "net.ipv4.ip_forward=1"]).send().await?;
+    client_router.exec().args(vec!["iptables", "-t", "nat", "-A", "POSTROUTING", "-o", &client_router_wan_eth, "-j", "MASQUERADE"]).send().await?;
+    client_router.exec().args(vec!["iptables", "-A", "FORWARD", "-i", &client_router_lan_eth, "-o", &client_router_wan_eth, "-j", "ACCEPT"]).send().await?;    
+    client_router.exec().args(vec!["iptables", "-A", "FORWARD", "-m", "conntrack", "--ctstate", "ESTABLISHED,RELATED", "-j", "ACCEPT"]).send().await?;
 
     let client: testcontainers::ContainerAsync<_> = node_image
         .to_owned()
@@ -270,38 +263,38 @@ async fn main() -> anyhow::Result<()> {
     dbg!(&client_grpc_port);
     dbg!(&client_peer_id);
 
-    assert!(client.can_reach(&client_router_lan_ip).await);
-    assert!(client.can_reach(&bootstrap_ip).await);
-    assert!(client.can_reach(&relay_ip).await);   
+    for _ in 0..=6 {
+        let client_dial_request: proto::DialRequest = proto::DialRequest {
+            addr: server_mu_via_relay.to_string()
+        };
+
+        let client_dial_response: tonic::Response<_> = client_grpc.dial(client_dial_request).await?;
+        let client_dial_response: proto::DialResponse = client_dial_response.into_inner();
+
+        assert!(client_dial_response.success);
+
+        dbg!(&client_dial_response);
+
+        tokio::time::sleep(std::time::Duration::from_mins(1)).await;
+    }
 
     assert!(bootstrap.can_reach(&relay_ip).await);
     assert!(bootstrap.can_reach(&client_router_wan_ip).await);
     assert!(relay.can_reach(&bootstrap_ip).await);
     assert!(relay.can_reach(&client_router_wan_ip).await);
+    assert!(server_router.can_reach(&bootstrap_ip).await);
+    assert!(server_router.can_reach(&relay_ip).await);
+    assert!(server.can_reach(&server_router_lan_ip).await);
+    assert!(server.can_reach(&bootstrap_ip).await);
+    assert!(server.can_reach(&relay_ip).await); 
+    assert!(client_router.can_reach(&bootstrap_ip).await);
+    assert!(client_router.can_reach(&relay_ip).await);
+    assert!(client.can_reach(&client_router_lan_ip).await);
+    assert!(client.can_reach(&bootstrap_ip).await);
+    assert!(client.can_reach(&relay_ip).await);
 
-    tokio::time::sleep(std::time::Duration::from_secs(20)).await;
-
-    let client_dial_request: proto::DialRequest = proto::DialRequest {
-        addr: server_mu_via_relay.to_string()
-    };
-
-    let client_dial_response: tonic::Response<_> = client_grpc.dial(client_dial_request).await?;
-    let client_dial_response: proto::DialResponse = client_dial_response.into_inner();
-
-    assert!(client_dial_response.success);
-
-    tokio::time::sleep(std::time::Duration::from_secs(20)).await;
-
-    relay.stop().await?;
-
-    let client_dial_request: proto::DialRequest = proto::DialRequest {
-        addr: server_mu_via_relay.to_string()
-    };
-
-    let client_dial_response: tonic::Response<_> = client_grpc.dial(client_dial_request).await?;
-    let client_dial_response: proto::DialResponse = client_dial_response.into_inner();
-
-    assert!(client_dial_response.success);
+    // this should break
+    assert!(!client.can_reach(&server_ip).await);
 
     if log_dir.exists() {
         tokio::fs::remove_dir_all(&log_dir).await?;

@@ -11,7 +11,24 @@ rand = "*"
 async-trait = "*"
 futures = "*"
 tokio = { version = "1.48.0", features = ["full"] }
-libp2p = { version = "0.56.0", default-features = false }
+libp2p = { version = "0.56.0", features = [
+    "tcp",
+    "quic",
+    "noise",
+    "yamux",
+    "mdns",
+    "kad",
+    "ping",
+    "identify",
+    "relay",
+    "macros",
+    "tls",
+    "gossipsub",
+    "request-response",
+    "dcutr",
+    "autonat",
+    "tokio"
+] }
 toml = "*"
 bon = "*"
 serde = { version = "*", features = ["derive"] }
@@ -99,157 +116,13 @@ required-features = ["malicious_relay"]
 
 [features]
 default = ["server", "end_to_end"]
-bootstrap = [
-    "tokio/full",
-    "libp2p/tcp",
-    "libp2p/quic",
-    "libp2p/noise",
-    "libp2p/yamux",
-    "libp2p/mdns",
-    "libp2p/kad",
-    "libp2p/ping",
-    "libp2p/identify",
-    "libp2p/relay",
-    "libp2p/macros",
-    "libp2p/tls",
-    "libp2p/tokio",
-    "libp2p/gossipsub",
-    "libp2p/request-response",
-    "libp2p/dcutr",
-    "libp2p/autonat"
-]
-client = [
-    "tokio/full",
-    "libp2p/tcp",
-    "libp2p/quic",
-    "libp2p/noise",
-    "libp2p/yamux",
-    "libp2p/mdns",
-    "libp2p/kad",
-    "libp2p/ping",
-    "libp2p/identify",
-    "libp2p/relay",
-    "libp2p/macros",
-    "libp2p/tls",
-    "libp2p/tokio",
-    "libp2p/gossipsub",
-    "libp2p/request-response",
-    "libp2p/dcutr",
-    "libp2p/autonat"
-]
-server = [
-    "tokio/full",
-    "libp2p/tcp",
-    "libp2p/quic",
-    "libp2p/noise",
-    "libp2p/yamux",
-    "libp2p/mdns",
-    "libp2p/kad",
-    "libp2p/ping",
-    "libp2p/identify",
-    "libp2p/relay",
-    "libp2p/macros",
-    "libp2p/tls",
-    "libp2p/tokio",
-    "libp2p/gossipsub",
-    "libp2p/request-response",
-    "libp2p/dcutr",
-    "libp2p/autonat"
-]
-relay = [
-    "tokio/full",
-    "libp2p/tcp",
-    "libp2p/quic",
-    "libp2p/noise",
-    "libp2p/yamux",
-    "libp2p/mdns",
-    "libp2p/kad",
-    "libp2p/ping",
-    "libp2p/identify",
-    "libp2p/relay",
-    "libp2p/macros",
-    "libp2p/tls",
-    "libp2p/tokio",
-    "libp2p/gossipsub",
-    "libp2p/request-response",
-    "libp2p/dcutr",
-    "libp2p/autonat"
-]
-malicious_bootstrap = [
-    "tokio/full",
-    "libp2p/tcp",
-    "libp2p/quic",
-    "libp2p/noise",
-    "libp2p/yamux",
-    "libp2p/mdns",
-    "libp2p/kad",
-    "libp2p/ping",
-    "libp2p/identify",
-    "libp2p/relay",
-    "libp2p/macros",
-    "libp2p/tls",
-    "libp2p/tokio",
-    "libp2p/gossipsub",
-    "libp2p/request-response",
-    "libp2p/dcutr",
-    "libp2p/autonat"
-]
-malicious_client = [
-    "tokio/full",
-    "libp2p/tcp",
-    "libp2p/quic",
-    "libp2p/noise",
-    "libp2p/yamux",
-    "libp2p/mdns",
-    "libp2p/kad",
-    "libp2p/ping",
-    "libp2p/identify",
-    "libp2p/relay",
-    "libp2p/macros",
-    "libp2p/tls",
-    "libp2p/tokio",
-    "libp2p/gossipsub",
-    "libp2p/request-response",
-    "libp2p/dcutr",
-    "libp2p/autonat"
-]
-malicious_server = [
-    "tokio/full",
-    "libp2p/tcp",
-    "libp2p/quic",
-    "libp2p/noise",
-    "libp2p/yamux",
-    "libp2p/mdns",
-    "libp2p/kad",
-    "libp2p/ping",
-    "libp2p/identify",
-    "libp2p/relay",
-    "libp2p/macros",
-    "libp2p/tls",
-    "libp2p/tokio",
-    "libp2p/gossipsub",
-    "libp2p/request-response",
-    "libp2p/dcutr",
-    "libp2p/autonat"
-]
-malicious_relay = [
-    "tokio/full",
-    "libp2p/tcp",
-    "libp2p/quic",
-    "libp2p/noise",
-    "libp2p/yamux",
-    "libp2p/mdns",
-    "libp2p/kad",
-    "libp2p/ping",
-    "libp2p/identify",
-    "libp2p/relay",
-    "libp2p/macros",
-    "libp2p/tls",
-    "libp2p/tokio",
-    "libp2p/gossipsub",
-    "libp2p/request-response",
-    "libp2p/dcutr",
-    "libp2p/autonat"
-]
+bootstrap = []
+client = []
+server = []
+relay = []
+malicious_bootstrap = []
+malicious_client = []
+malicious_server = []
+malicious_relay = ["tokio/full"]
 grpc = []
 end_to_end = []
