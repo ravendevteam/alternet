@@ -4,7 +4,7 @@ pub struct Dialer;
 
 impl SubSystem for Dialer {
     fn receive(&mut self, swarm: &mut Swarm, event: &mut Event, queue: &mut dyn FnMut(Event)) {
-        let Some(grpc::Dial{
+        let Some(grpc::Dial {
             addr,
             completed
         }) = event.downcast_mut() else {

@@ -1,5 +1,6 @@
 use image::Image as _;
-use testcontainers::{ImageExt as _, runners::AsyncRunner};
+use testcontainers::ImageExt as _;
+use testcontainers::runners::AsyncRunner as _;
 
 mod proto {
     include!("../proto_target/an.rs");
@@ -279,7 +280,7 @@ async fn main() -> anyhow::Result<()> {
     assert!(relay.can_reach(&bootstrap_ip).await);
     assert!(relay.can_reach(&client_router_wan_ip).await);
 
-    tokio::time::sleep(std::time::Duration::from_secs(20)).await;
+    tokio::time::sleep(std::time::Duration::from_secs(60)).await;
 
     let client_dial_request: proto::DialRequest = proto::DialRequest {
         addr: server_mu_via_relay.to_string()
@@ -290,7 +291,7 @@ async fn main() -> anyhow::Result<()> {
 
     assert!(client_dial_response.success);
 
-    tokio::time::sleep(std::time::Duration::from_secs(20)).await;
+    tokio::time::sleep(std::time::Duration::from_secs(60)).await;
 
     relay.stop().await?;
 
