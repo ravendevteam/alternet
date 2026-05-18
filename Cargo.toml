@@ -1,6 +1,7 @@
 [workspace]
 resolver = "3"
 members = [
+	"app/mchain",
     "app/node",
     "app/simulation-item/isp",
     "app/simulation-item/router",
