@@ -2,9 +2,10 @@
 .obsidian
 .env
 *.log
-/target
-/doc/README.md
-/doc/proof-of-transport.md
-/lib/algo
-/lib/chain
-/lib/crypto
+target/
+result/
+doc/README.md
+doc/proof-of-transport.md
+lib/algo
+lib/chain
+lib/crypto

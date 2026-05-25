@@ -116,7 +116,61 @@ mod env_key;
 mod grpc;
 mod sub_system;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+pub trait Transaction {
+	type Balance;
+	type Address;
+	type Hash;
+	
+	fn src(&self) -> Self::Address;
+	fn dst(&self) -> Self::Address;
+	fn nonce(&self) -> u64;
+	fn amount(&self) -> Self::Balance;
+	fn fee_limit(&self) -> Self::Balance;
+	fn fee_price(&self) -> Option<Self::Balance>;
+	fn ttl(&self) -> Option<u64>;
+}
+
+struct Domain {
+	
+}
+
+pub trait Chain {
+	type Transaction;
+	
+	async fn register(&self, domain: Domain) -> Result;
+	async fn mint(&self) -> Result;
+}
+
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(derive_more::From)]
+#[derive(derive_more::Add)]
+#[derive(derive_more::Sub)]
+pub struct Balance(u64);
+
+pub struct Address(Vec<u8>);
+
+pub trait Dns {
+	async fn mint(&self) -> Result;
+}
+
+pub trait DomainNft {
+	
+}
+
+pub trait Erc20 {
+	async fn symbol(&self) -> &str;
+	async fn decimals(&self) -> Result<u8>;
+	async fn balance_of(&self, account: &Address) -> Result<Balance>;
+	async fn total_supply(&self) -> Result<Balance>;
+	async fn transfer(&self);
+	async fn transfer_from(&self);
+	async fn approve(&self);
+}
+
+type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 type Swarm = swarm::Swarm<Behaviour>;
 type SwarmEvent = swarm::SwarmEvent<BehaviourEvent>;
