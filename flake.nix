@@ -14,7 +14,7 @@
 			"aarch64-darwin"
 		];
 
-		perSystem = { pkgs, lib, config, system, ... }:
+		perSystem = { config, pkgs, system, ... }:
 		let
 			crane_lib = inputs.crane.mkLib pkgs;
 			crane_src = crane_lib.cleanCargoSource (crane_lib.path ./.);
@@ -31,15 +31,17 @@
 				architecture.aarch64-linux.sha256 = "sha256-q/Wu5hii+ocgX871MrV/MhDzSB0S/j0pDFZnexio79Q=";
 				architecture.aarch64-darwin.target = "x86_64-apple-darwin";
 				architecture.aarch64-darwin.sha256 = "sha256-OO7oOWuxlCfenDbwfsOVtZzE2P6lupUaC51GPszzq6g=";
-				compatible_architecture = architecture.${system} or (throw "(unsupported_system=${system})");
+				compatibleArchitecture = architecture.${system} or (throw "(unsupported_system=${system})");
 				src =
 				let
-					url = "https://github.com/stellar/stellar-cli/releases/download/v${version}/stellar-cli-${version}-${compatible_architecture.target}.tar.gz";
+					url = "https://github.com/stellar/stellar-cli/releases/download/v${version}/stellar-cli-${version}-${compatibleArchitecture.target}.tar.gz";
 				in pkgs.fetchurl {
 					inherit url;
-					inherit (compatible_architecture) sha256;
+					inherit (compatibleArchitecture) sha256;
 				};
-				nativeBuildInputs = pkgs.lib.optionals pkgs.stdenv.isLinux [
+				nativeBuildInputs = [
+					pkgs.nushell
+				] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
 					pkgs.autoPatchelfHook
 				];
 				buildInputs = [
@@ -52,10 +54,12 @@
 				dontUnpack = true;
 				dontBuild = true;
 				installPhase = ''
-					mkdir -p $out/bin
-					tar -xzf $src
-					cp stellar $out/bin/stellar
-					chmod +x $out/bin/stellar
+					nu -c '
+						mkdir ($env.out | path join "bin")
+						tar -xzf $env.src
+						cp stellar ($env.out | path join "bin" "stellar")
+						chmod +x ($env.out | path join "bin" "stellar")
+					'
 				'';
 			in pkgs.stdenv.mkDerivation {
 				inherit pname;
@@ -72,6 +76,7 @@
 				RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
 
 				nativeBuildInputs = [
+					pkgs.nushell
 					pkgs.nixd
 					pkgs.nixpkgs-fmt
 					pkgs.clippy
@@ -89,10 +94,14 @@
 				];
 
 				shellHook = ''
-					export PATH="$PWD/.local/bin:$PATH"
-					export PATH="$HOME/.cargo/bin:$PATH"
+					nu -c '
+						$env.PATH = ($env.PATH | prepend ($env.PWD | path join ".local" "bin"))
+						$env.PATH = ($env.PATH | prepend ($env.HOME | path join ".cargo" "bin"))
 
-					rustup target add wasm32-unknown-unknown 2>/dev/null || true
+						try {
+							rustup target add wasm32-unknown-unknown
+						}
+					'
 				'';
 			};
 		};
