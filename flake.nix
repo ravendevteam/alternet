@@ -19,7 +19,7 @@
 			crane_lib = inputs.crane.mkLib pkgs;
 			crane_src = crane_lib.cleanCargoSource (crane_lib.path ./.);
 		in {
-			packages.stellar = 
+			packages.stellar =
 			let
 				pname = "stellar-cli";
 				version = "26.0.0";
@@ -32,7 +32,7 @@
 				architecture.aarch64-darwin.target = "x86_64-apple-darwin";
 				architecture.aarch64-darwin.sha256 = "sha256-OO7oOWuxlCfenDbwfsOVtZzE2P6lupUaC51GPszzq6g=";
 				compatible_architecture = architecture.${system} or (throw "(unsupported_system=${system})");
-				src = 
+				src =
 				let
 					url = "https://github.com/stellar/stellar-cli/releases/download/v${version}/stellar-cli-${version}-${compatible_architecture.target}.tar.gz";
 				in pkgs.fetchurl {
@@ -67,7 +67,7 @@
 				inherit dontBuild;
 				inherit installPhase;
 			};
-			
+
 			devShells.default = pkgs.mkShell {
 				RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
 
@@ -80,7 +80,7 @@
 					pkgs.rust-analyzer
 					pkgs.pkg-config
 					pkgs.wasm-bindgen-cli
-					
+
 					config.packages.stellar
 				];
 
@@ -89,12 +89,10 @@
 				];
 
 				shellHook = ''
+					export PATH="$PWD/.local/bin:$PATH"
 					export PATH="$HOME/.cargo/bin:$PATH"
-					export PATH="$PWD/.local/bin:$HOME/.cargo/bin:$PATH"
 
 					rustup target add wasm32-unknown-unknown 2>/dev/null || true
-
-					stellar --version # cant find command stellar
 				'';
 			};
 		};

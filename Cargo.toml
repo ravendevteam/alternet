@@ -12,6 +12,11 @@ members = [
     # ... coming soon ...
     "task"
 ]
+exclude = [
+	"contract/soroban/mock_dns",	# soroban_mock_dns
+	"contract/soroban/mock_erc_20", # soroban_mock_erc_20
+	"contract/soroban/mock_nft"	 	# soroban_mock_nft
+]
 
 [workspace.lints.clippy]
 pedantic = { level = "warn", priority = -1 }
