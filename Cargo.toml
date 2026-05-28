@@ -91,3 +91,6 @@ range_plus_one = "forbid"
 indexing_slicing = "forbid"
 string_slice = "forbid"
 str_to_owned = "forbid"
+
+[profile.release]
+overflow-checks = true

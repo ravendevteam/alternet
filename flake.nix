@@ -85,6 +85,7 @@
 					pkgs.rust-analyzer
 					pkgs.pkg-config
 					pkgs.wasm-bindgen-cli
+					pkgs.lld
 
 					config.packages.stellar
 				];

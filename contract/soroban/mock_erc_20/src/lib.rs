@@ -112,9 +112,7 @@ impl Main {
 		state.set(&MemoryStoreKey::Balance(account), &balance);
 	}
 	
-	pub fn burn(environment: soroban_sdk::Env, account: soroban_sdk::Address, amount: soroban_sdk::U256) {
-		account.require_auth();
-		
+	pub fn burn(environment: soroban_sdk::Env, account: soroban_sdk::Address, amount: soroban_sdk::U256) {		
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
 		let owner: soroban_sdk::Address = state.get(&MemoryStoreKey::Owner).expect("set on awakening");
 		
@@ -144,7 +142,12 @@ impl Main {
 		state.set(&MemoryStoreKey::Allowance(source, spender), &amount);
 	}
 	
-	pub fn transfer(environment: soroban_sdk::Env, sender: soroban_sdk::Address, recipient: soroban_sdk::Address, amount: soroban_sdk::U256) {
+	pub fn transfer(
+		environment: soroban_sdk::Env, 
+		sender: soroban_sdk::Address, 
+		recipient: soroban_sdk::Address, 
+		amount: soroban_sdk::U256
+	) {
 		sender.require_auth();
 		
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
@@ -162,7 +165,35 @@ impl Main {
 		state.set(&MemoryStoreKey::Balance(recipient), &recipient_balance);
 	}
 	
-	pub fn transfer_from(environment: soroban_sdk::Env) {
+	pub fn transfer_from(
+		environment: soroban_sdk::Env, 
+		sender: soroban_sdk::Address, 
+		recipient: soroban_sdk::Address, 
+		spender: soroban_sdk::Address,
+		amount: soroban_sdk::U256
+	) {
+		spender.require_auth();
 		
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+		let allowance: soroban_sdk::U256 = Self::allowance(Clone::clone(&environment), Clone::clone(&sender), Clone::clone(&spender));
+		
+		if allowance < amount {
+			panic!("insufficient allowance")
+		}
+		
+		let sender_balance: soroban_sdk::U256 = Self::balance_of(Clone::clone(&environment), Clone::clone(&sender));
+		
+		if sender_balance < amount {
+			panic!("insufficient balance")
+		}
+		
+		let allowance: soroban_sdk::U256 = allowance.sub(&amount);
+		let sender_balance: soroban_sdk::U256 = sender_balance.sub(&amount);	
+		let recipient_balance: soroban_sdk::U256 = Self::balance_of(Clone::clone(&environment), Clone::clone(&recipient));
+		let recipient_balance: soroban_sdk::U256 = recipient_balance.add(&amount);
+		
+		state.set(&MemoryStoreKey::Allowance(Clone::clone(&sender), Clone::clone(&spender)), &allowance);
+		state.set(&MemoryStoreKey::Balance(Clone::clone(&sender)), &sender_balance);
+		state.set(&MemoryStoreKey::Balance(Clone::clone(&recipient)), &recipient_balance);
 	}
 }
