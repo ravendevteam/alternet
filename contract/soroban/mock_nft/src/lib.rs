@@ -1,57 +1,128 @@
 #![no_std]
 
-use soroban_sdk as so;
-
-#[so::contracttype]
+#[soroban_sdk::contracttype]
 pub enum MemoryStoreKey {
+	Owner,
+	Ownership(soroban_sdk::String),
 	Name,
 	Symbol,
-	Unit,
-	Owner(so::String)
+	TotalSupply
 }
 
-#[so::contract]
+#[soroban_sdk::contract]
 pub struct Main;
 
-#[so::contractimpl]
+#[soroban_sdk::contractimpl]
 impl Main {
-	fn wake(
-		environment: so::Env, 
-		name: so::String, 
-		symbol: so::String, 
-		unit: so::Address,
-		min_fee: u64,
-		max_fee: u64,
-		traffic_target: u64
+	pub fn wake(
+		environment: soroban_sdk::Env,
+		owner: soroban_sdk::Address,
+		name: soroban_sdk::String, 
+		symbol: soroban_sdk::String
 	) {
-		environment.storage().instance().set(&MemoryStoreKey::Name, &name);
-		environment.storage().instance().set(&MemoryStoreKey::Symbol, &symbol);
-		environment.storage().instance().set(&MemoryStoreKey::Unit, &unit);
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+		let event: soroban_sdk::events::Events = environment.events();
+		
+		if state.has(&MemoryStoreKey::Owner)
+		|| state.has(&MemoryStoreKey::Name)
+		|| state.has(&MemoryStoreKey::Symbol) {
+			panic!("already awoken")
+		}
+		
+		state.set(&MemoryStoreKey::Owner, &owner);
+		state.set(&MemoryStoreKey::Name, &name);
+		state.set(&MemoryStoreKey::Symbol, &symbol);
+		
+		let zero: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 0);
+
+		state.set(&MemoryStoreKey::TotalSupply, &zero);
+		event.publish((soroban_sdk::symbol_short!("wake"), owner), (name, symbol));
 	}
 
-	fn name(environment: so::Env) -> so::String {
-		environment.storage().instance().get(&MemoryStoreKey::Name).expect("awakened")
+	pub fn name(environment: soroban_sdk::Env) -> soroban_sdk::String {
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+		
+		state.get(&MemoryStoreKey::Name).expect("set on awakening")
 	}
 
-	fn symbol(environment: so::Env) -> so::String {
-		environment.storage().instance().get(&MemoryStoreKey::Symbol).expect("awakened")
+	pub fn symbol(environment: soroban_sdk::Env) -> soroban_sdk::String {
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+		
+		state.get(&MemoryStoreKey::Symbol).expect("set on awakening")
+	}
+	
+	pub fn total_supply(environment: soroban_sdk::Env) -> soroban_sdk::U256 {
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+		let zero: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 0);
+		
+		state.get(&MemoryStoreKey::TotalSupply).unwrap_or(zero)
 	}
 
-	// owner_of("google")
-	fn owner_of(environment: so::Env, domain: so::String) -> so::Address {
-		environment.storage().instance().get(&MemoryStoreKey::Owner(domain)).expect("awake")
+	pub fn owner_of(environment: soroban_sdk::Env, domain: soroban_sdk::String) -> soroban_sdk::Address {
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+		
+		state.get(&MemoryStoreKey::Ownership(domain)).expect("awake")
 	}
 
-	// renew existing domain
-	pub fn renew(environment: so::Env, domain: so::String) {
-		// get caller
-		// check if caller owns the domain
-		// if they do
+	pub fn mint(environment: soroban_sdk::Env, owner: soroban_sdk::Address, domain: soroban_sdk::String) {
+		owner.require_auth();
+		
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+		let event: soroban_sdk::events::Events = environment.events();
+		let key: MemoryStoreKey = MemoryStoreKey::Ownership(Clone::clone(&domain));
+		
+		if state.has(&key) {
+			panic!("domain already minted")
+		}
+		
+		let one: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 1);
+		let total_supply: soroban_sdk::U256 = Self::total_supply(Clone::clone(&environment));
+		let total_supply: soroban_sdk::U256 = total_supply.add(&one);
+		
+		state.set(&key, &owner);
+		state.set(&MemoryStoreKey::TotalSupply, &total_supply);
+		event.publish((soroban_sdk::symbol_short!("mint"), owner), domain);
 	}
-
-	pub fn mint(environment: so::Env, owner: so::Address, domain: so::String) {
-		// check that there is sufficient balance to mint
-		// check that is has not been minted before
-		// include expirery
+	
+	pub fn burn(environment: soroban_sdk::Env, owner: soroban_sdk::Address, domain: soroban_sdk::String) {
+		owner.require_auth();
+		
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+		let event: soroban_sdk::events::Events = environment.events();
+		let key: MemoryStoreKey = MemoryStoreKey::Ownership(Clone::clone(&domain));
+		let key_owner: soroban_sdk::Address = Self::owner_of(Clone::clone(&environment), Clone::clone(&domain));
+		
+		if key_owner != owner {
+			panic!("not authorized")
+		}
+		
+		let one: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 1);
+		let total_supply: soroban_sdk::U256 = Self::total_supply(Clone::clone(&environment));
+		let total_supply: soroban_sdk::U256 = total_supply.sub(&one);
+		
+		state.remove(&key);
+		state.set(&MemoryStoreKey::TotalSupply, &total_supply);
+		event.publish((soroban_sdk::symbol_short!("burn"), owner), domain);
+	}
+	
+	pub fn transfer(
+		environment: soroban_sdk::Env,
+		sender: soroban_sdk::Address,
+		recipient: soroban_sdk::Address,
+		domain: soroban_sdk::String
+	) {
+		sender.require_auth();
+		
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+		let event: soroban_sdk::events::Events = environment.events();
+		let key: MemoryStoreKey = MemoryStoreKey::Ownership(Clone::clone(&domain));
+		let key_owner: soroban_sdk::Address = Self::owner_of(Clone::clone(&environment), Clone::clone(&domain));
+		
+		if key_owner != sender {
+			panic!("not authorized")
+		}
+		
+		state.set(&key, &recipient);
+		event.publish((soroban_sdk::symbol_short!("transfer"), sender, recipient), domain);
 	}
 }

@@ -35,7 +35,7 @@ impl Main {
 		|| state.has(&MemoryStoreKey::Decimals) {
 			panic!("already awoken")
 		}
-			
+
 		state.set(&MemoryStoreKey::Owner, &owner);
 		state.set(&MemoryStoreKey::Name, &name);
 		state.set(&MemoryStoreKey::Symbol, &symbol);

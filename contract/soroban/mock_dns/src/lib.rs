@@ -14,6 +14,7 @@ pub struct Main;
 impl Main {
 	pub fn wake(
 		environment: so::Env,
+		tkn: so::Address,
 		nft: so::Address
 	) {
 		if environment.storage().instance().has(&MemKey::NftAddr) {
@@ -25,7 +26,7 @@ impl Main {
 		
 	}
 	
-	pub fn lock() {
+	pub fn lock(environment: so::Env) {
 		
 	}
 }

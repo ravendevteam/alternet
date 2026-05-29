@@ -165,6 +165,7 @@ pub trait Erc20 {
 	async fn decimals(&self) -> Result<u8>;
 	async fn balance_of(&self, account: &Address) -> Result<Balance>;
 	async fn total_supply(&self) -> Result<Balance>;
+	async fn allowance(&self) -> Balance;
 	async fn transfer(&self);
 	async fn transfer_from(&self);
 	async fn approve(&self);
