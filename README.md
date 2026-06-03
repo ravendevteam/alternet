@@ -19,6 +19,28 @@ Suggested Obsidian
 
 ```
 
+### Test
+To test the `node` crate, you must enable `end-to-end` feature, and have all required dependencies.
+
+```bash
+docker pull stellar/quickstart:latest
+
+docker run --rm -it -p "8000:8000" -p "11626:11626" --name stellar-local stellar/quickstart:latest --local
+
+rm -rf ($env.HOME | path join ".config" "stellar")
+```
+
+```bash
+cargo run \
+	--package task \
+	-- \
+	build-image
+	
+cargo test \
+	--package node \
+	--features=end-to-end
+```
+
 ## Image
 
 ```shell

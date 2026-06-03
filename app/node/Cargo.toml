@@ -50,6 +50,7 @@ cfg-if = "*"
 anyhow = "*"
 url = "*"
 nanoid = "*"
+hex = "*"
 
 [dev-dependencies]
 testcontainers = "*"
@@ -69,6 +70,7 @@ strum = { version = "*", features = ["derive"] }
 thiserror = "*"
 image = { version = "*", path = "../../image" }
 e2e = { version = "*", path = "../../lib/e2e" }
+duct = "*"
 
 [build-dependencies]
 tonic-prost = "*"

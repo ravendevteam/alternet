@@ -19,7 +19,7 @@ enum Command {
         dockerfile: String
     },
     BuildImage,
-    
+
     #[command(name = "build-node")]
     BuildNode,
 
@@ -40,8 +40,8 @@ enum Command {
 trait DockerExt {
     async fn import_image_tar(&self, path: &std::path::Path) -> Result<()>;
     async fn export_image_to_tar_from_ws_context(
-        &self, 
-        ws_root: &std::path::Path, 
+        &self,
+        ws_root: &std::path::Path,
         ws_root_exclude: &[std::path::PathBuf],
         image_name: &str,
         image_tag: &str,
@@ -68,8 +68,8 @@ impl DockerExt for bollard::Docker {
     }
 
     async fn export_image_to_tar_from_ws_context(
-        &self, 
-        ws_root: &std::path::Path, 
+        &self,
+        ws_root: &std::path::Path,
         ws_root_exclude: &[std::path::PathBuf],
         image_name: &str,
         image_tag: &str,
@@ -219,12 +219,11 @@ async fn main() -> Result<()> {
                 RUN cargo build --release --package node --bin malicious_relay --features=malicious_relay --no-default-features
                 FROM debian:bookworm-slim
                 WORKDIR /app
-                RUN apt-get update
-                RUN apt-get install -y iproute2
-                RUN apt-get install -y iproutes
-                RUN apt-get install -y ca-certificates
-                run apt-get install -y curl
-                RUN rm -rf /var/lib/apt/lists/*
+                RUN apt-get update && apt-get install -y \
+                    iproute2 \
+                    ca-certificates \
+                    curl \
+                    && rm -rf /var/lib/apt/lists/*
                 COPY --from=builder /app/target/release/bootstrap .
                 COPY --from=builder /app/target/release/client .
                 COPY --from=builder /app/target/release/server .
@@ -293,7 +292,7 @@ async fn main() -> Result<()> {
                 .spawn()
                 .map_err(|error| {
                     if let std::io::ErrorKind::NotFound = error.kind() {
-                        
+
                     }
                     error
                 })?

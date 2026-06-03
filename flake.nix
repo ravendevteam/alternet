@@ -16,9 +16,107 @@
 
 		perSystem = { config, pkgs, system, ... }:
 		let
-			crane_lib = inputs.crane.mkLib pkgs;
-			crane_src = crane_lib.cleanCargoSource (crane_lib.path ./.);
+			craneLib = inputs.crane.mkLib pkgs;
+			craneSrc = craneLib.cleanCargoSource (craneLib.path ./.);
 		in {
+			packages.bootstrap = pkgs.rustPlatform.buildRustPackage {
+				RUSTFLAGS = "-Awarnings";
+				pname = "bootstrap";
+				version = "0.1.0";
+				src = ./.;
+				doCheck = false;
+				cargoLock.lockFile = ./Cargo.lock;
+				cargoBuildFlags = [
+					"--package" "node"
+					"--bin" "bootstrap"
+					"--features=bootstrap"
+					"--no-default-features"
+				];
+				nativeBuildInputs = [
+					pkgs.protobuf
+					pkgs.pkg-config
+				];
+				buildInputs = [
+					pkgs.openssl
+				];
+			};
+			
+			packages.bootstrapStellarCompatibleImage = pkgs.dockerTools.buildImage {
+				name = "bootstrap/stellar";
+				tag = config.packages.bootstrap.version;
+				copyToRoot = pkgs.buildEnv {
+					name = "";
+					pathsToLink = [
+						"/bin"
+						"/etc/ssl/certs"
+					];
+					paths = [
+						pkgs.coreutils
+						pkgs.cacert
+						config.packages.bootstrap
+						config.packages.stellar
+					];
+				};
+				config.Entrypoint = [
+					"/bin/bootstrap"
+				];
+				config.Env = [
+					"SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+				];
+				config.ExposedPorts."4001/udp" = {};
+				config.ExposedPorts."8080/tcp" = {};
+				config.WorkingDir = "/workspace";
+			};
+			
+			packages.relay = pkgs.rustPlatform.buildRustPackage {
+				RUSTFLAGS = "-Awarnings";
+				pname = "relay";
+				version = "0.1.0";
+				src = ./.;
+				doCheck = false;
+				cargoLock.lockFile = ./Cargo.lock;
+				cargoBuildFlags = [
+					"--package" "node"
+					"--bin" "relay"
+					"--features=relay"
+					"--no-default-features"
+				];
+				nativeBuildInputs = [
+					pkgs.protobuf
+					pkgs.pkg-config
+				];
+				buildInputs = [
+					pkgs.openssl
+				];
+			};
+			
+			packages.relayStellarCompatibleImage = pkgs.dockerTools.buildImage {
+				name = "relay/stellar";
+				tag = config.packages.relay.version;
+				copyToRoot = pkgs.buildEnv {
+					name = "";
+					pathsToLink = [
+						"/bin"
+						"/etc/ssl/certs"
+					];
+					paths = [
+						pkgs.coreutils
+						pkgs.cacert
+						config.packages.relay
+						config.packages.stellar
+					];
+				};
+				config.Entrypoint = [
+					"/bin/bootstrap"
+				];
+				config.Env = [
+					"SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+				];
+				config.ExposedPorts."4001/udp" = {};
+				config.ExposedPorts."8080/tcp" = {};
+				config.WorkingDir = "/workspace";
+			};
+			
 			packages.stellar =
 			let
 				pname = "stellar-cli";
@@ -86,6 +184,9 @@
 					pkgs.pkg-config
 					pkgs.wasm-bindgen-cli
 					pkgs.lld
+					pkgs.protobuf
+					pkgs.docker
+					pkgs.arion
 
 					config.packages.stellar
 				];
@@ -101,6 +202,18 @@
 
 						try {
 							rustup target add wasm32-unknown-unknown
+						}
+
+						print "checking for stellar/quickstart `docker` image:"
+						let image_check = (do -i { docker images -q stellar/quickstart } | complete)
+
+						if ($image_check.stdout | is-empty) {
+							print "stellar/quickstart not found locally: pull in progress:"
+
+							# to fix: needs a version to be fixed not latest to avoid breaking changes or sec vulnerabilities
+							docker pull stellar/quickstart:latest
+						} else {
+							print "stellar/quickstart image aquired"
 						}
 					'
 				'';

@@ -1,7 +1,7 @@
 [workspace]
 resolver = "3"
 members = [
-	"app/mchain",
+	# "app/mchain",
     "app/node",
     "app/simulation-item/isp",
     "app/simulation-item/router",
@@ -12,11 +12,11 @@ members = [
     # ... coming soon ...
     "task",
     
-    "contract/soroban/mock_congestion_monitor",  # soroban_mock_congestion_monitor
-	"contract/soroban/mock_dns",				 # soroban_mock_dns
-	"contract/soroban/mock_erc_20",				 # soroban_mock_erc_20
-	"contract/soroban/mock_nft", 			   	 # soroban_mock_nft
-	"contract/soroban/mock_pool"				 # soroban_mock_pool
+    # "contract/soroban/mock_congestion_monitor",  # soroban_mock_congestion_monitor
+	# "contract/soroban/mock_dns",				 # soroban_mock_dns
+	# "contract/soroban/mock_erc_20",				 # soroban_mock_erc_20
+	# "contract/soroban/mock_nft", 			   	 # soroban_mock_nft
+	# "contract/soroban/mock_pool"				 # soroban_mock_pool
 ]
 
 [workspace.lints.clippy]

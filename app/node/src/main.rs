@@ -233,7 +233,9 @@ struct Cli {
     #[arg(long)]
     pub grpc_endpoint: Option<std::net::SocketAddr>,
     #[arg(long)]
-    pub dial: Option<Vec<libp2p::Multiaddr>>
+    pub dial: Option<Vec<libp2p::Multiaddr>>,
+    #[arg(long)]
+    pub seed: Option<String>
 }
 
 #[derive(swarm::NetworkBehaviour)]
@@ -322,6 +324,14 @@ async fn main() -> Result<()> {
     } else {
         vec![]
     };
+    
+    let mut seed: Option<_> = if let Some(seed) = cli.seed {
+    	Some(hex::decode(seed)?)
+    } else if let Ok(seed) = std::env::var("SEED") {
+    	Some(hex::decode(seed)?)
+    } else {
+    	None
+    };
 
     let version: &str = env!("CARGO_PKG_VERSION");
     let protocol_version: String = format!("/an/{}", version);
@@ -381,7 +391,11 @@ async fn main() -> Result<()> {
     #[cfg(any(feature = "relay", feature = "malicious_relay"))]
     let identify_interval: std::time::Duration = std::time::Duration::from_mins(5);
 
-    let local_keypair: identity::Keypair = identity::Keypair::generate_ed25519();
+    let local_keypair: identity::Keypair = if let Some(seed) = &mut seed {
+    	identity::Keypair::ed25519_from_bytes(seed)?
+    } else {
+    	identity::Keypair::generate_ed25519()
+    };
     let local_public_key: identity::PublicKey = local_keypair.public();
     let local_peer_id: libp2p::PeerId = local_keypair.public().into();
 

@@ -1466,7 +1466,6 @@ impl Test for Simulation {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn end_to_end() {
-    panic!();
     let docker: bollard::Docker = bollard::Docker::connect_with_local_defaults().unwrap();
     let mut harness: Harness = Harness::new(docker);
     // harness.add_test(NatEasy);

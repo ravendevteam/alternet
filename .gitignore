@@ -1,9 +1,11 @@
+.temp/
 .direnv/
 .obsidian
 .env
 *.log
 target/
 result/
+result
 doc/README.md
 doc/proof-of-transport.md
 lib/algo

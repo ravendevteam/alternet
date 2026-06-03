@@ -4,6 +4,7 @@
 pub enum MemoryStoreKey {
 	Owner,
 	Ownership(soroban_sdk::String),
+	ExpiryTimestamp(soroban_sdk::String),
 	Name,
 	Symbol,
 	TotalSupply
@@ -20,75 +21,66 @@ impl Main {
 		name: soroban_sdk::String, 
 		symbol: soroban_sdk::String
 	) {
-		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
-		let event: soroban_sdk::events::Events = environment.events();
-		
-		if state.has(&MemoryStoreKey::Owner)
-		|| state.has(&MemoryStoreKey::Name)
-		|| state.has(&MemoryStoreKey::Symbol) {
+		if environment.storage().persistent().has(&MemoryStoreKey::Owner)
+		|| environment.storage().persistent().has(&MemoryStoreKey::Name)
+		|| environment.storage().persistent().has(&MemoryStoreKey::Symbol) {
 			panic!("already awoken")
 		}
 		
-		state.set(&MemoryStoreKey::Owner, &owner);
-		state.set(&MemoryStoreKey::Name, &name);
-		state.set(&MemoryStoreKey::Symbol, &symbol);
+		environment.storage().persistent().set(&MemoryStoreKey::Owner, &owner);
+		environment.storage().persistent().set(&MemoryStoreKey::Name, &name);
+		environment.storage().persistent().set(&MemoryStoreKey::Symbol, &symbol);
 		
-		let zero: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 0);
+		let n_0: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 0);
 
-		state.set(&MemoryStoreKey::TotalSupply, &zero);
-		event.publish((soroban_sdk::symbol_short!("wake"), owner), (name, symbol));
+		environment.storage().persistent().set(&MemoryStoreKey::TotalSupply, &n_0);
+		environment.events().publish((soroban_sdk::symbol_short!("wake"), owner), (name, symbol));
 	}
 
 	pub fn name(environment: soroban_sdk::Env) -> soroban_sdk::String {
-		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
-		
-		state.get(&MemoryStoreKey::Name).expect("set on awakening")
+		environment.storage().persistent().get(&MemoryStoreKey::Name).expect("set on awakening")
 	}
 
 	pub fn symbol(environment: soroban_sdk::Env) -> soroban_sdk::String {
-		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
-		
-		state.get(&MemoryStoreKey::Symbol).expect("set on awakening")
+		environment.storage().persistent().get(&MemoryStoreKey::Symbol).expect("set on awakening")
 	}
 	
 	pub fn total_supply(environment: soroban_sdk::Env) -> soroban_sdk::U256 {
-		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
-		let zero: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 0);
+		let n_0: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 0);
 		
-		state.get(&MemoryStoreKey::TotalSupply).unwrap_or(zero)
+		environment.storage().persistent().get(&MemoryStoreKey::TotalSupply).unwrap_or(n_0)
+	}
+	
+	// time when the domain becomes mintable and ownership is revoked
+	pub fn expiry_timestamp() {
+		
 	}
 
 	pub fn owner_of(environment: soroban_sdk::Env, domain: soroban_sdk::String) -> soroban_sdk::Address {
-		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
-		
-		state.get(&MemoryStoreKey::Ownership(domain)).expect("awake")
+		environment.storage().persistent().get(&MemoryStoreKey::Ownership(domain)).expect("awake")
 	}
 
 	pub fn mint(environment: soroban_sdk::Env, owner: soroban_sdk::Address, domain: soroban_sdk::String) {
 		owner.require_auth();
 		
-		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
-		let event: soroban_sdk::events::Events = environment.events();
 		let key: MemoryStoreKey = MemoryStoreKey::Ownership(Clone::clone(&domain));
 		
-		if state.has(&key) {
+		if environment.storage().persistent().has(&key) {
 			panic!("domain already minted")
 		}
 		
-		let one: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 1);
+		let n_1: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 1);
 		let total_supply: soroban_sdk::U256 = Self::total_supply(Clone::clone(&environment));
-		let total_supply: soroban_sdk::U256 = total_supply.add(&one);
+		let total_supply: soroban_sdk::U256 = total_supply.add(&n_1);
 		
-		state.set(&key, &owner);
-		state.set(&MemoryStoreKey::TotalSupply, &total_supply);
-		event.publish((soroban_sdk::symbol_short!("mint"), owner), domain);
+		environment.storage().persistent().set(&key, &owner);
+		environment.storage().persistent().set(&MemoryStoreKey::TotalSupply, &total_supply);
+		environment.events().publish((soroban_sdk::symbol_short!("mint"), owner), domain);
 	}
 	
 	pub fn burn(environment: soroban_sdk::Env, owner: soroban_sdk::Address, domain: soroban_sdk::String) {
 		owner.require_auth();
 		
-		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
-		let event: soroban_sdk::events::Events = environment.events();
 		let key: MemoryStoreKey = MemoryStoreKey::Ownership(Clone::clone(&domain));
 		let key_owner: soroban_sdk::Address = Self::owner_of(Clone::clone(&environment), Clone::clone(&domain));
 		
@@ -96,13 +88,13 @@ impl Main {
 			panic!("not authorized")
 		}
 		
-		let one: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 1);
+		let n_1: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 1);
 		let total_supply: soroban_sdk::U256 = Self::total_supply(Clone::clone(&environment));
-		let total_supply: soroban_sdk::U256 = total_supply.sub(&one);
+		let total_supply: soroban_sdk::U256 = total_supply.sub(&n_1);
 		
-		state.remove(&key);
-		state.set(&MemoryStoreKey::TotalSupply, &total_supply);
-		event.publish((soroban_sdk::symbol_short!("burn"), owner), domain);
+		environment.storage().persistent().remove(&key);
+		environment.storage().persistent().set(&MemoryStoreKey::TotalSupply, &total_supply);
+		environment.events().publish((soroban_sdk::symbol_short!("burn"), owner), domain);
 	}
 	
 	pub fn transfer(
@@ -113,8 +105,6 @@ impl Main {
 	) {
 		sender.require_auth();
 		
-		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
-		let event: soroban_sdk::events::Events = environment.events();
 		let key: MemoryStoreKey = MemoryStoreKey::Ownership(Clone::clone(&domain));
 		let key_owner: soroban_sdk::Address = Self::owner_of(Clone::clone(&environment), Clone::clone(&domain));
 		
@@ -122,7 +112,7 @@ impl Main {
 			panic!("not authorized")
 		}
 		
-		state.set(&key, &recipient);
-		event.publish((soroban_sdk::symbol_short!("transfer"), sender, recipient), domain);
+		environment.storage().persistent().set(&key, &recipient);
+		environment.events().publish((soroban_sdk::symbol_short!("transfer"), sender, recipient), domain);
 	}
 }
