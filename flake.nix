@@ -18,7 +18,7 @@
 		let
 			craneLib = inputs.crane.mkLib pkgs;
 			craneSrc = craneLib.cleanCargoSource (craneLib.path ./.);
-		in {
+		in {			
 			packages.bootstrap = pkgs.rustPlatform.buildRustPackage {
 				RUSTFLAGS = "-Awarnings";
 				pname = "bootstrap";
