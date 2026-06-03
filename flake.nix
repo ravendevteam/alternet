@@ -18,7 +18,47 @@
 		let
 			craneLib = inputs.crane.mkLib pkgs;
 			craneSrc = craneLib.cleanCargoSource (craneLib.path ./.);
-		in {			
+		in {
+			packages.vm = pkgs.testers.runNixOSTest {
+				name = "vm";
+				
+				# runs vm with access to internet so deps can be resolved...
+				# ^sudo nix run .#vm -L --option sandbox false 
+				
+				nodes.vm = { ... }: {
+					system.stateVersion = "24.05";
+					
+					virtualisation.docker.enable = true;
+					
+					environment.etc."workspace".source = ./.;
+					
+					networking.useDHCP = true;
+					
+					environment.systemPackages = [
+						pkgs.cargo
+						pkgs.rustc
+						pkgs.pkg-config
+						pkgs.openssl
+						pkgs.protobuf
+						pkgs.git
+						pkgs.iptables
+						pkgs.tcpdump
+						
+						config.packages.stellar
+					];
+				};
+				
+				# python wtf
+				testScript = ''
+vm.start()
+vm.wait_for_unit("docker.service")
+
+vm.succeed("docker load -i ${config.packages.bootstrapStellarCompatibleImage}")
+vm.succeed("cp -r /etc/workspace /root/workspace")
+vm.succeed("cd /root/workspace && cargo test --package node --test main -- --nocapture")
+				'';
+			};
+			
 			packages.bootstrap = pkgs.rustPlatform.buildRustPackage {
 				RUSTFLAGS = "-Awarnings";
 				pname = "bootstrap";
@@ -187,6 +227,7 @@
 					pkgs.protobuf
 					pkgs.docker
 					pkgs.arion
+					pkgs.docker
 
 					config.packages.stellar
 				];
