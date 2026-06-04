@@ -35,7 +35,7 @@ async fn main() -> anyhow::Result<()> {
         .with_cmd(["./bootstrap"])
         .start()
         .await?;
-    
+
     let bootstrap: e2e::container::Container<_> = e2e::container::Container::new(&docker, bootstrap);
 
     bootstrap.connect_to(&wan).await?;
@@ -81,7 +81,7 @@ async fn main() -> anyhow::Result<()> {
     relay.connect_to(&wan).await?;
 
     let relay_ip: std::net::Ipv4Addr = relay.ip(&wan).await?.ok_or(anyhow::anyhow!("no connection"))?;
-    
+
     let relay_grpc_host: url::Host = relay.host().await?;
     let relay_grpc_port: u16 = relay.host_ipv4_port(tcp_port).await?;
     let relay_grpc_endpoint: String = format!("http://{}:{}", relay_grpc_host, relay_grpc_port);
@@ -113,7 +113,7 @@ async fn main() -> anyhow::Result<()> {
         .with_cmd(["sleep", "infinity"])
         .start()
         .await?;
-    
+
     let server_router: e2e::container::Container<_> = e2e::container::Container::new(&docker, server_router);
 
     server_router.connect_to(&server_lan).await?;
@@ -145,7 +145,7 @@ async fn main() -> anyhow::Result<()> {
 
     client_router.connect_to(&client_lan).await?;
     client_router.connect_to(&wan).await?;
-    
+
     let client_router_lan_ip: std::net::Ipv4Addr = client_router.ip(&client_lan).await?.ok_or(anyhow::anyhow!("no connection"))?;
     let client_router_wan_ip: std::net::Ipv4Addr = client_router.ip(&wan).await?.ok_or(anyhow::anyhow!("no connection"))?;
 
@@ -176,7 +176,6 @@ async fn main() -> anyhow::Result<()> {
     client_router.exec().args(vec!["iptables", "-A", "FORWARD", "-d", &format!("{}", &bootstrap_ip), "-p", "udp", "--dport", "4001", "-j", "ACCEPT"]).send().await?;
     client_router.exec().args(vec!["iptables", "-A", "FORWARD", "-d", &format!("{}", &relay_ip), "-p", "udp", "--dport", "4001", "-j", "ACCEPT"]).send().await?;
     client_router.exec().args(vec!["iptables", "-A", "FORWARD", "-d", &format!("{}", &server_router_wan_ip), "-p", "udp", "--dport", "4001", "-j", "DROP"]).send().await?;
-    client_router.exec().args(vec!["iptables", "-A", "FORWARD", "-i", &client_router_lan_eth, "-j", "ACCEPT"]).send().await?;
     client_router.exec().args(vec!["iptables", "-P", "FORWARD", "DROP"]).send().await?;
 
     assert!(server_router.can_reach(&bootstrap_ip).await);
@@ -191,7 +190,7 @@ async fn main() -> anyhow::Result<()> {
         .with_privileged(true)
         .with_container_name(format!("server.{}", nanoid::nanoid!()))
         .with_cmd([
-            "./server", 
+            "./server",
             "--dial", &format!("{}", &bootstrap_mu),
             "--dial", &format!("{}", &relay_mu)
         ])
@@ -210,7 +209,7 @@ async fn main() -> anyhow::Result<()> {
     let server_grpc_endpoint: String = format!("http://{}:{}", server_grpc_host, server_grpc_port);
 
     let mut server_grpc: proto::node_client::NodeClient<_> = proto::node_client::NodeClient::connect(server_grpc_endpoint).await?;
-    
+
     tokio::time::sleep(std::time::Duration::from_secs(1)).await;
 
     let server_peer_id_request: proto::PeerIdRequest = proto::PeerIdRequest {
@@ -220,7 +219,7 @@ async fn main() -> anyhow::Result<()> {
     let server_peer_id_response: tonic::Response<_> = server_grpc.peer_id(server_peer_id_request).await?;
     let server_peer_id_response: proto::PeerIdResponse = server_peer_id_response.into_inner();
     let server_peer_id: String = server_peer_id_response.peer_id;
-    
+
     let server_mu_via_relay: libp2p::Multiaddr = format!("/ip4/{}/udp/4001/quic-v1/p2p/{}/p2p-circuit/p2p/{}", relay_ip, relay_peer_id, server_peer_id).parse()?;
 
     dbg!(&server_ip);
@@ -231,7 +230,7 @@ async fn main() -> anyhow::Result<()> {
 
     assert!(server.can_reach(&server_router_lan_ip).await);
     assert!(server.can_reach(&bootstrap_ip).await);
-    assert!(server.can_reach(&relay_ip).await); 
+    assert!(server.can_reach(&relay_ip).await);
 
     let client: testcontainers::ContainerAsync<_> = node_image
         .to_owned()
@@ -264,7 +263,7 @@ async fn main() -> anyhow::Result<()> {
 
     let client_peer_id_response: tonic::Response<_> = client_grpc.peer_id(client_peer_id_request).await?;
     let client_peer_id_response: proto::PeerIdResponse = client_peer_id_response.into_inner();
-    let client_peer_id: String = client_peer_id_response.peer_id;    
+    let client_peer_id: String = client_peer_id_response.peer_id;
 
     dbg!(&client_ip);
     dbg!(&client_grpc_host);
@@ -273,7 +272,7 @@ async fn main() -> anyhow::Result<()> {
 
     assert!(client.can_reach(&client_router_lan_ip).await);
     assert!(client.can_reach(&bootstrap_ip).await);
-    assert!(client.can_reach(&relay_ip).await);   
+    assert!(client.can_reach(&relay_ip).await);
 
     assert!(bootstrap.can_reach(&relay_ip).await);
     assert!(bootstrap.can_reach(&client_router_wan_ip).await);
@@ -318,7 +317,7 @@ async fn main() -> anyhow::Result<()> {
         server_router,
         server
     ];
-    
+
     for container in containers {
         let container_id: &str = container.id();
         let path: std::path::PathBuf = log_dir.join(format!("{}.log", container_id));
