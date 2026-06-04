@@ -21,44 +21,70 @@
 		in {
 			packages.vm = pkgs.testers.runNixOSTest {
 				name = "vm";
-				
+
 				# runs vm with access to internet so deps can be resolved...
-				# ^sudo nix run .#vm -L --option sandbox false 
-				
+				# ^sudo nix run .#vm -L --option sandbox false
+
 				nodes.vm = { ... }: {
 					system.stateVersion = "24.05";
 					
-					virtualisation.docker.enable = true;
+					nix.settings.experimental-features = [
+						"flakes"
+						"nix-command"
+					];
 					
-					environment.etc."workspace".source = ./.;
+					virtualisation.cores = 4;
+					virtualisation.diskSize = 40960;
+					virtualisation.memorySize = 8192;
+					virtualisation.docker.enable = true;
+
+					boot.kernel.sysctl."net.core.rmem_max" = 2500000;
+					boot.kernel.sysctl."net.core.wmem_max" = 2500000;
+					boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
+					boot.kernel.sysctl."net.ipv4.conf.all.arp_ignore" = 1;
+					boot.kernel.sysctl."net.ipv4.conf.all.arp_announce" = 2;
+					boot.kernelModules = [
+						"br_netfilter"
+					];
 					
 					networking.useDHCP = true;
-					
+					networking.useNetworkd = true;
+					networking.dhcpcd.enable = false;
+					networking.dhcpcd.extraConfig = ''
+				    	denyinterfaces veth*
+				  	'';
+
+					environment.etc."workspace".source = ./.;
 					environment.systemPackages = [
+						pkgs.nushell
+						pkgs.nixd
+						pkgs.nixpkgs-fmt
+						pkgs.clippy
 						pkgs.cargo
 						pkgs.rustc
+						pkgs.rust-analyzer
 						pkgs.pkg-config
-						pkgs.openssl
+						pkgs.wasm-bindgen-cli
+						pkgs.lld
+						pkgs.gcc
 						pkgs.protobuf
-						pkgs.git
-						pkgs.iptables
-						pkgs.tcpdump
-						
+						pkgs.docker
+						pkgs.arion
+						pkgs.docker
+	
 						config.packages.stellar
 					];
 				};
-				
-				# python wtf
-				testScript = ''
-vm.start()
-vm.wait_for_unit("docker.service")
 
-vm.succeed("docker load -i ${config.packages.bootstrapStellarCompatibleImage}")
-vm.succeed("cp -r /etc/workspace /root/workspace")
-vm.succeed("cd /root/workspace && cargo test --package node --test main -- --nocapture")
-				'';
+				testScript = pkgs.lib.concatLines [
+					"vm.start()"
+					"vm.wait_for_unit('docker.service')"
+					"vm.succeed('docker load -i ${config.packages.bootstrapStellarCompatibleImage}')"
+					"vm.succeed('cp -r /etc/workspace /root/workspace')"
+					"vm.succeed('export CARGO_TARGET_DIR=/root/workspace/target && cd /root/workspace && cargo test --package node --test main -- --nocapture')"
+				];
 			};
-			
+
 			packages.bootstrap = pkgs.rustPlatform.buildRustPackage {
 				RUSTFLAGS = "-Awarnings";
 				pname = "bootstrap";
@@ -80,7 +106,7 @@ vm.succeed("cd /root/workspace && cargo test --package node --test main -- --noc
 					pkgs.openssl
 				];
 			};
-			
+
 			packages.bootstrapStellarCompatibleImage = pkgs.dockerTools.buildImage {
 				name = "bootstrap/stellar";
 				tag = config.packages.bootstrap.version;
@@ -107,7 +133,7 @@ vm.succeed("cd /root/workspace && cargo test --package node --test main -- --noc
 				config.ExposedPorts."8080/tcp" = {};
 				config.WorkingDir = "/workspace";
 			};
-			
+
 			packages.relay = pkgs.rustPlatform.buildRustPackage {
 				RUSTFLAGS = "-Awarnings";
 				pname = "relay";
@@ -129,7 +155,7 @@ vm.succeed("cd /root/workspace && cargo test --package node --test main -- --noc
 					pkgs.openssl
 				];
 			};
-			
+
 			packages.relayStellarCompatibleImage = pkgs.dockerTools.buildImage {
 				name = "relay/stellar";
 				tag = config.packages.relay.version;
@@ -156,7 +182,7 @@ vm.succeed("cd /root/workspace && cargo test --package node --test main -- --noc
 				config.ExposedPorts."8080/tcp" = {};
 				config.WorkingDir = "/workspace";
 			};
-			
+
 			packages.stellar =
 			let
 				pname = "stellar-cli";
@@ -243,18 +269,6 @@ vm.succeed("cd /root/workspace && cargo test --package node --test main -- --noc
 
 						try {
 							rustup target add wasm32-unknown-unknown
-						}
-
-						print "checking for stellar/quickstart `docker` image:"
-						let image_check = (do -i { docker images -q stellar/quickstart } | complete)
-
-						if ($image_check.stdout | is-empty) {
-							print "stellar/quickstart not found locally: pull in progress:"
-
-							# to fix: needs a version to be fixed not latest to avoid breaking changes or sec vulnerabilities
-							docker pull stellar/quickstart:latest
-						} else {
-							print "stellar/quickstart image aquired"
 						}
 					'
 				'';
