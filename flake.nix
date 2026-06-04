@@ -26,7 +26,7 @@
 				# ^sudo nix run .#vm -L --option sandbox false
 
 				nodes.vm = { ... }: {
-					system.stateVersion = "24.05";
+					system.stateVersion = "26.05";
 					
 					nix.settings.experimental-features = [
 						"flakes"
@@ -35,17 +35,33 @@
 					
 					virtualisation.cores = 4;
 					virtualisation.diskSize = 40960;
-					virtualisation.memorySize = 8192;
+					virtualisation.memorySize = 12288;
 					virtualisation.docker.enable = true;
 
+					boot.kernelPackages = pkgs.linuxPackages_latest;
 					boot.kernel.sysctl."net.core.rmem_max" = 2500000;
 					boot.kernel.sysctl."net.core.wmem_max" = 2500000;
 					boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
-					boot.kernel.sysctl."net.ipv4.conf.all.arp_ignore" = 1;
-					boot.kernel.sysctl."net.ipv4.conf.all.arp_announce" = 2;
+					boot.kernel.sysctl."net.ipv4.conf.all.forwarding" = 1;
+					boot.kernel.sysctl."net.ipv4.conf.all.rp_filter" = 0;
+					boot.kernel.sysctl."net.ipv4.conf.default.rp_filter" = 0;
 					boot.kernelModules = [
 						"br_netfilter"
 					];
+					
+					networking.firewall.enable = true;
+					networking.firewall.checkReversePath = false;
+					networking.firewall.extraCommands = ''
+						iptables -A FORWARD -i br-+ -o br-+ -j ACCEPT
+						iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+					'';
+					
+					systemd.network.networks."10-unmanaged-docker".matchConfig.Name = [
+						"docker0"
+						"veth*"
+						"br-*"
+					];
+					systemd.network.networks."10-unmanaged-docker".linkConfig.Unmanaged = "yes";
 					
 					networking.useDHCP = true;
 					networking.useNetworkd = true;
@@ -80,8 +96,9 @@
 					"vm.start()"
 					"vm.wait_for_unit('docker.service')"
 					"vm.succeed('docker load -i ${config.packages.bootstrapStellarCompatibleImage}')"
-					"vm.succeed('cp -r /etc/workspace /root/workspace')"
-					"vm.succeed('export CARGO_TARGET_DIR=/root/workspace/target && cd /root/workspace && cargo test --package node --test main -- --nocapture')"
+					"vm.succeed('cp -rL /etc/workspace /root/workspace')"
+					"vm.succeed('chmod -R u+w /root/workspace')"
+					"vm.succeed('export CARGO_TARGET_DIR=/var/tmp/cargo-target && cd /root/workspace && cargo test --jobs 1 --package node --test main -- --nocapture')"
 				];
 			};
 
