@@ -22,7 +22,11 @@ Suggested Obsidian
 ### Test
 To test the `node` crate, you must enable `end-to-end` feature, and have all required dependencies.
 
+
 ```bash
+# finds docker image digest
+docker inspect --format='{{index .RepoDigests 0}}' stellar/quickstart:latest
+
 docker pull stellar/quickstart:latest
 
 docker run --rm -it -p "8000:8000" -p "11626:11626" --name stellar-local stellar/quickstart:latest --local

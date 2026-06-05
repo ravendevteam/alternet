@@ -40,11 +40,11 @@
 				];
 			};
 		in {
-			checks.e2e = 
+			packages.e2e = 
 			let
 				wan = 1;
 				isp_wan_ip = "192.168.1.254";
-				chain_ip = "192.168.1.3";
+				chain_wan_ip = "192.168.1.3";
 				bootstrap_ip = "192.168.1.1";
 				relay_ip = "192.168.1.2";
 				client_lan = 2;
@@ -56,7 +56,7 @@
 				server_lan = 3;
 				server_router_wan_ip = "192.168.1.253";
 			in pkgs.testers.runNixOSTest {
-				name = "test";				
+				name = "e2e";			
 				
 				nodes.isp.system.stateVersion = "26.05";
 				
@@ -75,13 +75,27 @@
 				
 				nodes.chain.system.stateVersion = "26.05";
 				
+				nodes.chain.virtualisation.diskSize = 8192;
+				nodes.chain.virtualisation.memorySize = 2048;
+				nodes.chain.virtualisation.docker.enable = true;
+				nodes.chain.virtualisation.docker.autoPrune.enable = true;
 				nodes.chain.virtualisation.vlans = [
 					wan
 				];
 				
 				nodes.chain.networking.useDHCP = false;
 				nodes.chain.networking.defaultGateway = isp_wan_ip;
-				nodes.chain.networking.interfaces.eth1.ipv4.addresses = [{ address = chain_ip; prefixLength = 24; }];
+				nodes.chain.networking.interfaces.eth1.ipv4.addresses = [{ address = chain_wan_ip; prefixLength = 24; }];
+				nodes.chain.networking.firewall.allowedTCPPorts = [
+					8080
+				];
+				
+				nodes.chain.environment.systemPackages = [
+					pkgs.nushell
+					pkgs.docker
+					
+					config.packages.stellar
+				];
 
 				nodes.bootstrap.system.stateVersion = "26.05";
 				
@@ -94,6 +108,8 @@
 				nodes.bootstrap.networking.interfaces.eth1.ipv4.addresses = [{ address = bootstrap_ip; prefixLength = 24; }];
 				
 				nodes.bootstrap.environment.systemPackages = [
+					pkgs.nushell
+					
 					config.packages.bootstrap
 					config.packages.stellar
 				];
@@ -105,6 +121,8 @@
 				];
 				
 				nodes.relay.environment.systemPackages = [
+					pkgs.nushell
+					
 					config.packages.relay
 					config.packages.stellar
 				];
@@ -156,17 +174,42 @@
 				# grpcurl -d '{"field_name": "value"}' localhost:8080 your.package.ServiceName/MethodName
 				
 				testScript = pkgs.lib.concatLines [
-					"start_all()"
+					"isp.start()"
+					"isp.wait_for_unit(\"network.target\")"
 					
-					"chain.wait_for_unit('network.target')"
-					"isp.wait_for_unit('network.target')"
+					"chain.start()"
+					"chain.wait_for_unit(\"network.target\")"
+					"chain.wait_for_unit(\"docker.service\")"
+					"chain.succeed(\"nu -c 'docker load --input ${config.packages.stellar_testnet_image}'\")"
+					"chain.succeed(\"nu -c 'docker run --detach --name stellar --publish 8080:8080 stellar/quickstart:latest'\")"
+					"chain.wait_for_open_port(8080)"
 					
-					"bootstrap.wait_for_unit('network.target')"
+					"initial_balance=10000"
+					"bootstrap_public_key=chain.succeed(\"nu -c 'stellar keys generate bootstrap --network local --fund | lines | find \\\"Public Key\\\" | parse \\\"Public Key: {key}\\\" | get key.0'\").strip()"
 					
-					"relay.wait_for_unit('network.target')"
+					"relay_public_key=chain.succeed(\"nu -c 'stellar keys generate relay --network local --fund --output json | from json | get public_key'\").strip()"
+					"client_public_key=chain.succeed(\"nu -c 'stellar keys generate client --network local --fund --output json | from json | get public_key'\").strip()"
+					"server_public_key=chain.succeed(\"nu -c 'stellar keys generate server --network local --fund --output json | from json | get public_key'\").strip()"
+
+					"chain.succeed(f\"nu -c 'stellar account address {bootstrap_public_key} --rpc-url http://localhost:8080 | get balances | where asset_type == \\\"native\\\" | get balance | into float | $in == {initial_balance}'\")"
+					"chain.succeed(f\"nu -c 'stellar account address {relay_public_key} --rpc-url http://localhost:8080 | get balances | where asset_type == \\\"native\\\" | get balance | into float | $in == {initial_balance}'\")"
+					"chain.succeed(f\"nu -c 'stellar account address {client_public_key} --rpc-url http://localhost:8080 | get balances | where asset_type == \\\"native\\\" | get balance | into float | $in == {initial_balance}'\")"
+					"chain.succeed(f\"nu -c 'stellar account address {server_public_key} --rpc-url http://localhost:8080 | get balances | where asset_type == \\\"native\\\" | get balance | into float | $in == {initial_balance}'\")"
+
+					"bootstrap.start()"
+					"bootstrap.wait_for_unit(\"network.target\")"
+					"bootstrap.succeed(\"bootstrap --flag value > /dev/null 2>&1 &\")"
+					
+					"relay.start()"
+					"relay.wait_for_unit(\"network.target\")"
+					
 					
 					"client_router.wait_for_unit('network.target')"
 					"client.wait_for_unit('network.target')"
+					
+					
+					
+					# "bootstrap.succeed('stellar --rpc-url http://${chain_wan_ip}:8080)"
 					
 					"bootstrap.execute('bootstrap > /var/log/bootstrap.log 2>&1 &')"
 					"bootstrap.wait_for_open_port(8080)"
@@ -181,6 +224,10 @@
 
 					# bootstrap -> client
 					"bootstrap.fail('ping -c 3 -W 1 192.168.2.1')"
+					
+					"bootstrap.shutdown()"
+					"chain.shutdown()"
+					
 				];
 			};
 
@@ -250,8 +297,6 @@
 						pkgs.gcc
 						pkgs.protobuf
 						pkgs.docker
-						pkgs.arion
-						pkgs.docker
 
 						config.packages.bootstrap
 						config.packages.relay
@@ -269,7 +314,7 @@
 					"vm.wait_for_unit('docker.service')"
 					"vm.succeed('cp -rL /etc/workspace /root/workspace')"
 					"vm.succeed('chmod -R u+w /root/workspace')"
-					"vm.succeed('export CARGO_TARGET_DIR=/var/tmp/cargo-target && cd /root/workspace && cargo test --jobs 1 --package node --test main -- --nocapture')"
+					"vm.succeed('export CARGO_TARGET_DIR=/var/tmp/cargo-target && cd /root/workspace && cargo test --jobs 1 --package node --no-default-features -- --nocapture')"
 				];
 			};
 			
@@ -282,6 +327,12 @@
 			packages.maliciousClient = mkNode "malicious_client";
 			packages.maliciousServer = mkNode "malicious_server";
 
+			packages.stellar_testnet_image = pkgs.dockerTools.pullImage {
+				imageName = "stellar/quickstart";
+				imageDigest = "sha256:89d4990f8147956011f4090d5d125f7eb4604c6df3ad50289b55082ff1cb5217";
+				sha256 = "sha256-kI/3/QW4hAwfMhDQKfyFRtWA1PDHhn8odMl/GG1hMxU=";
+			};
+			
 			packages.stellar =
 			let
 				pname = "stellar-cli";
@@ -294,13 +345,13 @@
 				architecture.aarch64-linux.sha256 = "sha256-q/Wu5hii+ocgX871MrV/MhDzSB0S/j0pDFZnexio79Q=";
 				architecture.aarch64-darwin.target = "x86_64-apple-darwin";
 				architecture.aarch64-darwin.sha256 = "sha256-OO7oOWuxlCfenDbwfsOVtZzE2P6lupUaC51GPszzq6g=";
-				compatible_architecture = architecture.${system} or (throw "(unsupported_system=${system})");
+				compatibleArchitecture = architecture.${system} or (throw "(unsupported_system=${system})");
 				src =
 				let
-					url = "https://github.com/stellar/stellar-cli/releases/download/v${version}/stellar-cli-${version}-${compatible_architecture.target}.tar.gz";
+					url = "https://github.com/stellar/stellar-cli/releases/download/v${version}/stellar-cli-${version}-${compatibleArchitecture.target}.tar.gz";
 				in pkgs.fetchurl {
 					inherit url;
-					inherit (compatible_architecture) sha256;
+					inherit (compatibleArchitecture) sha256;
 				};
 				nativeBuildInputs = [
 					pkgs.nushell
@@ -351,6 +402,8 @@
 					pkgs.lld
 					pkgs.protobuf
 					pkgs.docker
+					
+					config.packages.stellar
 				];
 
 				buildInputs = [
