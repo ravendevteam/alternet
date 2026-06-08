@@ -56,6 +56,14 @@ fn c(domain: &str) -> u32 {
 	0
 }
 
+pub struct Chain;
+
+impl Chain {
+	pub fn register(&self) {
+		
+	}
+}
+
 fn main() {
 	std::process::Command::new("stellar").args(["container", "start", "local"]);
 	std::process::Command::new("stellar").args(["keys", "generate", "steve"]);

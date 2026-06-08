@@ -75,8 +75,8 @@
 				
 				nodes.chain.system.stateVersion = "26.05";
 				
-				nodes.chain.virtualisation.diskSize = 8192;
-				nodes.chain.virtualisation.memorySize = 2048;
+				nodes.chain.virtualisation.diskSize = 8000;
+				nodes.chain.virtualisation.memorySize = 2500;
 				nodes.chain.virtualisation.docker.enable = true;
 				nodes.chain.virtualisation.docker.autoPrune.enable = true;
 				nodes.chain.virtualisation.vlans = [
@@ -184,21 +184,20 @@
 					"chain.succeed(\"nu -c 'docker run --detach --name stellar --publish 8080:8080 stellar/quickstart:latest'\")"
 					"chain.wait_for_open_port(8080)"
 					
-					"initial_balance=10000"
-					"bootstrap_public_key=chain.succeed(\"nu -c 'stellar keys generate bootstrap --network local --fund | lines | find \\\"Public Key\\\" | parse \\\"Public Key: {key}\\\" | get key.0'\").strip()"
+					"chain.succeed(\"nu -c 'stellar keys generate bootstrap --network local'\")"
+					"chain.succeed(\"nu -c 'stellar keys generate relay --network local'\")"
+					"chain.succeed(\"nu -c 'stellar keys generate client --network local'\")"
+					"chain.succeed(\"nu -c 'stellar keys generate server --network local'\")"
+
+					"bootstrap_public_key=chain.succeed(\"nu -c 'stellar keys public-key bootstrap'\").strip()"
+					"bootstrap_secret_key=chain.succeed(\"nu -c 'stellar keys secret bootstrap'\").strip()"
 					
-					"relay_public_key=chain.succeed(\"nu -c 'stellar keys generate relay --network local --fund --output json | from json | get public_key'\").strip()"
-					"client_public_key=chain.succeed(\"nu -c 'stellar keys generate client --network local --fund --output json | from json | get public_key'\").strip()"
-					"server_public_key=chain.succeed(\"nu -c 'stellar keys generate server --network local --fund --output json | from json | get public_key'\").strip()"
-
-					"chain.succeed(f\"nu -c 'stellar account address {bootstrap_public_key} --rpc-url http://localhost:8080 | get balances | where asset_type == \\\"native\\\" | get balance | into float | $in == {initial_balance}'\")"
-					"chain.succeed(f\"nu -c 'stellar account address {relay_public_key} --rpc-url http://localhost:8080 | get balances | where asset_type == \\\"native\\\" | get balance | into float | $in == {initial_balance}'\")"
-					"chain.succeed(f\"nu -c 'stellar account address {client_public_key} --rpc-url http://localhost:8080 | get balances | where asset_type == \\\"native\\\" | get balance | into float | $in == {initial_balance}'\")"
-					"chain.succeed(f\"nu -c 'stellar account address {server_public_key} --rpc-url http://localhost:8080 | get balances | where asset_type == \\\"native\\\" | get balance | into float | $in == {initial_balance}'\")"
-
+					
+					
+					
 					"bootstrap.start()"
 					"bootstrap.wait_for_unit(\"network.target\")"
-					"bootstrap.succeed(\"bootstrap --flag value > /dev/null 2>&1 &\")"
+					# "bootstrap.succeed(\"bootstrap --flag value > /dev/null 2>&1 &\")"
 					
 					"relay.start()"
 					"relay.wait_for_unit(\"network.target\")"

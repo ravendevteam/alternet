@@ -1,6 +1,7 @@
 use super::*;
 
 pub mod bootstrap;
+pub mod broker;
 pub mod connection_manager;
 pub mod dht_poison;
 pub mod dialer;
@@ -8,11 +9,13 @@ pub mod identity_spoofer;
 pub mod metadata;
 pub mod monitor;
 pub mod discovery_monitor;
+pub mod handshake;
 pub mod nat_observer;
 pub mod peer_registry;
 pub mod relay_killer;
 pub mod routing_monitor;
 pub mod self_destruct;
+pub mod session_manager;
 pub mod slug;
 
 pub trait SubSystem {

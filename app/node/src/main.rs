@@ -114,32 +114,9 @@ use num::ToPrimitive as _;
 mod config;
 mod env_key;
 mod grpc;
+mod stream;
 mod sub_system;
 
-pub trait Transaction {
-	type Balance;
-	type Address;
-	type Hash;
-	
-	fn src(&self) -> Self::Address;
-	fn dst(&self) -> Self::Address;
-	fn nonce(&self) -> u64;
-	fn amount(&self) -> Self::Balance;
-	fn fee_limit(&self) -> Self::Balance;
-	fn fee_price(&self) -> Option<Self::Balance>;
-	fn ttl(&self) -> Option<u64>;
-}
-
-struct Domain {
-	
-}
-
-pub trait Chain {
-	type Transaction;
-	
-	async fn register(&self, domain: Domain) -> Result;
-	async fn mint(&self) -> Result;
-}
 
 #[derive(Debug)]
 #[derive(Clone)]
@@ -148,28 +125,87 @@ pub trait Chain {
 #[derive(derive_more::From)]
 #[derive(derive_more::Add)]
 #[derive(derive_more::Sub)]
-pub struct Balance(u64);
+struct Balance(u64);
 
-pub struct Address(Vec<u8>);
+// time in seconds
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(derive_more::From)]
+struct Duration(u64);
 
-pub trait Dns {
-	async fn mint(&self) -> Result;
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(derive_more::From)]
+struct Address(Vec<u8>);
+
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(derive_more::From)]
+struct Domain(String);
+
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(derive_more::From)]
+struct PublicKey([u8; 32]);
+
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(derive_more::From)]
+struct Signature([u8; 64]);
+
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+struct Proof {
+	src: PublicKey,
+	src_sig: Signature,
+	dst: PublicKey,
+	dst_sig: Signature,
+	// relays involved in the delivery of this session
+	relays: Vec<(PublicKey, Signature)>
 }
 
-pub trait DomainNft {
+/// External dns source of truth provider, may be swapped and implemented by
+/// other chains or networks, the nodes rely on this sytem for value transfer
+/// and cryptographic proofs
+#[async_trait::async_trait]
+trait Dns {
+	async fn receive_attestation(
+		&self,
+		public_key: PublicKey,
+		signature: Signature
+	) -> Result;
 	
+	/// Receives a proof of trasit from src to dst through possible relays.
+	async fn receive_proof(&self, proof: Proof) -> Result;
+	
+	// for a given foreign key will return the onchain identity
+	// 
+	// i own this pk offchain, this is who i am onchain
+	async fn attestation(&self, key: PublicKey) -> Result<Address>;
+	
+	async fn foreign_attestation(&self) -> Result<PublicKey>;
+	
+	async fn locked_balance_of(&self, owner: PublicKey) -> Result<Balance>;
+	
+	/// Creates a timelocked pool of assets used for congestion charge
+	async fn lock(&self, amount: Balance, duration: Duration) -> Result;
+	
+	async fn renew(&self, domain: Domain) -> Result;
+	async fn mint(&self, domain: Domain) -> Result;
 }
 
-pub trait Erc20 {
-	async fn symbol(&self) -> &str;
-	async fn decimals(&self) -> Result<u8>;
-	async fn balance_of(&self, account: &Address) -> Result<Balance>;
-	async fn total_supply(&self) -> Result<Balance>;
-	async fn allowance(&self) -> Balance;
-	async fn transfer(&self);
-	async fn transfer_from(&self);
-	async fn approve(&self);
-}
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -238,6 +274,7 @@ struct Cli {
     pub seed: Option<String>
 }
 
+
 #[derive(swarm::NetworkBehaviour)]
 struct Behaviour {
     #[cfg(any(feature = "relay", feature = "malicious_relay"))]
@@ -283,10 +320,21 @@ struct Behaviour {
         feature = "malicious_server",
         feature = "malicious_relay"
     ))]
-    pub identify: identify::Behaviour
+    pub identify: identify::Behaviour,
+    
+    #[cfg(any(
+        feature = "bootstrap",
+        feature = "client", 
+        feature = "server", 
+        feature = "relay",
+        feature = "malicious_bootstrap",
+        feature = "malicious_client",
+        feature = "malicious_server",
+        feature = "malicious_relay"
+    ))]
+    pub stream: libp2p_stream::Behaviour
 }
 
-// MARK: Main
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -472,10 +520,13 @@ async fn main() -> Result<()> {
 
             let identify: identify::Behaviour = identify::Behaviour::new(identify_config);            
 
+            let stream: libp2p_stream::Behaviour = libp2p_stream::Behaviour::default();
+            
             Behaviour {
                 autonat,
                 kad,
-                identify
+                identify,
+                stream
             }
         })?
         .build();
@@ -540,12 +591,15 @@ async fn main() -> Result<()> {
 
             let identify: identify::Behaviour = identify::Behaviour::new(identify_config);
 
+            let stream: libp2p_stream::Behaviour = libp2p_stream::Behaviour::default();
+            
             Behaviour {
                 relay_client,
                 autonat,
                 dcutr,
                 kad,
-                identify
+                identify,
+                stream
             }
         })?
         .build();
@@ -610,12 +664,15 @@ async fn main() -> Result<()> {
 
             let identify: identify::Behaviour = identify::Behaviour::new(identify_config);
 
+            let stream: libp2p_stream::Behaviour = libp2p_stream::Behaviour::default();
+            
             Behaviour {
                 relay_client,
                 autonat,
                 dcutr,
                 kad,
-                identify
+                identify,
+                stream
             }
         })?
         .build();
@@ -696,11 +753,14 @@ async fn main() -> Result<()> {
 
             let identify: identify::Behaviour = identify::Behaviour::new(identify_config);
 
+            let stream: libp2p_stream::Behaviour = libp2p_stream::Behaviour::default();
+            
             Behaviour {
                 relay,
                 autonat,
                 kad,
-                identify
+                identify,
+                stream
             }
         })
         .expect("")

@@ -7,10 +7,14 @@ build = "build.rs"
 publish = false
 
 [dependencies]
+bytes = "*"
 rand = "*"
 async-trait = "*"
 futures = "*"
 tokio = { version = "1.48.0", features = ["full"] }
+tokio-stream = "*"
+tokio-util = { version = "*", features = ["compat"] }
+libp2p-stream = "0.4.0-alpha"
 libp2p = { version = "0.56.0", features = [
     "tcp",
     "quic",
@@ -117,7 +121,7 @@ path = "src/main.rs"
 required-features = ["malicious_relay"]
 
 [features]
-default = ["server", "end_to_end"]
+default = ["client", "end_to_end"]
 bootstrap = []
 client = []
 server = []
