@@ -112,6 +112,10 @@ impl Default for SessionManager {
 }
 
 impl SubSystem for SessionManager {
+	
+	// this subsystem should make it easier to interact with streams, but the overhead of passing these events to every other subsystems
+	// even if to check, can add up for high through put streams or even multiple streans
+	// eventually this should be replaced with a more reliable abstraction (there is plenty of room for optimization)
 	fn receive(
 		&mut self, 
 		swarm: &mut Swarm, 
