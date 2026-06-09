@@ -837,6 +837,7 @@ async fn main() -> Result<()> {
     sub_system_bus.add_system(sub_system::dialer::Dialer);
     sub_system_bus.add_system(sub_system::metadata::Metadata);
     sub_system_bus.add_system(sub_system::monitor::Monitor);
+    sub_system_bus.add_system(sub_system::session_manager::SessionManager::default());
 
     cfg_if::cfg_if!(
         if #[cfg(feature = "malicious_relay")] {

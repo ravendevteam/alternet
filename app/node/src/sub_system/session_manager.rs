@@ -3,7 +3,7 @@ use futures::SinkExt as _;
 use tokio_util::compat::FuturesAsyncReadCompatExt as _;
 
 trait Bridge {
-	fn bind_to_event_loop(self, remote: libp2p::PeerId, event_sx: tokio::sync::mpsc::Sender<Event>);
+	fn bind_to_event_loop(self, peer: libp2p::PeerId, event_sx: tokio::sync::mpsc::Sender<Event>);
 }
 
 impl Bridge for libp2p::Stream {
@@ -155,6 +155,13 @@ impl SubSystem for SessionManager {
 					stream.bind_to_event_loop(dst, event_sx);
 				}
 			});
+		}
+		
+		if let Some(RegisterPeerChannel {
+			peer,
+			dst_sx
+		}) = event.downcast_ref() {
+		    self.peer_to_bytes_sx.insert(peer.clone(), dst_sx.clone());
 		}
 		
 		if let Some(OutboundBytes {
