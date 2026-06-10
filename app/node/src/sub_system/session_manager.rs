@@ -133,6 +133,7 @@ impl SubSystem for SessionManager {
 		
 		if !self.boot {
 			self.boot = true;
+			log::info!("listening to {}", PROTOCOL);
 			let mut control: libp2p_stream::Control = swarm.behaviour_mut().stream.new_control().to_owned();
 			let Ok(mut streams) = control.accept(PROTOCOL) else {
 				panic!("session manager subsystem failed to accept protocol")

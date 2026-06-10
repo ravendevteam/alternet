@@ -22,6 +22,13 @@ where
 		event: &mut Event, 
 		queue: &mut dyn FnMut(Event)
 	) {
+		if let Some(session_manager::InboundBytes {
+			src,
+			content
+		}) = event.downcast_ref() {
+			
+		}
+		
 		tokio::runtime::Handle::current().block_on(async {
 			match event.downcast_ref() {
 				// check for verify ivent
