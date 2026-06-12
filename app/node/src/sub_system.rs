@@ -9,6 +9,8 @@ pub mod identity_spoofer;
 pub mod metadata;
 pub mod monitor;
 pub mod discovery_monitor;
+pub mod firewall;
+pub mod forward;
 pub mod router;
 pub mod handshake;
 pub mod nat_observer;

@@ -22,7 +22,7 @@ where
 		event: &mut Event, 
 		queue: &mut dyn FnMut(Event)
 	) {
-		if let Some(session_manager::InboundBytes {
+		if let Some(router::InboundBytes {
 			src,
 			content
 		}) = event.downcast_ref() {
