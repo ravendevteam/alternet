@@ -9,6 +9,7 @@ publish = false
 [dependencies]
 bytes = "*"
 rand = "*"
+rand_core = "*"
 async-trait = "*"
 futures = "*"
 tokio = { version = "1.48.0", features = ["full"] }
@@ -36,6 +37,8 @@ libp2p = { version = "0.56.0", features = [
 toml = "*"
 bon = "*"
 serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+bincode = "*"
 tonic = "0.14.5"
 tonic-prost = "*"
 tonic-reflection = "*"
@@ -55,6 +58,8 @@ anyhow = "*"
 url = "*"
 nanoid = "*"
 hex = "*"
+
+ed25519-dalek = { version = "2.1.0", features = ["rand_core"] }
 
 [dev-dependencies]
 testcontainers = "*"
@@ -121,7 +126,7 @@ path = "src/main.rs"
 required-features = ["malicious_relay"]
 
 [features]
-default = ["client", "end_to_end"]
+default = ["relay", "end_to_end"]
 bootstrap = []
 client = []
 server = []

@@ -12,7 +12,7 @@ impl Bridge for libp2p::Stream {
      	let stream: tokio_util::codec::Framed<_, _> = tokio_util::codec::Framed::new(stream, tokio_util::codec::LengthDelimitedCodec::default());
       	let (mut stream_sx, mut stream_rx) = stream.split();
        	let (dst_sx, mut dst_rx) = tokio::sync::mpsc::channel(1000);
-		let event: Event = Event::new(RegisterPeerChannel {
+		let event: Event = Event::from_any(RegisterPeerChannel {
 			peer: peer.to_owned(),
 			dst_sx
 		});
@@ -29,7 +29,7 @@ impl Bridge for libp2p::Stream {
 		
 		tokio::spawn(async move {
 			while let Some(Ok(bytes)) = stream_rx.next().await {
-				let event = Event::new(InboundBytes {
+				let event = Event::from_any(InboundBytes {
 					src: peer.to_owned(),
 					content: bytes.freeze(),
 				});
@@ -38,7 +38,7 @@ impl Bridge for libp2p::Stream {
 				}
 			}
 
-			event_sx.send(Event::new(Disconnection {
+			event_sx.send(Event::from_any(Disconnection {
 				peer: peer.to_owned()
 			})).await;
 		});

@@ -32,6 +32,6 @@ impl SubSystem for IdentitySpoofer {
         }
         self.last_rotation = std::time::Instant::now();
         log::warn!("rotating peer identity");
-        queue(Event::new(Rotation))
+        queue(Event::from_any(Rotation))
     }
 }

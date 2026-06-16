@@ -1,92 +1,159 @@
 use super::*;
 
-pub struct Verify;
+pub struct An;
 
-pub enum State {
-	Unset,
-	Ready
+impl stream::Protocol for An {
+	fn protocol() -> libp2p::StreamProtocol {
+		libp2p::StreamProtocol::new("/an")
+	}
 }
 
-pub struct Broker<A, B> {
-	erc_20: A,
-	dns: B,
-	state: State
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(derive_more::From)]
+pub struct Reservation {
+	owner: PublicKey,
+	owner_signature: Signature,
+	src: libp2p::PeerId,
+	src_public_key: PublicKey,
+	dst: libp2p::PeerId,
+	dst_public_key: PublicKey,
+	ttl: std::time::Duration
 }
 
-impl<A, B> SubSystem for Broker<A, B> 
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+pub enum Opcode {
+	Reserve(Reservation),
+	Idle
+}
+
+impl std::str::FromStr for Opcode {
+	type Err = ();
+	
+	fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+		
+	}
+}
+
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+pub struct Search(Domain);
+
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(derive_more::From)]
+pub struct Found(Vec<libp2p::Multiaddr>);
+
+pub struct PendingReservation {
+	src: libp2p::PeerId,
+	src_stream_established: bool,
+	dst: libp2p::PeerId,
+	dst_stream_established: bool
+}
+
+pub struct Broker<T> {
+	dns: T,
+	res: Vec<Reservation>,
+	
+	// cache visited ones
+	domain_to_addrs: std::collections::HashMap<Domain, Found>
+}
+
+impl<T> Broker<T> {
+	
+}
+
+impl<T> SubSystem for Broker<T> 
 where
-	B: Dns {
+	T: Dns {
 	fn receive(
 		&mut self, 
 		swarm: &mut Swarm, 
 		event: &mut Event, 
 		queue: &mut dyn FnMut(Event)
 	) {
-		if let Some(router::InboundBytes {
-			src,
-			content
-		}) = event.downcast_ref() {
+		
+		
+		
+		let swarm = swarm.behaviour_mut();
+		
+		queue(Event::from_any(search_engine::Query::from(Domain::from(String::from("hello.an")))));
+
+		if let Some(Search(domain)) = event.downcast_ref() {
 			
+			// after search cache result, and send out event for the entire system
+			queue(Event::from_any(Found::from(vec![])));
 		}
 		
-		tokio::runtime::Handle::current().block_on(async {
-			match event.downcast_ref() {
-				// check for verify ivent
-				Some(Verify) => {
-					
-				},
-				None => return
-			}
-			
-			match self.state {
-				State::Unset => {
-					
-				},
-				State::Ready => return
-			}
-		});
+		// begin search for the specific key on the kad, the key should be the domain it needs to look up
+		// after recieving all matches, it will verify which one actually has the real signature of the owner of the domain proving it is the real one
+		// the record should contain the address to connect to
+		// 
+		// relay can then establish a connection with that peer, and dns search complete
+		swarm.kad.get_record(libp2p::kad::RecordKey::new(b""));
 		
-
+		if let Some(SwarmEvent::Behaviour(BehaviourEvent::Kad(libp2p::kad::Event::OutboundQueryProgressed {
+			id,
+			result: libp2p::kad::QueryResult::GetRecord(Ok(libp2p::kad::GetRecordOk::FoundRecord(libp2p::kad::PeerRecord {
+				peer,
+				record
+			}))),
+			stats,
+			step
+		}))) = event.downcast_ref() {
+			// look up signatures for validity
+			record.value;
+		}
 		
-    	#[cfg(any(feature = "client"))] {
-
-       		// blocks, ideally will need to architect a way to not do this
-			tokio::runtime::Handle::current().block_on(async {
-				// check how much balance the client has, check the pk
-				let balance: Balance = self.dns.locked_balance_of().await.unwrap();
-				
-				// check threshold and time until last pool will unlock
-				
-				self.dns.lock(Balance::from(20000), Duration::from(60000)).await.ok();
-			});
-
-			
-       
-       		
-       		
-     		// lock up pool
-     	}
-      
-      	#[cfg(any(feature = "relay"))] {
-       		// pools that are about to expire in less than x time, will be ignored, this time may be set by the relay
-       
-       
-       		tokio::spawn(async move {
-         		self.dns.pool().await;
-           	
-           		// after verifying approve the service
-           		emit()
-         	});
-         
-       		// detect when you have forwarded content
-         	//  
-         	// remember it (if the server doesnt return proof of your work, blacklist or reduce reputation)
-       	}
-        
-        #[cfg(any(feature = "server"))] {
-        	// received, from who, and if relay is there
-         	// sign proof, and return back to the relay
-          	// 
-        }
+		#[cfg(feature = "relay")] {
+			if let Some(stream::Inbound::<An>(stream::Packet {
+				peer,
+				content,
+				..
+			})) = event.downcast_ref() {
+				let content: Vec<_> = content.to_vec();
+				let content: &str = std::str::from_utf8(&content).unwrap();
+				let content: Opcode = content.parse().unwrap();
+				if let Opcode::Reserve(Reservation {
+					owner,
+					owner_signature,
+					src,
+					src_public_key,
+					dst,
+					dst_public_key,
+					ttl
+				}) = content {
+					
+					
+					tokio::runtime::Handle::current().block_on(async move {
+						match self.dns.locked_balance_of(owner).await {
+							Ok(balance) => {
+								if balance < 200 {
+									
+								}
+							},
+							Err(_) => {
+								
+							}
+						}
+						
+						// how long will it be valid for
+						self.dns.locked_balance_timeout_of(owner).await.unwrap();
+						
+						// all good, create forward event and timeout for it
+						queue();
+					});
+				}
+			}	
+		}
 	}
 }

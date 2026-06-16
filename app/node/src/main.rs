@@ -93,30 +93,24 @@ cfg_if::cfg_if!(
     }
 );
 
-use tokio::io::AsyncBufReadExt as _;
 use libp2p::swarm;
 use libp2p::identify;
-use libp2p::identity;
 use libp2p::kad;
-use libp2p::gossipsub;
-use libp2p::request_response;
 use libp2p::quic;
-use libp2p::noise;
-use libp2p::yamux;
 use libp2p::autonat;
 use libp2p::futures::StreamExt as _;
 use libp2p::relay;
-use libp2p::dcutr;
 use clap::Parser as _;
 use ubyte::ToByteUnit as _;
 use num::ToPrimitive as _;
 
 mod config;
+mod identity;
 mod env_key;
 mod grpc;
+mod saga;
 mod stream;
 mod sub_system;
-
 
 #[derive(Debug)]
 #[derive(Clone)]
@@ -146,34 +140,23 @@ struct Address(Vec<u8>);
 #[derive(Clone)]
 #[derive(PartialEq)]
 #[derive(Eq)]
+#[derive(Hash)]
 #[derive(derive_more::From)]
 struct Domain(String);
 
-#[derive(Debug)]
-#[derive(Clone)]
-#[derive(PartialEq)]
-#[derive(Eq)]
-#[derive(derive_more::From)]
-struct PublicKey([u8; 32]);
 
-#[derive(Debug)]
-#[derive(Clone)]
-#[derive(PartialEq)]
-#[derive(Eq)]
-#[derive(derive_more::From)]
-struct Signature([u8; 64]);
 
 #[derive(Debug)]
 #[derive(Clone)]
 #[derive(PartialEq)]
 #[derive(Eq)]
 struct Proof {
-	src: PublicKey,
-	src_sig: Signature,
-	dst: PublicKey,
-	dst_sig: Signature,
+	src: identity::PublicKey,
+	src_sig: identity::Signature,
+	dst: identity::PublicKey,
+	dst_sig: identity::Signature,
 	// relays involved in the delivery of this session
-	relays: Vec<(PublicKey, Signature)>
+	relays: Vec<(identity::PublicKey, identity::Signature)>
 }
 
 /// External dns source of truth provider, may be swapped and implemented by
@@ -183,8 +166,8 @@ struct Proof {
 trait Dns {
 	async fn receive_attestation(
 		&self,
-		public_key: PublicKey,
-		signature: Signature
+		public_key: identity::PublicKey,
+		signature: identity::Signature
 	) -> Result;
 	
 	/// Receives a proof of trasit from src to dst through possible relays.
@@ -193,11 +176,22 @@ trait Dns {
 	// for a given foreign key will return the onchain identity
 	// 
 	// i own this pk offchain, this is who i am onchain
-	async fn attestation(&self, key: PublicKey) -> Result<Address>;
+	async fn attestation(&self, key: identity::PublicKey) -> Result<Address>;
 	
-	async fn foreign_attestation(&self) -> Result<PublicKey>;
+	async fn foreign_attestation(&self) -> Result<identity::PublicKey>;
 	
-	async fn locked_balance_of(&self, owner: PublicKey) -> Result<Balance>;
+	async fn locked_balance_of(&self, owner: identity::PublicKey) -> Result<Balance>;
+	async fn locked_balance_timeout_of(&self, owner: identity::PublicKey) -> Result<std::time::Instant>;
+	
+	// relay can request a commitment from an account they are serving
+	async fn open_commitment(&self, account: identity::PublicKey) -> Result;
+	
+	// account accepts the commitment or reservation
+	async fn accept_commitment(&self) -> Result;
+	
+	
+	
+	async fn account_has_sufficient_balance(&self, account: identity::PublicKey) -> Result<bool>;
 	
 	/// Creates a timelocked pool of assets used for congestion charge
 	async fn lock(&self, amount: Balance, duration: Duration) -> Result;
@@ -219,7 +213,7 @@ struct Event {
 }
 
 impl Event {
-    pub fn new<T>(item: T) -> Self
+    pub fn from_any<T>(item: T) -> Self
     where
         T: std::any::Any,
         T: Send,
@@ -439,12 +433,12 @@ async fn main() -> Result<()> {
     #[cfg(any(feature = "relay", feature = "malicious_relay"))]
     let identify_interval: std::time::Duration = std::time::Duration::from_mins(5);
 
-    let local_keypair: identity::Keypair = if let Some(seed) = &mut seed {
-    	identity::Keypair::ed25519_from_bytes(seed)?
+    let local_keypair: libp2p::identity::Keypair = if let Some(seed) = &mut seed {
+    	libp2p::identity::Keypair::ed25519_from_bytes(seed)?
     } else {
-    	identity::Keypair::generate_ed25519()
+    	libp2p::identity::Keypair::generate_ed25519()
     };
-    let local_public_key: identity::PublicKey = local_keypair.public();
+    let local_public_key: libp2p::identity::PublicKey = local_keypair.public();
     let local_peer_id: libp2p::PeerId = local_keypair.public().into();
 
     log::info!("peer identity initialized: {:?}", local_peer_id);
@@ -868,7 +862,7 @@ async fn main() -> Result<()> {
                 break
             },
             event = swarm.select_next_some() => {
-                sub_system_bus.receive(&mut swarm, Event::new(event))
+                sub_system_bus.receive(&mut swarm, Event::from_any(event))
             },
             Some(event) = rx.recv() => {
                 sub_system_bus.receive(&mut swarm, event)

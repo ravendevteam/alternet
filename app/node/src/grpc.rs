@@ -30,7 +30,7 @@ impl proto::node_server::Node for Server {
         let event = PeerId {
             completed: completed.to_owned()
         };
-        let event = Event::new(event);
+        let event = Event::from_any(event);
         self.sx.send(event).await
             .ok()
             .ok_or(tonic::Status::internal("unable to send event"))?;
@@ -67,7 +67,7 @@ impl proto::node_server::Node for Server {
             addr,
             completed: completed.to_owned()
         };
-        let event: Event = Event::new(event);
+        let event: Event = Event::from_any(event);
         self.sx.send(event).await
             .ok()
             .ok_or(tonic::Status::internal(format!("failed to send event")))?;
