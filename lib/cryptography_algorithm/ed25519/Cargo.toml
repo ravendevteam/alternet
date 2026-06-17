@@ -1,0 +1,10 @@
+[package]
+name = "cryptography_algorithm_ed25519"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cryptography = { version = "*", path = "../../cryptography" }
+ed25519-dalek = "*"
+ed25519 = "*"
+rand = "*"

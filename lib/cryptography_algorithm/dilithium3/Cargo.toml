@@ -1,0 +1,10 @@
+[package]
+name = "cryptography_algorithm_dilithium3"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cryptography = { version = "*", path = "../../cryptography" }
+thiserror = "*"
+pqcrypto-traits = "*"
+pqcrypto-dilithium = "*"

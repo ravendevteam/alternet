@@ -1,0 +1,10 @@
+[package]
+name = "packet"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cryptography = { version = "*", path = "../cryptography" }
+kore = { version = "*", path = "../kore" }
+derive_more = { version = "*", features = ["full"] }
+bytes = "*"

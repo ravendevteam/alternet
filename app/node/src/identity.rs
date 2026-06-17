@@ -3,7 +3,21 @@ use ed25519_dalek::Signer as _;
 use ed25519::signature::Keypair as _;
 
 pub mod commitment {
+	use super::*;
 	
+	// a packet which may or may not contain encrypted data
+	pub struct Puzzle {
+		
+	}
+	
+	
+	pub struct Accumulator {
+		pkts: Vec<sub_system::stream::Packet<sub_system::broker::An>>
+	}
+	
+	impl Accumulator {
+		pub fn store(&mut self, pkt: sub_system::stream::Packet<>)
+	}
 }
 
 pub mod multi_party {
@@ -38,18 +52,18 @@ pub mod multi_party {
 	}
 	
 	impl Partial {
-		pub fn sign(self, pk: PublicKey, sg: Signature) -> Result<Or<Self, CompleteVerified>> {
+		pub fn sign(self, pk: PublicKey, sg: Signature) -> Result<kore::Or<Self, CompleteVerified>> {
 			sg.verify(mg, &pk)?;
 			
 			self.pk_to_sg.insert(pk, sg);
-			Ok(Or::Lhs(self))
+			Ok(kore::Or::Lhs(self))
 		}
 	}
 	
-	impl TryFrom<Vec<u8>> for Partial {
+	impl TryFrom<bytes::Bytes> for Partial {
 		type Error = Box<dyn std::error::Error>;
 		
-		fn try_from(value: Vec<u8>) -> std::result::Result<Self, Self::Error> {
+		fn try_from(value: bytes::Bytes) -> std::result::Result<Self, Self::Error> {
 			
 		}
 	}
@@ -83,7 +97,7 @@ pub mod single_party {
 		}
 	}
 	
-	impl Unpack<(PublicKey, Unsigned)> for SignedVerified {
+	impl kore::Unpack<(PublicKey, Unsigned)> for SignedVerified {
 		fn unpack(self) -> (PublicKey, Unsigned) {
 			let mg: Unsigned = self.content.into();
 			(self.pk, mg)

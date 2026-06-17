@@ -8,6 +8,4 @@ result/
 result
 doc/README.md
 doc/proof-of-transport.md
-lib/algo
 lib/chain
-lib/crypto

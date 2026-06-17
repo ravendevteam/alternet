@@ -139,9 +139,15 @@ where
 				};
 				
 				tokio::runtime::Handle::current().block_on(async move {
-					dns.receive_proof(proof).await.unwrap();
+					match dns.receive_proof(proof).await {
+						Ok(_) => {
+							
+						},
+						Err(_) => {
+							
+						}
+					}
 				});
-				
 				
 			},
 			_ => self

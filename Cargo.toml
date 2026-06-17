@@ -8,7 +8,15 @@ members = [
     "app/simulation-item/switch",
     "image",
     "image_util",
+    
+    "lib/cryptography",
+    "lib/cryptography_algorithm/dilithium3", # cryptography_algorithm_dilithium3
+    "lib/cryptography_algorithm/ed25519",    # cryptography_algorithm_ed25519
+    "lib/cryptography_algorithm/kyber1024",  # cryptography_algorithm_hyber1024
     "lib/e2e",
+    "lib/kore",
+    "lib/packet",
+    
     # ... coming soon ...
     "task",
     

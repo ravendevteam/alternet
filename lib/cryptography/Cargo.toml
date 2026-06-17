@@ -1,0 +1,9 @@
+[package]
+name = "cryptography"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bon = "*"
+libp2p = "*"
+serde = { version = "1.0.228", features = ["derive"] }

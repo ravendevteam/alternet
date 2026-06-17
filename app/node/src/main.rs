@@ -104,6 +104,7 @@ use clap::Parser as _;
 use ubyte::ToByteUnit as _;
 use num::ToPrimitive as _;
 
+mod cmn;
 mod config;
 mod identity;
 mod env_key;
@@ -111,14 +112,6 @@ mod grpc;
 mod saga;
 mod stream;
 mod sub_system;
-
-#[derive(Debug)]
-#[derive(Clone)]
-#[derive(derive_more::From)]
-enum Or<A, B> {
-	Lhs(A),
-	Rhs(B)
-}
 
 #[derive(Debug)]
 #[derive(Clone)]
@@ -192,16 +185,6 @@ struct Proof {
 	relays: Vec<(identity::PublicKey, identity::Signature)>
 }
 
-trait Unpack<T> {
-	fn unpack(self) -> T;
-}
-
-trait TryUnpack<T> {
-	type Error;
-	
-	fn unpack(self) -> std::result::Result<T, Self::Error>;
-}
-
 /// External dns source of truth provider, may be swapped and implemented by
 /// other chains or networks, the nodes rely on this sytem for value transfer
 /// and cryptographic proofs
@@ -209,8 +192,8 @@ trait TryUnpack<T> {
 trait Dns {
 	async fn receive_attestation(
 		&self,
-		public_key: identity::PublicKey,
-		signature: identity::Signature
+		pk: identity::PublicKey,
+		sg: identity::Signature
 	) -> Result;
 
 	/// Receives a proof of trasit from src to dst through possible relays.
@@ -219,7 +202,7 @@ trait Dns {
 	// for a given foreign key will return the onchain identity
 	//
 	// i own this pk offchain, this is who i am onchain
-	async fn attestation(&self, key: identity::PublicKey) -> Result<Address>;
+	async fn attestation(&self, pk: identity::PublicKey) -> Result<Address>;
 
 	async fn foreign_attestation(&self) -> Result<identity::PublicKey>;
 
@@ -262,6 +245,61 @@ trait Dns {
 	// measures the time since the first transaction 
 	async fn age(&self, pk: identity::PublicKey) -> Result<Option<Age>>;
 }
+
+#[derive(Debug)]
+struct StellarTestnet;
+
+#[async_trait::async_trait]
+impl Dns for StellarTestnet {
+	async fn receive_attestation(
+		&self,
+		pk: identity::PublicKey,
+		sg: identity::Signature
+	) -> Result {
+		
+	}
+	
+	async fn receive_proof(&self, proof: Proof) -> Result {
+		
+	}
+	
+	async fn attestation(&self, pk: identity::PublicKey) -> Result<Address> {
+		
+	}
+	
+	async fn renew(&self, domain: Domain) -> Result {
+		todo!()
+	}
+	
+	async fn mint(&self, domain: Domain) -> Result {
+		todo!()
+	}
+	
+	async fn congestion_charge(&self) -> Result<Fee> {
+		todo!()
+	}
+	
+	async fn fee(&self) -> Result<Fee> {
+		todo!()
+	}
+	
+	async fn traffic(&self, domain: Domain) -> Result<Traffic> {
+		todo!()
+	}
+	
+	async fn total_spend(&self) -> Result<Balance> {
+		todo!()
+	}
+	
+	async fn total_claim(&self) -> Result<Balance> {
+		todo!()
+	}
+	
+	async fn age(&self, pk: identity::PublicKey) -> Result<Option<Age>> {
+		todo!()
+	}
+}
+
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 

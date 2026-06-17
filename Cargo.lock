@@ -847,6 +847,46 @@ dependencies = [
 ]
 
 [[package]]
+name = "cryptography"
+version = "0.1.0"
+dependencies = [
+ "bon",
+ "libp2p",
+ "serde",
+]
+
+[[package]]
+name = "cryptography_algorithm_dilithium3"
+version = "0.1.0"
+dependencies = [
+ "cryptography",
+ "pqcrypto-dilithium",
+ "pqcrypto-traits",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "cryptography_algorithm_ed25519"
+version = "0.1.0"
+dependencies = [
+ "cryptography",
+ "ed25519",
+ "ed25519-dalek",
+ "rand 0.8.5",
+]
+
+[[package]]
+name = "cryptography_algorithm_kyber1024"
+version = "0.1.0"
+dependencies = [
+ "aes-gcm",
+ "cryptography",
+ "pqcrypto-kyber",
+ "pqcrypto-traits",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "ctr"
 version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1515,6 +1555,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "glob"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0cc23270f6e1808e30a928bdc84dea0b9b4136a8bc82338574f23baf47bbd280"
+
+[[package]]
 name = "h2"
 version = "0.4.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2177,6 +2223,13 @@ checksum = "b49715b7073f385ba4bc528e5747d02e66cb39c6146efb66b781f131f0fb399c"
 dependencies = [
  "once_cell",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "kore"
+version = "0.1.0"
+dependencies = [
+ "derive_more",
 ]
 
 [[package]]
@@ -2974,6 +3027,7 @@ dependencies = [
  "hex",
  "humantime",
  "image",
+ "kore",
  "libp2p",
  "libp2p-stream",
  "log",
@@ -3141,6 +3195,16 @@ checksum = "7d8fae84b431384b68627d0f9b3b1245fcf9f46f6c0e3dc902e9dce64edd1967"
 dependencies = [
  "libc",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "packet"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "cryptography",
+ "derive_more",
+ "kore",
 ]
 
 [[package]]
@@ -3344,6 +3408,50 @@ checksum = "85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9"
 dependencies = [
  "zerocopy",
 ]
+
+[[package]]
+name = "pqcrypto-dilithium"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "685de0fa68c6786559d5fcdaa414f0cd68ef3f5d162f61823bd7424cd276726f"
+dependencies = [
+ "cc",
+ "glob",
+ "libc",
+ "pqcrypto-internals",
+ "pqcrypto-traits",
+]
+
+[[package]]
+name = "pqcrypto-internals"
+version = "0.2.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4a326caf27cbf2ac291ca7fd56300497ba9e76a8cc6a7d95b7a18b57f22b61d"
+dependencies = [
+ "cc",
+ "dunce",
+ "getrandom 0.3.4",
+ "libc",
+]
+
+[[package]]
+name = "pqcrypto-kyber"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "15c00293cf898859d0c771455388054fd69ab712263c73fdc7f287a39b1ba000"
+dependencies = [
+ "cc",
+ "glob",
+ "libc",
+ "pqcrypto-internals",
+ "pqcrypto-traits",
+]
+
+[[package]]
+name = "pqcrypto-traits"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94e851c7654eed9e68d7d27164c454961a616cf8c203d500607ef22c737b51bb"
 
 [[package]]
 name = "prettyplease"

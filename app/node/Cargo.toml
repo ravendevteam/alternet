@@ -7,6 +7,7 @@ build = "build.rs"
 publish = false
 
 [dependencies]
+kore = { version = "*", path = "../../lib/kore" }
 bytes = "*"
 rand = "*"
 rand_core = "*"
