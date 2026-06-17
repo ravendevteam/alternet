@@ -12,3 +12,12 @@ pub struct Signature<T> {
     #[deref_mut]
     content: bytes::Bytes
 }
+
+impl<T> From<bytes::Bytes> for Signature<T> {
+	fn from(value: bytes::Bytes) -> Self {
+		Self {
+			phantom_data: std::marker::PhantomData,
+			content: value
+		}
+	}
+}

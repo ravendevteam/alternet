@@ -5,6 +5,7 @@ const PUBLIC_KEY_LEN: usize = 32;
 const SECRET_KEY_LEN: usize = 32;
 const SIGNATURE_LEN: usize = 64;
 
+#[derive(Debug)]
 pub struct Ed25519Algorithm;
 
 impl cryptography::Algorithm for Ed25519Algorithm {}

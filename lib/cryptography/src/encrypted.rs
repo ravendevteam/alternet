@@ -6,6 +6,7 @@ use super::*;
 #[derive(Eq)]
 #[derive(derive_more::Deref)]
 #[derive(derive_more::DerefMut)]
+#[derive(derive_more::From)]
 pub struct Encrypted<T> {
     phantom_data: std::marker::PhantomData<T>,
     #[deref]
