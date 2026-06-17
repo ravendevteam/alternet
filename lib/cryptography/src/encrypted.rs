@@ -4,30 +4,11 @@ use super::*;
 #[derive(Clone)]
 #[derive(PartialEq)]
 #[derive(Eq)]
-#[derive(Hash)]
-#[derive(Default)] 
-#[derive(serde::Serialize)]
-#[derive(serde::Deserialize)]
-#[serde(transparent)]
+#[derive(derive_more::Deref)]
+#[derive(derive_more::DerefMut)]
 pub struct Encrypted<T> {
-    #[serde(skip)]
     phantom_data: std::marker::PhantomData<T>,
-    bytes: Bytes
-}
-
-impl<T> From<Bytes> for Encrypted<T> {
-    fn from(value: Bytes) -> Self {
-        let phantom_data: std::marker::PhantomData<_> = std::marker::PhantomData;
-        let bytes: Bytes = value;
-        Self {
-            phantom_data,
-            bytes
-        }
-    }
-}
-
-impl<T> AsRef<[u8]> for Encrypted<T> {
-    fn as_ref(&self) -> &[u8] {
-        &self.bytes
-    }
+    #[deref]
+    #[deref_mut]
+    content: message::Message
 }

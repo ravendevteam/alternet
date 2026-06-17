@@ -3,6 +3,12 @@ use ed25519_dalek::Signer as _;
 
 pub struct Ed25519Algorithm;
 
+impl cryptography::AsymmetricSetLayout for Ed25519Algorithm {
+	const PUBLIC_KEY_LEN: usize = 32;
+	const SECRET_KEY_LEN: usize = 32;
+	const SIGNATURE_LEN: usize = 64;
+}
+
 impl cryptography::AsymmetricKeyGenAlgorithm for Ed25519Algorithm {
 	fn generate() -> cryptography::Result<cryptography::Pair> {
 		let sk = ed25519_dalek::SigningKey::generate(&mut rand::rngs::OsRng);
