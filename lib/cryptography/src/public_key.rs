@@ -12,3 +12,17 @@ pub struct PublicKey<T> {
     #[deref_mut]
     content: bytes::Bytes
 }
+
+impl<T> TryFrom<bytes::Bytes> for PublicKey<T> {
+	type Error = Box<dyn std::error::Error>;
+	
+	fn try_from(value: bytes::Bytes) -> std::result::Result<Self, Self::Error> {
+		if value.len() == 0 {
+			return Err(<Box<dyn std::error::Error>>::from(String::from("must not be empty")))
+		}
+		Ok(Self {
+			phantom_data: std::marker::PhantomData,
+			content: value
+		})
+	}
+}

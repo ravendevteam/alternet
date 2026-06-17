@@ -8,3 +8,4 @@ cryptography = { version = "*", path = "../../cryptography" }
 ed25519-dalek = "*"
 ed25519 = "*"
 rand = "*"
+bytes = "*"

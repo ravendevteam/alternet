@@ -25,10 +25,10 @@ impl<T> Key<T>
 where
     T: SymmetricEncryptionAlgorithm {
     pub fn encrypt(&self, message: message::Message) -> Result<encrypted::Encrypted<T>> {
-        T::encrypt(self, message)
+        T::encrypt(&self, message)
     }
 
     pub fn decrypt(&self, message: encrypted::Encrypted<T>) -> Result<message::Message> {
-        T::decrypt(self, message)
+        T::decrypt(&self, message)
     }
 }

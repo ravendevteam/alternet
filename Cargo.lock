@@ -872,6 +872,7 @@ dependencies = [
 name = "cryptography_algorithm_ed25519"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "cryptography",
  "ed25519",
  "ed25519-dalek",

@@ -40,8 +40,8 @@ where
 pub trait AsymmetricEncryptionAlgorithm 
 where
 	Self: Algorithm {
-    fn encrypt(public_key: &public_key::PublicKey<Self>, message: message::Message) -> Result<encrypted::Encrypted<Self>>;
-    fn decrypt(secret_key: &secret_key::SecretKey<Self>, message: encrypted::Encrypted<Self>) -> Result<message::Message>;
+    fn encrypt(public_key: &public_key::PublicKey<Self>, message: &message::Message) -> Result<encrypted::Encrypted<Self>>;
+    fn decrypt(secret_key: &secret_key::SecretKey<Self>, message: &encrypted::Encrypted<Self>) -> Result<message::Message>;
 }
 
 pub trait SymmetricKeyGenAlgorithm 
@@ -53,6 +53,6 @@ where
 pub trait SymmetricEncryptionAlgorithm 
 where
 	Self: Algorithm {
-    fn encrypt(key: &key::Key<Self>, message: message::Message) -> Result<encrypted::Encrypted<Self>>;
-    fn decrypt(key: &key::Key<Self>, message: encrypted::Encrypted<Self>) -> Result<message::Message>;
+    fn encrypt(key: &key::Key<Self>, message: &message::Message) -> Result<encrypted::Encrypted<Self>>;
+    fn decrypt(key: &key::Key<Self>, message: &encrypted::Encrypted<Self>) -> Result<message::Message>;
 }
