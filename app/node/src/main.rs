@@ -114,12 +114,29 @@ mod sub_system;
 
 #[derive(Debug)]
 #[derive(Clone)]
+#[derive(derive_more::From)]
+enum Or<A, B> {
+	Lhs(A),
+	Rhs(B)
+}
+
+#[derive(Debug)]
+#[derive(Clone)]
 #[derive(PartialEq)]
 #[derive(Eq)]
 #[derive(derive_more::From)]
 #[derive(derive_more::Add)]
 #[derive(derive_more::Sub)]
 struct Balance(u64);
+
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(derive_more::From)]
+#[derive(derive_more::Add)]
+#[derive(derive_more::Sub)]
+struct Fee(u64);
 
 // time in seconds
 #[derive(Debug)]
@@ -144,7 +161,23 @@ struct Address(Vec<u8>);
 #[derive(derive_more::From)]
 struct Domain(String);
 
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(derive_more::From)]
+#[derive(derive_more::Add)]
+#[derive(derive_more::Sub)]
+struct Traffic(u64);
 
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(derive_more::From)]
+#[derive(derive_more::Add)]
+#[derive(derive_more::Sub)]
+struct Age(std::time::Duration);
 
 #[derive(Debug)]
 #[derive(Clone)]
@@ -159,6 +192,16 @@ struct Proof {
 	relays: Vec<(identity::PublicKey, identity::Signature)>
 }
 
+trait Unpack<T> {
+	fn unpack(self) -> T;
+}
+
+trait TryUnpack<T> {
+	type Error;
+	
+	fn unpack(self) -> std::result::Result<T, Self::Error>;
+}
+
 /// External dns source of truth provider, may be swapped and implemented by
 /// other chains or networks, the nodes rely on this sytem for value transfer
 /// and cryptographic proofs
@@ -169,37 +212,56 @@ trait Dns {
 		public_key: identity::PublicKey,
 		signature: identity::Signature
 	) -> Result;
-	
+
 	/// Receives a proof of trasit from src to dst through possible relays.
 	async fn receive_proof(&self, proof: Proof) -> Result;
-	
+
 	// for a given foreign key will return the onchain identity
-	// 
+	//
 	// i own this pk offchain, this is who i am onchain
 	async fn attestation(&self, key: identity::PublicKey) -> Result<Address>;
-	
+
 	async fn foreign_attestation(&self) -> Result<identity::PublicKey>;
-	
+
 	async fn locked_balance_of(&self, owner: identity::PublicKey) -> Result<Balance>;
 	async fn locked_balance_timeout_of(&self, owner: identity::PublicKey) -> Result<std::time::Instant>;
-	
+
 	// relay can request a commitment from an account they are serving
 	async fn open_commitment(&self, account: identity::PublicKey) -> Result;
-	
+
 	// account accepts the commitment or reservation
 	async fn accept_commitment(&self) -> Result;
-	
-	
-	
+
 	async fn account_has_sufficient_balance(&self, account: identity::PublicKey) -> Result<bool>;
-	
+
 	/// Creates a timelocked pool of assets used for congestion charge
 	async fn lock(&self, amount: Balance, duration: Duration) -> Result;
-	
-	async fn renew(&self, domain: Domain) -> Result;
-	async fn mint(&self, domain: Domain) -> Result;
-}
 
+	async fn renew(&self, domain: Domain) -> Result;
+	
+	async fn mint(&self, domain: Domain) -> Result;
+	
+	
+	async fn congestion_charge(&self) -> Result<Fee>;
+	async fn fee(&self) -> Result<Fee>;
+	
+	async fn traffic(&self, domain: Domain) -> Result<Traffic>;
+	
+	
+	// both metrics backed by cryptographic proof, transactions carry a fee to minimize false activity
+	
+	// total amount spent, can be used to vet if clients are actually trustworthy, for new clients, shorter sessions might be ideal, for longer
+	// running clients, longer sessions can take place increasing efficiency
+	// 
+	// ideally measured on a rolling 7 - 30 day basis
+	async fn total_spend(&self) -> Result<Balance>;
+	
+	// total rewards earnt, may be used a judge of reliability
+	async fn total_claim(&self) -> Result<Balance>;
+	
+	// measures the time since the first transaction 
+	async fn age(&self, pk: identity::PublicKey) -> Result<Option<Age>>;
+}
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -224,7 +286,7 @@ impl Event {
         }
     }
 
-    pub fn downcast_ref<T>(&self) -> Option<&T> 
+    pub fn downcast_ref<T>(&self) -> Option<&T>
     where
         T: std::any::Any {
         self.item.downcast_ref()
@@ -236,7 +298,7 @@ impl Event {
         self.item.downcast_mut()
     }
 
-    pub fn downcast<T>(self) -> std::result::Result<T, Self> 
+    pub fn downcast<T>(self) -> std::result::Result<T, Self>
     where
         T: std::any::Any {
         match self.item.downcast::<T>() {
@@ -275,17 +337,17 @@ struct Behaviour {
     pub relay: relay::Behaviour,
 
     #[cfg(any(
-        feature = "client", 
+        feature = "client",
         feature = "server",
         feature = "malicious_client",
         feature = "malicious_server"
     ))]
     pub relay_client: relay::client::Behaviour,
-    
+
     pub autonat: autonat::Behaviour,
 
     #[cfg(any(
-        feature = "client", 
+        feature = "client",
         feature = "server",
         feature = "malicious_client",
         feature = "malicious_server"
@@ -294,8 +356,8 @@ struct Behaviour {
 
     #[cfg(any(
         feature = "bootstrap",
-        feature = "client", 
-        feature = "server", 
+        feature = "client",
+        feature = "server",
         feature = "relay",
         feature = "malicious_bootstrap",
         feature = "malicious_client",
@@ -303,11 +365,11 @@ struct Behaviour {
         feature = "malicious_relay"
     ))]
     pub kad: kad::Behaviour<kad::store::MemoryStore>,
-    
+
     #[cfg(any(
         feature = "bootstrap",
-        feature = "client", 
-        feature = "server", 
+        feature = "client",
+        feature = "server",
         feature = "relay",
         feature = "malicious_bootstrap",
         feature = "malicious_client",
@@ -315,11 +377,11 @@ struct Behaviour {
         feature = "malicious_relay"
     ))]
     pub identify: identify::Behaviour,
-    
+
     #[cfg(any(
         feature = "bootstrap",
-        feature = "client", 
-        feature = "server", 
+        feature = "client",
+        feature = "server",
         feature = "relay",
         feature = "malicious_bootstrap",
         feature = "malicious_client",
@@ -366,7 +428,7 @@ async fn main() -> Result<()> {
     } else {
         vec![]
     };
-    
+
     let mut seed: Option<_> = if let Some(seed) = cli.seed {
     	Some(hex::decode(seed)?)
     } else if let Ok(seed) = std::env::var("SEED") {
@@ -404,8 +466,8 @@ async fn main() -> Result<()> {
     };
 
     #[cfg(any(feature = "server", feature = "malicious_server"))]
-    let identify_cache_size: usize = if let Some(conf) = &conf 
-    && let Some(server) = &conf.server 
+    let identify_cache_size: usize = if let Some(conf) = &conf
+    && let Some(server) = &conf.server
     && let Some(identity_cache_size) = server.identity_cache_size {
         identity_cache_size
     } else {
@@ -486,7 +548,7 @@ async fn main() -> Result<()> {
             kad_conf.set_substreams_timeout(std::time::Duration::from_millis(20000));
 
             let mut kad: kad::Behaviour<_> = kad::Behaviour::with_config(local_peer_id, kad_store, kad_conf);
-            
+
             kad.set_mode(Some(kad::Mode::Server));
 
             let mut autonat_conf = autonat::Config::default();
@@ -512,10 +574,10 @@ async fn main() -> Result<()> {
                 .with_interval(identify_interval)
                 .with_push_listen_addr_updates(true);
 
-            let identify: identify::Behaviour = identify::Behaviour::new(identify_config);            
+            let identify: identify::Behaviour = identify::Behaviour::new(identify_config);
 
             let stream: libp2p_stream::Behaviour = libp2p_stream::Behaviour::default();
-            
+
             Behaviour {
                 autonat,
                 kad,
@@ -532,7 +594,7 @@ async fn main() -> Result<()> {
         .with_relay_client(noise::Config::new, yamux::Config::default)?
         .with_behaviour(|_, relay_client| {
             let kad_store: kad::store::MemoryStore = kad::store::MemoryStore::new(local_peer_id);
-            
+
             let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
             kad_conf.disjoint_query_paths(true);
             kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 64 });
@@ -553,9 +615,9 @@ async fn main() -> Result<()> {
             kad_conf.set_replication_factor(kad::K_VALUE);
             kad_conf.set_replication_interval(None);
             kad_conf.set_substreams_timeout(std::time::Duration::from_secs(10));
-            
+
             let mut kad: kad::Behaviour<_> = kad::Behaviour::with_config(local_peer_id, kad_store, kad_conf);
-            
+
             kad.set_mode(Some(kad::Mode::Client));
 
             let mut autonat_conf = autonat::Config::default();
@@ -575,7 +637,7 @@ async fn main() -> Result<()> {
             let autonat = autonat::Behaviour::new(local_peer_id, autonat_conf);
 
             let dcutr: dcutr::Behaviour = dcutr::Behaviour::new(local_peer_id);
-        
+
             let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
                 .with_agent_version(agent_version)
                 .with_cache_size(identify_cache_size)
@@ -586,7 +648,7 @@ async fn main() -> Result<()> {
             let identify: identify::Behaviour = identify::Behaviour::new(identify_config);
 
             let stream: libp2p_stream::Behaviour = libp2p_stream::Behaviour::default();
-            
+
             Behaviour {
                 relay_client,
                 autonat,
@@ -598,14 +660,14 @@ async fn main() -> Result<()> {
         })?
         .build();
 
-    #[cfg(any(feature = "server", feature = "malicious_server"))] 
+    #[cfg(any(feature = "server", feature = "malicious_server"))]
     let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
         .with_tokio()
         .with_quic_config(|_| quic_config)
         .with_relay_client(noise::Config::new, yamux::Config::default)?
         .with_behaviour(|_, relay_client| {
             let kad_store: kad::store::MemoryStore = kad::store::MemoryStore::new(local_peer_id);
-            
+
             let mut kad_conf: kad::Config = kad::Config::new(protocol_name);
             kad_conf.disjoint_query_paths(true);
             kad_conf.set_caching(kad::Caching::Enabled{ max_peers: 256 });
@@ -626,7 +688,7 @@ async fn main() -> Result<()> {
             kad_conf.set_replication_factor(kad::K_VALUE);
             kad_conf.set_replication_interval(None);
             kad_conf.set_substreams_timeout(std::time::Duration::from_secs(10));
-            
+
             let mut kad: kad::Behaviour<_> = kad::Behaviour::with_config(local_peer_id, kad_store, kad_conf);
 
             kad.set_mode(Some(kad::Mode::Server));
@@ -659,7 +721,7 @@ async fn main() -> Result<()> {
             let identify: identify::Behaviour = identify::Behaviour::new(identify_config);
 
             let stream: libp2p_stream::Behaviour = libp2p_stream::Behaviour::default();
-            
+
             Behaviour {
                 relay_client,
                 autonat,
@@ -670,7 +732,7 @@ async fn main() -> Result<()> {
             }
         })?
         .build();
-    
+
     #[cfg(any(feature = "relay", feature = "malicious_relay"))]
     let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
         .with_tokio()
@@ -719,7 +781,7 @@ async fn main() -> Result<()> {
             kad_conf.set_substreams_timeout(std::time::Duration::from_secs(10));
 
             let mut kad: kad::Behaviour<_> = kad::Behaviour::with_config(local_peer_id, kad_store, kad_conf);
-            
+
             kad.set_mode(Some(kad::Mode::Server));
 
             let mut autonat_conf = autonat::Config::default();
@@ -737,7 +799,7 @@ async fn main() -> Result<()> {
             autonat_conf.use_connected = true;
 
             let autonat = autonat::Behaviour::new(local_peer_id, autonat_conf);
-            
+
             let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
                 .with_agent_version(agent_version)
                 .with_cache_size(identify_cache_size)
@@ -748,7 +810,7 @@ async fn main() -> Result<()> {
             let identify: identify::Behaviour = identify::Behaviour::new(identify_config);
 
             let stream: libp2p_stream::Behaviour = libp2p_stream::Behaviour::default();
-            
+
             Behaviour {
                 relay,
                 autonat,
@@ -766,10 +828,10 @@ async fn main() -> Result<()> {
         for addr in &dial {
             if addr.to_string().contains("p2p") {
                 let is_p2p: bool = addr.iter().any(|protocol| matches!(protocol, libp2p::multiaddr::Protocol::P2p(_)));
-    
+
                 if is_p2p {
                     let circuit_addr: libp2p::Multiaddr = addr.clone().with(libp2p::multiaddr::Protocol::P2pCircuit);
-                    
+
                     log::info!("server attempting relay reservation: {}", circuit_addr);
 
                     // these are speculative attempts
