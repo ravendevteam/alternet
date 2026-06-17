@@ -21,16 +21,11 @@ where
 	}
 }
 
-impl<T> TryFrom<bytes::Bytes> for SecretKey<T> {
-	type Error = Box<dyn std::error::Error>;
-	
-	fn try_from(value: bytes::Bytes) -> std::result::Result<Self, Self::Error> {
-		if value.len() == 0 {
-			return Err(<Box<dyn std::error::Error>>::from(String::from("must not be empty")))
-		}
-		Ok(Self {
+impl<T> From<bytes::Bytes> for SecretKey<T> {
+	fn from(value: bytes::Bytes) -> Self {
+		Self {
 			phantom_data: std::marker::PhantomData,
 			content: value
-		})
+		}
 	}
 }

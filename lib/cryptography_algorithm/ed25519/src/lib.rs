@@ -24,9 +24,11 @@ impl cryptography::AsymmetricKeyGenAlgorithm for Ed25519Algorithm {
 		let signing_key: [_; _] = signing_key.to_bytes();
 		let signing_key: &[_] = signing_key.as_slice();
 		let secret_key: bytes::Bytes = bytes::Bytes::copy_from_slice(signing_key);
-		let secret_key: cryptography::secret_key::SecretKey<_> = secret_key.try_into()?;
+		let secret_key: cryptography::bytes::Bytes = secret_key.try_into()?;
+		let secret_key: cryptography::secret_key::SecretKey<_> = secret_key.into();
 		let public_key: bytes::Bytes = bytes::Bytes::copy_from_slice(verifying_key);
-		let public_key: cryptography::public_key::PublicKey<_> = public_key.try_into()?;
+		let public_key: cryptography::bytes::Bytes = public_key.try_into()?;
+		let public_key: cryptography::public_key::PublicKey<_> = public_key.into();
 		Ok(cryptography::pair::Pair::from((public_key, secret_key)))
 	}
 }
@@ -39,7 +41,8 @@ impl cryptography::AsymmetricSignatureAlgorithm for Ed25519Algorithm {
 		let out: ed25519::Signature = signing_key.sign(message);
 		let out: [_; _] = out.to_bytes();
 		let out: bytes::Bytes = bytes::Bytes::copy_from_slice(&out);
-		let out: cryptography::signature::Signature<Self> = out.try_into()?;
+		let out: cryptography::bytes::Bytes = out.try_into()?;
+		let out: cryptography::signature::Signature<Self> = out.into();
 		Ok(out)
 	}
 	
