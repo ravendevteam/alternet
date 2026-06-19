@@ -1,5 +1,6 @@
 use bytes::Buf as _;
-use lib_kore::Unpack as _;
+
+pub struct IsUnknownProtocol;
 
 #[derive(Debug)]
 #[derive(Clone)]
@@ -7,7 +8,7 @@ use lib_kore::Unpack as _;
 #[derive(Eq)]
 #[derive(derive_more::Deref)]
 #[derive(derive_more::DerefMut)]
-pub struct MarkedSignedVerified<A, B = ()> {
+pub struct MarkedSignedVerified<A, B = IsUnknownProtocol> {
 	phantom_data: std::marker::PhantomData<B>,
 	signer: lib_cryptography::public_key::PublicKey<A>,
 	signature: lib_cryptography::signature::Signature<A>,
@@ -16,62 +17,42 @@ pub struct MarkedSignedVerified<A, B = ()> {
 	content: Unsigned<B>
 }
 
-impl<A, B> lib_kore::Unpack<(lib_cryptography::signature::Signature<A>, lib_cryptography::public_key::PublicKey<A>, Unsigned<B>)> for MarkedSignedVerified<A, B> {
-	fn unpack(self) -> (lib_cryptography::signature::Signature<A>, lib_cryptography::public_key::PublicKey<A>, Unsigned<B>) {
-		(
-			self.signature, 
-			self.signer, 
-			self.content
-		)
-	}
-}
-
-impl<A, B> TryFrom<MarkedSignedUnverified<A, B>> for MarkedSignedVerified<A, B> 
+impl<A, B> TryFrom<MarkedSignedUnverified<A, B>> for MarkedSignedVerified<A, B>
 where
 	A: lib_cryptography::AsymmetricSignatureAlgorithm {
 	type Error = Box<dyn std::error::Error>;
-	
+
 	fn try_from(value: MarkedSignedUnverified<A, B>) -> Result<Self, Self::Error> {
-		let (signature, public_key, unsigned) = value.unpack();
-		A::verify(public_key, message, signature)
+		let (signature, signer, unsigned) = value.into();
+		let message: lib_bytes::NonEmpty = unsigned.into();
+		let message: lib_cryptography::message::Message = message.into();
+		if !A::verify(&signer, &message, &signature)? {
+			return Err(<Box<dyn std::error::Error>>::from(String::from("invalid")))
+		}
+		let content: Unsigned<_> = message.into();
+		Ok(Self {
+			phantom_data: std::marker::PhantomData,
+			signer,
+			signature,
+			content
+		})
 	}
 }
 
-impl<A, B> TryFrom<(Unsigned<B>, &lib_cryptography::secret_key::SecretKey<A>)> for MarkedSignedVerified<A, B> 
+impl<A, B> TryFrom<(Unsigned<B>, &lib_cryptography::secret_key::SecretKey<A>)> for MarkedSignedVerified<A, B>
 where
 	A: lib_cryptography::AsymmetricSignatureAlgorithm {
 	type Error = Box<dyn std::error::Error>;
-	
+
 	fn try_from(value: (Unsigned<B>, &lib_cryptography::secret_key::SecretKey<A>)) -> Result<Self, Self::Error> {
 		let (unsigned, secret_key) = value;
 		let signature = A::sign(&secret_key.as_ref().to_vec().into_boxed_slice(), &unsigned.content.to_vec().into_boxed_slice())?;
-		
+
 	}
 }
 
-#[derive(Debug)]
-#[derive(Clone)]
-#[derive(PartialEq)]
-#[derive(Eq)]
-#[derive(derive_more::Deref)]
-#[derive(derive_more::DerefMut)]
-pub struct MarkedSignedUnverified<A, B = ()> {
-	phantom_data: std::marker::PhantomData<B>,
-	signer: lib_cryptography::public_key::PublicKey<A>,
-	signature: lib_cryptography::signature::Signature<A>,
-	#[deref]
-	#[deref_mut]
-	content: Unsigned<B>
-}
-
-impl<A, B> MarkedSignedUnverified<A, B> {
-	pub fn verify(self) -> lib_kore::Result<MarkedSignedVerified<A, B>> {
-		self.try_into()
-	}
-}
-
-impl<A, B> lib_kore::Unpack<(lib_cryptography::signature::Signature<A>, lib_cryptography::public_key::PublicKey<A>, Unsigned<B>)> for MarkedSignedUnverified<A, B> {
-	fn unpack(self) -> (lib_cryptography::signature::Signature<A>, lib_cryptography::public_key::PublicKey<A>, Unsigned<B>) {
+impl<A, B> Into<(lib_cryptography::signature::Signature<A>, lib_cryptography::public_key::PublicKey<A>, Unsigned<B>)> for MarkedSignedVerified<A, B> {
+	fn into(self) -> (lib_cryptography::signature::Signature<A>, lib_cryptography::public_key::PublicKey<A>, Unsigned<B>) {
 		(
 			self.signature,
 			self.signer,
@@ -80,11 +61,36 @@ impl<A, B> lib_kore::Unpack<(lib_cryptography::signature::Signature<A>, lib_cryp
 	}
 }
 
-impl<A, B> TryFrom<lib_bytes::NonEmpty> for MarkedSignedUnverified<A, B> 
+
+
+#[derive(Debug)]
+#[derive(Clone)]
+#[derive(PartialEq)]
+#[derive(Eq)]
+#[derive(derive_more::Deref)]
+#[derive(derive_more::DerefMut)]
+pub struct MarkedSignedUnverified<A, B = IsUnknownProtocol> {
+	phantom_data: std::marker::PhantomData<B>,
+	signer: lib_cryptography::public_key::PublicKey<A>,
+	signature: lib_cryptography::signature::Signature<A>,
+	#[deref]
+	#[deref_mut]
+	content: Unsigned<B>
+}
+
+impl<A, B> MarkedSignedUnverified<A, B>
+where
+	A: lib_cryptography::AsymmetricSignatureAlgorithm {
+	pub fn verify(self) -> lib_kore::Result<MarkedSignedVerified<A, B>> {
+		self.try_into()
+	}
+}
+
+impl<A, B> TryFrom<lib_bytes::NonEmpty> for MarkedSignedUnverified<A, B>
 where
 	A: lib_cryptography::AsymmetricSetLayout {
 	type Error = Box<dyn std::error::Error>;
-	
+
 	fn try_from(value: lib_bytes::NonEmpty) -> Result<Self, Self::Error> {
 		let mut bytes: bytes::Bytes = value.into();
 		let header_len: usize = A::PUBLIC_KEY_LEN + A::SIGNATURE_LEN;
@@ -108,8 +114,18 @@ where
 	}
 }
 
+impl<A, B> Into<(lib_cryptography::signature::Signature<A>, lib_cryptography::public_key::PublicKey<A>, Unsigned<B>)> for  MarkedSignedUnverified<A, B> {
+	fn into(self) -> (lib_cryptography::signature::Signature<A>, lib_cryptography::public_key::PublicKey<A>, Unsigned<B>) {
+		(
+			self.signature,
+			self.signer,
+			self.content
+		)
+	}
+}
+
 pub struct SignedVerified<A, B = ()> {
-	
+
 }
 
 #[derive(Debug)]
@@ -118,7 +134,7 @@ pub struct SignedVerified<A, B = ()> {
 #[derive(Eq)]
 #[derive(derive_more::Deref)]
 #[derive(derive_more::DerefMut)]
-pub struct SignedUnverified<A, B = ()> {
+pub struct SignedUnverified<A, B = IsUnknownProtocol> {
 	phantom_data: std::marker::PhantomData<B>,
 	signature: lib_cryptography::signature::Signature<A>,
 	#[deref]
@@ -128,13 +144,16 @@ pub struct SignedUnverified<A, B = ()> {
 
 impl<A, B> TryFrom<lib_bytes::NonEmpty> for SignedUnverified<A, B> {
 	type Error = Box<dyn std::error::Error>;
-	
+
 	fn try_from(value: lib_bytes::NonEmpty) -> Result<Self, Self::Error> {
-		
+
 	}
 }
 
-// T designates the protocol the packet belongs to, () for generic or any
+// T designates the protocol the packet belongs to, () for generic, any, or unknown
+
+
+
 
 #[derive(Debug)]
 #[derive(Clone)]
@@ -142,7 +161,7 @@ impl<A, B> TryFrom<lib_bytes::NonEmpty> for SignedUnverified<A, B> {
 #[derive(Eq)]
 #[derive(derive_more::Deref)]
 #[derive(derive_more::DerefMut)]
-pub struct Unsigned<T = ()> {
+pub struct Unsigned<T = IsUnknownProtocol> {
 	phantom_data: std::marker::PhantomData<T>,
 	#[deref]
 	#[deref_mut]
@@ -158,9 +177,17 @@ impl<T> From<lib_bytes::NonEmpty> for Unsigned<T> {
 	}
 }
 
+impl<T> From<lib_cryptography::message::Message> for Unsigned<T> {
+	fn from(value: lib_cryptography::message::Message) -> Self {
+		let out: lib_bytes::NonEmpty = value.into();
+		let out: Self = out.into();
+		out
+	}
+}
+
 impl<T> TryFrom<bytes::Bytes> for Unsigned<T> {
 	type Error = Box<dyn std::error::Error>;
-	
+
 	fn try_from(value: bytes::Bytes) -> Result<Self, Self::Error> {
 		let out: lib_bytes::NonEmpty = value.try_into()?;
 		let out: Self = out.into();
