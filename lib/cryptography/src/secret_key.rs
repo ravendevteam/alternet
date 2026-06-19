@@ -10,7 +10,7 @@ pub struct SecretKey<T> {
     phantom_data: std::marker::PhantomData<T>,
     #[deref]
     #[deref_mut]
-    content: bytes::Bytes
+    content: lib_bytes::NonEmpty
 }
 
 impl<T> SecretKey<T> 
@@ -21,11 +21,12 @@ where
 	}
 }
 
-impl<T> From<bytes::Bytes> for SecretKey<T> {
-	fn from(value: bytes::Bytes) -> Self {
+impl<T> From<lib_bytes::NonEmpty> for SecretKey<T> {
+	fn from(value: lib_bytes::NonEmpty) -> Self {
+		let content: lib_bytes::NonEmpty = value;
 		Self {
 			phantom_data: std::marker::PhantomData,
-			content: value
+			content
 		}
 	}
 }

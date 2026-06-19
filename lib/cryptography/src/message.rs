@@ -7,4 +7,4 @@ use super::*;
 #[derive(derive_more::Deref)]
 #[derive(derive_more::DerefMut)]
 #[derive(derive_more::From)]
-pub struct Message(bytes::Bytes);
+pub struct Message(lib_bytes::NonEmpty);

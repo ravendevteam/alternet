@@ -9,6 +9,7 @@ members = [
     "image",
     "image_util",
     
+    "lib/bytes",
     "lib/cryptography",
     "lib/cryptography_algorithm/dilithium3", # cryptography_algorithm_dilithium3
     "lib/cryptography_algorithm/ed25519",    # cryptography_algorithm_ed25519

@@ -1,4 +1,3 @@
-pub mod bytes;
 pub mod encrypted;
 pub mod key;
 pub mod message;

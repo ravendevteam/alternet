@@ -29,7 +29,7 @@ impl<T> From<(public_key::PublicKey<T>, secret_key::SecretKey<T>)> for Pair<T> {
 	}
 }
 
-impl<T> kore::Unpack<(public_key::PublicKey<T>, secret_key::SecretKey<T>)> for Pair<T> {
+impl<T> lib_kore::Unpack<(public_key::PublicKey<T>, secret_key::SecretKey<T>)> for Pair<T> {
 	fn unpack(self) -> (public_key::PublicKey<T>, secret_key::SecretKey<T>) {
 		let Self {
 			public_key,

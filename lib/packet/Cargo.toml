@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-cryptography = { version = "*", path = "../cryptography" }
-kore = { version = "*", path = "../kore" }
+lib_cryptography = { version = "*", package = "cryptography", path = "../cryptography" }
+lib_kore = { version = "*", package = "kore", path = "../kore" }
+lib_bytes = { version = "*", package = "bytes", path = "../bytes" }
 derive_more = { version = "*", features = ["full"] }
 bytes = "*"

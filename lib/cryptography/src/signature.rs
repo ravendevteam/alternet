@@ -6,18 +6,10 @@ use super::*;
 #[derive(Eq)]
 #[derive(derive_more::Deref)]
 #[derive(derive_more::DerefMut)]
+#[derive(derive_more::From)]
 pub struct Signature<T> {
     phantom_data: std::marker::PhantomData<T>,
     #[deref]
     #[deref_mut]
-    content: bytes::Bytes
-}
-
-impl<T> From<bytes::Bytes> for Signature<T> {
-	fn from(value: bytes::Bytes) -> Self {
-		Self {
-			phantom_data: std::marker::PhantomData,
-			content: value
-		}
-	}
+    content: lib_bytes::NonEmpty
 }

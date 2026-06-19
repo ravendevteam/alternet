@@ -7,6 +7,6 @@ edition = "2024"
 bon = "*"
 libp2p = "*"
 serde = { version = "1.0.228", features = ["derive"] }
-bytes = "*"
 derive_more = { version = "*", features = ["full"] }
-kore = { version = "*", path = "../kore" }
+lib_bytes = { version = "*", package = "bytes", path = "../bytes" }
+lib_kore = { version = "*", package = "kore", path = "../kore" }

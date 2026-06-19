@@ -10,7 +10,7 @@ pub struct Key<T> {
     phantom_data: std::marker::PhantomData<T>,
     #[deref]
     #[deref_mut]
-    content: bytes::Bytes
+    content: lib_bytes::NonEmpty
 }
 
 impl<T> Key<T> 
