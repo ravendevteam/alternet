@@ -15,7 +15,6 @@ members = [
     "lib/cryptography_algorithm/ed25519",    # cryptography_algorithm_ed25519
     "lib/cryptography_algorithm/kyber1024",  # cryptography_algorithm_hyber1024
     "lib/e2e",
-    "lib/kore",
     "lib/packet",
     
     # ... coming soon ...
