@@ -57,9 +57,20 @@ where
 		match self {
 			Self::Parse(bytes) => {
 				let content: Vec<_> = bytes.to_vec();
-				let content: identity::SignedUnverified = content.try_into().unwrap();
-				let content: identity::SignedVerified = content.try_into().unwrap();
-				let (pk, mg) = content.unpack();
+				let content: bytes::Bytes = content.into();
+				let content: lib_bytes::NonEmpty = content.try_into().unwrap();
+				let content: lib_packet::MarkedSignedUnverified<lib_cryptography_algorithm_ed25519::Ed25519Algorithm, sub_system::broker::An> = content.try_into().unwrap();
+				let content: lib_packet::MarkedSignedVerified<_, _> = content.try_into().unwrap();
+				let (_, public_key, message) = content.into();
+				let message: lib_bytes::NonEmpty = message.into();
+				let message: bytes::Bytes = message.into();
+				let segments: std::iter::Filter<_, _> = message.split(|byte| byte.is_ascii_whitespace()).filter(|chunk| !chunk.is_empty());
+				let src: &[u8] = segments.next().unwrap();
+				let src: libp2p::Multiaddr = src.parse().unwrap();
+				let dst: &[u8] = segments.next().unwrap();
+				let dst: libp2p::Multiaddr = dst.parse().unwrap();
+				
+				
 				let src: &str = segments.get(2).unwrap();
 				let src: libp2p::Multiaddr = src.parse().unwrap();
 				let dst: &str = segments.get(3).unwrap();
@@ -73,7 +84,7 @@ where
 				// state transition
 				Self::Validation {
 					key: nanoid::nanoid!(),
-					pk,
+					pk: public_key,
 					src,
 					dst,
 					ttl,

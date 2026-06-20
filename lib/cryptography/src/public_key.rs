@@ -1,5 +1,3 @@
-use super::*;
-
 #[derive(Debug)]
 #[derive(Clone)]
 #[derive(PartialEq)]
@@ -20,5 +18,11 @@ impl<T> From<lib_bytes::NonEmpty> for PublicKey<T> {
 			phantom_data: std::marker::PhantomData,
 			content
 		}
+	}
+}
+
+impl<T> Into<lib_bytes::NonEmpty> for PublicKey<T> {
+	fn into(self) -> lib_bytes::NonEmpty {
+		self.content
 	}
 }

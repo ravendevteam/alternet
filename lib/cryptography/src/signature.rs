@@ -1,15 +1,28 @@
-use super::*;
-
 #[derive(Debug)]
 #[derive(Clone)]
 #[derive(PartialEq)]
 #[derive(Eq)]
 #[derive(derive_more::Deref)]
 #[derive(derive_more::DerefMut)]
-#[derive(derive_more::From)]
 pub struct Signature<T> {
     phantom_data: std::marker::PhantomData<T>,
     #[deref]
     #[deref_mut]
     content: lib_bytes::NonEmpty
+}
+
+impl<T> From<lib_bytes::NonEmpty> for Signature<T> {
+	fn from(value: lib_bytes::NonEmpty) -> Self {
+		let content: lib_bytes::NonEmpty = value;
+		Self {
+			phantom_data: std::marker::PhantomData,
+			content
+		}
+	}
+}
+
+impl<T> Into<lib_bytes::NonEmpty> for Signature<T> {
+	fn into(self) -> lib_bytes::NonEmpty {
+		self.content
+	}
 }

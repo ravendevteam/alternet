@@ -30,3 +30,15 @@ impl<T> From<lib_bytes::NonEmpty> for SecretKey<T> {
 		}
 	}
 }
+
+impl<T> Into<lib_bytes::NonEmpty> for SecretKey<T> {
+	fn into(self) -> lib_bytes::NonEmpty {
+		self.content
+	}
+}
+
+impl<T> Into<lib_bytes::NonEmpty> for &SecretKey<T> {
+	fn into(self) -> lib_bytes::NonEmpty {
+		self.content.to_owned()
+	}
+}
