@@ -1,9 +1,6 @@
-modwire::expose! {
-	pub unsigned
-}
-
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
+// might need to be Clone
 pub struct IsUnsetSigner;
 pub struct IsUnsetSignature;
 pub struct IsUnsetLayout;
@@ -32,6 +29,41 @@ impl<A, B> Unsigned<A, B> {
 	}
 }
 
+impl<A, B> TryFrom<lib_bytes::NonEmpty> for Unsigned<A, B> 
+where
+	A: TryFrom<lib_bytes::NonEmpty, Error = Box<dyn std::error::Error>> {
+	type Error = Box<dyn std::error::Error>;
+	
+	fn try_from(value: lib_bytes::NonEmpty) -> std::result::Result<Self, Self::Error> {
+		let out: A = value.try_into()?;
+		let out: Self = Self {
+			phantom_data: std::marker::PhantomData,
+			content: out,
+			signer: IsUnsetSigner,
+			signature: IsUnsetSignature
+		};
+		Ok(out)
+	}
+}
+
+impl<A, B> Into<A> for Unsigned<A, B> {
+	fn into(self) -> A {
+		self.content
+	}
+}
+
+impl<A, B> TryInto<lib_bytes::NonEmpty> for Unsigned<A, B>
+where
+	A: TryInto<lib_bytes::NonEmpty, Error = Box<dyn std::error::Error>> {
+	type Error = Box<dyn std::error::Error>;
+	
+	fn try_into(self) -> std::result::Result<lib_bytes::NonEmpty, Self::Error> {
+		let out: A = self.into();
+		let out: lib_bytes::NonEmpty = out.try_into()?;
+		Ok(out)
+	}
+}
+
 pub type MarkedSignedVerified<A = IsUnsetLayout, B = IsUnsetAlgorithm, C = IsUnsetProtocol> = Packet<IsMarkedSignedVerified, A, B, C, lib_cryptography::public_key::PublicKey<C>, lib_cryptography::signature::Signature<C>>;
 
 impl<A, B, C> MarkedSignedVerified<A, B, C> {
@@ -50,7 +82,7 @@ impl<A, B, C> MarkedSignedVerified<A, B, C> {
 
 impl<A, B, C> TryFrom<MarkedSignedUnverified<A, B, C>> for MarkedSignedVerified<A, B, C>
 where
-	C: lib_cryptography::AsymmetricSignatureAlgorithm {
+	B: lib_cryptography::AsymmetricSignatureAlgorithm {
 	type Error = Box<dyn std::error::Error>;
 
 	fn try_from(value: Packet<IsMarkedSignedUnverified, A, B, C>) -> std::result::Result<Self, Self::Error> {
@@ -58,32 +90,6 @@ where
 
 	}
 }
-
-pub type MarkedSignedUnverified<A, B, C> = Packet<IsMarkedSignedUnverified, A, B, C, lib_cryptography::public_key::PublicKey<C>, lib_cryptography::signature::Signature<C>>;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-impl<A, B, C> Packet<IsMarkedSignedUnverified, A, B, C>
-where
-	C: lib_cryptography::AsymmetricSignatureAlgorithm {
-	pub fn verify(self) -> Result<Packet<IsMarkedSignedVerified, A, B, C>> {
-		self.try_into()
-	}
-}
-
-
 
 impl<A, B, C> TryFrom<lib_bytes::NonEmpty> for Packet<IsMarkedSignedVerified, A, B, C, lib_cryptography::public_key::PublicKey<C>, lib_cryptography::signature::Signature<C>>
 where
@@ -118,6 +124,32 @@ where
 		})
 	}
 }
+
+pub type MarkedSignedUnverified<A = IsUnsetLayout, B = IsUnsetAlgorithm, C = IsUnsetProtocol> = Packet<IsMarkedSignedUnverified, A, B, C, lib_cryptography::public_key::PublicKey<C>, lib_cryptography::signature::Signature<C>>;
+
+impl<A, B, C> MarkedSignedUnverified<A, B, C> 
+where
+	B: lib_cryptography::AsymmetricSignatureAlgorithm {
+	pub fn verify(self) -> Result<MarkedSignedVerified<A, B, C>> {
+		self.try_into()
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 impl<A, B, C> Into<(A, lib_cryptography::public_key::PublicKey<C>, lib_cryptography::signature::Signature<C>)> for Packet<IsMarkedSignedVerified, A, B, C, lib_cryptography::public_key::PublicKey<C>, lib_cryptography::signature::Signature<C>> {
 	fn into(self) -> (A, lib_cryptography::public_key::PublicKey<C>, lib_cryptography::signature::Signature<C>) {
