@@ -4,6 +4,18 @@ use super::*;
 // forward x to anther peer
 // including 
 
+struct Request {
+	
+}
+
+impl TryFrom<lib_packet::Unsigned> for Request {
+	type Error = Box<dyn std::error::Error>;
+	
+	fn try_from(value: lib_bytes::NonEmpty) -> std::result::Result<Self, Self::Error> {
+		
+	}
+}
+
 #[derive(serde::Serialize)]
 #[derive(serde::Deserialize)]
 pub enum Reservation<T> {
@@ -45,7 +57,7 @@ impl<T> Unique for Reservation<T> {
 	}
 }
 
-impl<T> Saga for Reservation<T> 
+impl<T> Saga for Reservation<T>
 where
 	T: Dns {	
 	fn next(
@@ -59,8 +71,19 @@ where
 				let content: Vec<_> = bytes.to_vec();
 				let content: bytes::Bytes = content.into();
 				let content: lib_bytes::NonEmpty = content.try_into().unwrap();
-				let content: lib_packet::MarkedSignedUnverified<lib_cryptography_algorithm_ed25519::Ed25519Algorithm, sub_system::broker::An> = content.try_into().unwrap();
-				let content: lib_packet::MarkedSignedVerified<_, _> = content.try_into().unwrap();
+				let content: lib_packet::Packet<
+					Request, 
+					lib_cryptography_algorithm_ed25519::Ed25519Algorithm, 
+					lib_packet::IsUnsetProtocol,
+					lib_cryptography::public_key::PublicKey<
+						lib_cryptography_algorithm_ed25519::Ed25519Algorithm
+					>,
+					lib_cryptography::signature::Signature<
+						lib_cryptography_algorithm_ed25519::Ed25519Algorithm
+					>
+				> = content.try_into().unwrap();
+				
+	
 				let (_, public_key, message) = content.into();
 				let message: lib_bytes::NonEmpty = message.into();
 				let message: bytes::Bytes = message.into();

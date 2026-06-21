@@ -9,4 +9,3 @@ libp2p = "*"
 serde = { version = "1.0.228", features = ["derive"] }
 derive_more = { version = "*", features = ["full"] }
 lib_bytes = { version = "*", package = "bytes", path = "../bytes" }
-lib_kore = { version = "*", package = "kore", path = "../kore" }

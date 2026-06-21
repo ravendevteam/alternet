@@ -10,7 +10,6 @@ publish = false
 lib_packet = { version = "*", package = "packet", path = "../../lib/packet" }
 lib_bytes = { version = "*", package = "bytes", path = "../../lib/bytes" }
 lib_cryptography_algorithm_ed25519 = { version = "*", package = "cryptography_algorithm_ed25519", path = "../../lib/cryptography_algorithm/ed25519" }
-kore = { version = "*", path = "../../lib/kore" }
 bytes = "*"
 rand = "*"
 rand_core = "*"
