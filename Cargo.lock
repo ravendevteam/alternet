@@ -3020,6 +3020,7 @@ dependencies = [
  "chrono",
  "clap",
  "colored",
+ "cryptography",
  "cryptography_algorithm_ed25519",
  "derivative",
  "derive_more",

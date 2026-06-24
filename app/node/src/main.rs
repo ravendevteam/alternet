@@ -190,10 +190,12 @@ struct Proof {
 /// and cryptographic proofs
 #[async_trait::async_trait]
 trait Dns {
+	type Algorithm;
+	
 	async fn receive_attestation(
 		&self,
-		pk: identity::PublicKey,
-		sg: identity::Signature
+		signer: lib_cryptography::public_key::PublicKey<Self::Algorithm>,
+		signature: lib_cryptography::signature::Signature<Self::Algorithm>
 	) -> Result;
 
 	/// Receives a proof of trasit from src to dst through possible relays.
@@ -215,7 +217,7 @@ trait Dns {
 	// account accepts the commitment or reservation
 	async fn accept_commitment(&self) -> Result;
 
-	async fn account_has_sufficient_balance(&self, account: identity::PublicKey) -> Result<bool>;
+	async fn account_has_sufficient_balance(&self, account: lib_cryptography::public_key::PublicKey<Self::Algorithm>) -> Result<bool>;
 
 	/// Creates a timelocked pool of assets used for congestion charge
 	async fn lock(&self, amount: Balance, duration: Duration) -> Result;
@@ -223,7 +225,6 @@ trait Dns {
 	async fn renew(&self, domain: Domain) -> Result;
 	
 	async fn mint(&self, domain: Domain) -> Result;
-	
 	
 	async fn congestion_charge(&self) -> Result<Fee>;
 	async fn fee(&self) -> Result<Fee>;
@@ -251,20 +252,50 @@ struct StellarTestnet;
 
 #[async_trait::async_trait]
 impl Dns for StellarTestnet {
+	type Algorithm = lib_cryptography_algorithm_ed25519::Ed25519Algorithm;
+	
+	async fn foreign_attestation(&self) -> Result<identity::PublicKey> {
+		todo!()
+	}
+	
+	async fn open_commitment(&self, account: identity::PublicKey) -> Result {
+		todo!()
+	}
+	
+	async fn accept_commitment(&self) -> Result {
+		todo!()
+	}
+	
+	async fn account_has_sufficient_balance(&self, account: lib_cryptography::public_key::PublicKey<Self::Algorithm>) -> Result<bool> {
+		todo!()
+	}
+	
 	async fn receive_attestation(
 		&self,
 		pk: identity::PublicKey,
 		sg: identity::Signature
 	) -> Result {
-		
+		todo!()
+	}
+	
+	async fn lock(&self, amount: Balance, duration: Duration) -> Result {
+		todo!()
+	}
+	
+	async fn locked_balance_of(&self, owner: identity::PublicKey) -> Result<Balance> {
+		todo!()
+	}
+	
+	async fn locked_balance_timeout_of(&self, owner: identity::PublicKey) -> Result<std::time::Instant> {
+		todo!()
 	}
 	
 	async fn receive_proof(&self, proof: Proof) -> Result {
-		
+		todo!()
 	}
 	
 	async fn attestation(&self, pk: identity::PublicKey) -> Result<Address> {
-		
+		todo!()
 	}
 	
 	async fn renew(&self, domain: Domain) -> Result {

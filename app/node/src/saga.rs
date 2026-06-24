@@ -8,7 +8,7 @@ pub trait Unique {
 }
 
 pub trait Termination {
-	fn clean_up(&self) -> bool;
+	fn is_ready_to_unmount(&self) -> bool;
 }
 
 pub trait Saga 
@@ -22,7 +22,7 @@ where
 	) -> Self;
 }
 
-pub struct Terminatable<T>(T);
+pub struct Terminable<T>(T);
 
 #[derive(Debug)]
 #[derive(Clone)]
@@ -42,7 +42,7 @@ where
 		queue: &mut dyn FnMut(Event)
 	) {
 		for saga in self.0 {
-			if saga.clean_up() {
+			if saga.is_ready_to_unmount() {
 				// remove and skip
 				
 				continue
