@@ -11,6 +11,18 @@ pub struct IsSignedVerified;
 pub struct IsSignedUnverified;
 pub struct IsUnsigned;
 
+pub trait Payload 
+where
+	Self: Clone,
+	Self: TryFrom<lib_bytes::NonEmpty, Error = Box<dyn std::error::Error>>,
+	Self: TryInto<lib_bytes::NonEmpty, Error = Box<dyn std::error::Error>> {}
+
+impl<T> Payload for T 
+where
+	T: Clone,
+	T: TryFrom<lib_bytes::NonEmpty, Error = Box<dyn std::error::Error>>,
+	T: TryInto<lib_bytes::NonEmpty, Error = Box<dyn std::error::Error>> {}
+
 #[derive(Debug)]
 #[derive(Clone)]
 #[derive(PartialEq)]
@@ -27,6 +39,17 @@ pub struct Packet<A = IsUnsigned, B = IsUnsetLayout, C = IsUnsetAlgorithm, D = I
 }
 
 pub type Unsigned<A = IsUnsetLayout, B = IsUnsetProtocol> = Packet<IsUnsigned, A, IsUnsetAlgorithm, B>;
+
+impl<A, B> Unsigned<A, B> {
+	pub fn from_payload(content: A) -> Self {
+		Self {
+			phantom_data: std::marker::PhantomData,
+			content,
+			signer: IsUnsetSigner,
+			signature: IsUnsetSignature
+		}
+	}
+}
 
 impl<A, B> Unsigned<A, B> {
 	pub fn content(&self) -> &A {
@@ -97,6 +120,31 @@ impl<A, B, C> MarkedSignedVerified<A, B, C> {
 	}
 }
 
+impl<A, B, C> TryFrom<(Unsigned<A, C>, &lib_cryptography::secret_key::SecretKey<B>)> for MarkedSignedVerified<A, B, C> 
+where
+	A: Clone,
+	A: TryInto<lib_bytes::NonEmpty, Error = Box<dyn std::error::Error>>,
+	B: lib_cryptography::AsymmetricKeyDerivationAlgorithm,
+	B: lib_cryptography::AsymmetricSignatureAlgorithm {
+	type Error = Box<dyn std::error::Error>;
+	
+	fn try_from(value: (Unsigned<A, C>, &lib_cryptography::secret_key::SecretKey<B>)) -> std::result::Result<Self, Self::Error> {
+		let (unsigned, secret_key) = value;
+		let content: A = unsigned.content().to_owned();
+		let message: lib_bytes::NonEmpty = content.to_owned().try_into()?;
+		let message: lib_cryptography::message::Message = message.into();
+		let signature: lib_cryptography::signature::Signature<_> = B::sign(&secret_key, &message)?;
+		let signer: lib_cryptography::public_key::PublicKey<_> = secret_key.public_key();
+		let out: Self = Self {
+			phantom_data: std::marker::PhantomData,
+			content,
+			signer,
+			signature
+		};
+		Ok(out)
+	}
+}
+
 impl<A, B, C> TryFrom<MarkedSignedUnverified<A, B, C>> for MarkedSignedVerified<A, B, C>
 where
 	A: Clone,
@@ -157,13 +205,46 @@ where
 	}
 }
 
-impl<A, B, C> Into<(A, lib_cryptography::public_key::PublicKey<B>, lib_cryptography::signature::Signature<B>)> for Packet<IsMarkedSignedVerified, A, B, C, lib_cryptography::public_key::PublicKey<B>, lib_cryptography::signature::Signature<B>> {
+impl<A, B, C> Into<(A, lib_cryptography::public_key::PublicKey<B>, lib_cryptography::signature::Signature<B>)> for MarkedSignedVerified<A, B, C> {
 	fn into(self) -> (A, lib_cryptography::public_key::PublicKey<B>, lib_cryptography::signature::Signature<B>) {
 		(
 			self.content,
 			self.signer,
 			self.signature
 		)
+	}
+}
+
+impl<A, B, C> TryInto<lib_bytes::NonEmpty> for MarkedSignedVerified<A, B, C> 
+where
+	A: TryInto<lib_bytes::NonEmpty, Error = Box<dyn std::error::Error>>,
+	B: lib_cryptography::AsymmetricSetLayout {
+	type Error = Box<dyn std::error::Error>;
+	
+	fn try_into(self) -> std::result::Result<lib_bytes::NonEmpty, Self::Error> {
+		let content: A = self.content;
+		let content: lib_bytes::NonEmpty = content.try_into()?;
+		let content: bytes::Bytes = content.into();
+		
+		let signer: lib_cryptography::public_key::PublicKey<_> = self.signer;
+		let signer: lib_bytes::NonEmpty = signer.into();
+		let signer: bytes::Bytes = signer.into();
+		
+		let signature: lib_cryptography::signature::Signature<_> = self.signature;
+		let signature: lib_bytes::NonEmpty = signature.into();
+		let signature: bytes::Bytes = signature.into();
+		
+		let capacity: usize = signer.len() + signature.len() + content.len();
+		
+		let mut buffer: bytes::BytesMut = bytes::BytesMut::with_capacity(capacity);
+		buffer.extend_from_slice(&signer);
+		buffer.extend_from_slice(&signature);
+		buffer.extend_from_slice(&content);
+		
+		let out: bytes::Bytes = buffer.freeze();
+		let out: lib_bytes::NonEmpty = out.try_into()?;
+		
+		Ok(out)
 	}
 }
 

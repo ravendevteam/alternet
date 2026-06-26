@@ -42,7 +42,6 @@ toml = "*"
 bon = "*"
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
-bincode = "*"
 tonic = "0.14.5"
 tonic-prost = "*"
 tonic-reflection = "*"
