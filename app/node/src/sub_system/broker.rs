@@ -13,20 +13,31 @@ impl stream::Protocol for An {
 }
 
 pub struct Broker<A = UnsetAlgorithm, B = UnsetDns, C = UnsetProtocol> {	
-	pool: saga::Pool<saga::reservation::Reservation<A, B, C>>
+	client_pool: workflow::Pool<workflow::reservation::client::Client<A, B, C>>,
+	relay_pool: workflow::Pool<workflow::reservation::relay::Relay<A, B, C>>
 }
 
 impl<A, B, C> SubSystem for Broker<A, B, C> 
 where
-	B: Dns<Algorithm = A> {
+	A: Clone,
+	A: PartialEq,
+	A: lib_cryptography::AsymmetricSetLayout,
+	A: lib_cryptography::AsymmetricKeyDerivationAlgorithm,
+	A: lib_cryptography::AsymmetricSignatureAlgorithm,
+	A: lib_cryptography::AsymmetricSignatureAlgorithm,
+	B: Default,
+	B: Dns<Algorithm = A>,
+	C: 'static,
+	C: Send,
+	C: Clone {
 	fn receive(
 		&mut self, 
 		swarm: &mut Swarm, 
 		event: &mut Event, 
 		queue: &mut dyn FnMut(Event)
 	) {
-		use saga::Saga as _;
-		
-		self.pool.next(swarm, event, queue);
+		self.client_pool.next(swarm, event, queue);
+		self.relay_pool.generate(swarm, event, queue);
+		self.relay_pool.next(swarm, event, queue);
 	}
 }

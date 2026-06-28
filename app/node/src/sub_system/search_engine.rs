@@ -9,8 +9,7 @@ use super::*;
 #[derive(Clone)]
 #[derive(PartialEq)]
 #[derive(Eq)]
-#[derive(serde::Serialize)]
-#[derive(serde::Deserialize)]
+#[derive(Hash)]
 pub struct Record {
 	goto: libp2p::Multiaddr,
 	signature: bytes::Bytes
@@ -40,6 +39,7 @@ pub struct Found((Domain, Available));
 #[derive(Clone)]
 #[derive(PartialEq)]
 #[derive(Eq)]
+#[derive(Hash)]
 #[derive(derive_more::Deref)]
 #[derive(derive_more::DerefMut)]
 #[derive(derive_more::From)]

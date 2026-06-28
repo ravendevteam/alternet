@@ -1,8 +1,5 @@
 #![no_std]
 
-extern crate alloc;
-
-use alloc::borrow::ToOwned as _;
 use soroban_sdk::FromVal as _;
 use soroban_sdk::xdr::ToXdr as _;
 
@@ -29,7 +26,8 @@ pub enum MemoryStoreKey {
 	RenewMaxFee,
 	RenewTargetTraffic,
 	Attestation(soroban_sdk::Address),
-	AttestationOwner(soroban_sdk::BytesN<32>)
+	AttestationOwner(soroban_sdk::BytesN<32>),
+	BalanceLock(soroban_sdk::Address)
 }
 
 #[soroban_sdk::contract]
@@ -59,7 +57,9 @@ impl Main {
 	}
 	
 	pub fn attestation(environment: soroban_sdk::Env, foreign_public_key: soroban_sdk::BytesN<32>) -> Option<soroban_sdk::Address> {		
-		environment.storage().persistent().get(&MemoryStoreKey::AttestationOwner(foreign_public_key))
+		// environment.storage().persistent().get(&MemoryStoreKey::AttestationOwner(foreign_public_key))
+		
+		None
 	}
 	
 	pub fn sign_attestation(
@@ -70,21 +70,19 @@ impl Main {
 	) {
 		owner.require_auth();
 		
-		let message: soroban_sdk::Bytes = owner.to_owned().to_xdr(&environment);
-		let raw_pub_key: &soroban_sdk::BytesN<32> = &foreign_public_key.0;
-		let raw_sig: &soroban_sdk::BytesN<64> = &foreign_signature.0;
+		// let message: soroban_sdk::Bytes = owner.to_owned().to_xdr(&environment);
+		// let raw_pub_key: &soroban_sdk::BytesN<32> = &foreign_public_key.0;
+		// let raw_sig: &soroban_sdk::BytesN<64> = &foreign_signature.0;
 		
-		environment.crypto().ed25519_verify(raw_pub_key, &message, raw_sig);
-		environment.storage().persistent().set(&MemoryStoreKey::Attestation(Clone::clone(&owner)), &foreign_public_key);
-		environment.storage().persistent().set(&MemoryStoreKey::AttestationOwner(Clone::clone(&foreign_public_key)), &owner);
-		environment.events().publish((soroban_sdk::symbol_short!("attest"), owner), foreign_public_key);
+		// environment.crypto().ed25519_verify(raw_pub_key, &message, raw_sig);
+		// environment.storage().persistent().set(&MemoryStoreKey::Attestation(Clone::clone(&owner)), &foreign_public_key);
+		// environment.storage().persistent().set(&MemoryStoreKey::AttestationOwner(Clone::clone(&foreign_public_key)), &owner);
+		// environment.events().publish((soroban_sdk::symbol_short!("attest"), owner), foreign_public_key);
 	}
 	
 	pub fn mint(environment: soroban_sdk::Env, account: soroban_sdk::Address) {
 		account.require_auth();
 	
-		let event: soroban_sdk::events::Events = environment.events();
-		
 		let token_address: soroban_sdk::Address = environment.storage().persistent().get(&MemoryStoreKey::Tkn).unwrap();
 
 	    environment.invoke_contract::<()>(
@@ -101,30 +99,41 @@ impl Main {
 	}
 	
 	pub fn renew(environment: soroban_sdk::Env) {
-		Self::fee_rational(min_fee, max_fee, traffic, target_traffic);
-		
-	    environment.invoke_contract(
-	        &token_address, 
-	        &soroban_sdk::symbol_short!("burn"),
-	        soroban_sdk::vec![
-		        &environment, 
-		        soroban_sdk::Val::from_val(&environment, &account),
-				soroban_sdk::Val::from_val(&environment, &)
-		    ]
-	    );
+		// ...
 	}
 
 	pub fn lock(environment: soroban_sdk::Env, owner: soroban_sdk::Address, amount: soroban_sdk::U256) {
 		owner.require_auth();
 		
+		let token_address: soroban_sdk::Address = environment.storage().persistent().get(&MemoryStoreKey::Tkn).unwrap();
 		
+		environment.invoke_contract::<()>(
+			&token_address,
+			&soroban_sdk::symbol_short!("transfer"),
+			soroban_sdk::vec![
+				&environment,
+				soroban_sdk::Val::from_val(&environment, &owner),
+				soroban_sdk::Val::from_val(&environment, &environment.current_contract_address()),
+				soroban_sdk::Val::from_val(&environment, &amount)
+			]
+		);
+		
+		let n_0: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 0);
+		let key: MemoryStoreKey = MemoryStoreKey::BalanceLock(owner.clone());
+		let old_amount: soroban_sdk::U256 = environment.storage().persistent().get::<_, soroban_sdk::U256>(&key).unwrap_or(n_0);
+		let new_amount: soroban_sdk::U256 = old_amount.add(&amount);
+		
+		environment.storage().persistent().set::<_, _>(&key, &new_amount);
+		environment.events().publish((soroban_sdk::symbol_short!("lock"), owner), amount);
 	}
 	
 	pub fn submit_proof(environment: soroban_sdk::Env, proof: Proof) {
-		
+		// tied to the cryptographic commitment mechanism, done in cryptography milestone
 	}
 	
 	pub fn claim(environment: soroban_sdk::Env) {
+		// claims reward from locked pool
+
 		
 	}
 	
@@ -142,9 +151,7 @@ impl Main {
 			return max_fee
 		}
 		
-		
-
-		()
+		n_0
 	}
 	
 	fn harberger_tax(environment: soroban_sdk::Env, last_mint: soroban_sdk::U256, tax_rate: soroban_sdk::U256) -> soroban_sdk::U256 {

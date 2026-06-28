@@ -62,6 +62,7 @@ url = "*"
 nanoid = "*"
 hex = "*"
 ed25519-dalek = { version = "2.1.0", features = ["rand_core"] }
+duct = "*"
 
 [dev-dependencies]
 testcontainers = "*"

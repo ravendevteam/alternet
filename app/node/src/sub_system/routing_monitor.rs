@@ -72,7 +72,7 @@ impl RoutingMonitor {
 
 impl SubSystem for RoutingMonitor {
     fn receive(&mut self, swarm: &mut Swarm, event: &mut Event, queue: &mut dyn FnMut(Event)) {
-        if let Some(SwarmEvent::Behaviour(BehaviourEvent::Kad(kad::Event::RoutingUpdated{
+        if let Some(SwarmEvent::Behaviour(BehaviourEvent::Kad(libp2p::kad::Event::RoutingUpdated{
             peer,
             is_new_peer,
             addresses,

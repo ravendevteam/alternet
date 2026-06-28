@@ -59,127 +59,47 @@ impl<T> TryInto<lib_bytes::NonEmpty> for Route<T> {
 	}
 }
 
-struct Out {
-	secret_key: lib_cryptography::secret_key::SecretKey<>
+#[derive(Debug)]
+#[derive(Clone)]
+struct Status<T = UnsetProtocol> {
+	phantom_data: std::marker::PhantomData<T>,
+	code: u8
 }
 
-struct Inbound(lib_bytes::NonEmpty);
-
-struct Validation<A = UnsetAlgorithm, B = UnsetDns> {
-	key: String,
-	signer: lib_cryptography::public_key::PublicKey<A>,
-	signature: lib_cryptography::signature::Signature<A>,
-	request: Route,
-	dns: B
-}
-
-
-
-
-pub enum Relay {
+impl<T> TryFrom<lib_bytes::NonEmpty> for Status<T> {
+	type Error = Box<dyn std::error::Error>;
 	
-}
-
-pub enum Reservation<A = UnsetAlgorithm, B = UnsetDns, C = UnsetProtocol> {
-	Outbound(Out),
-	Inbound(Inbound),
-	Validation(Validation<A, B>),
-	Connection,
-	Illegal
-}
-
-impl<A, B, C> From<(libp2p::PeerId, libp2p::PeerId)> for Reservation<A, B, C> {
-	fn from(value: (libp2p::PeerId, libp2p::PeerId)) -> Self {
-		let (src, dst) = value;
+	fn try_from(value: lib_bytes::NonEmpty) -> std::result::Result<Self, Self::Error> {
+		let bytes: bytes::Bytes = value.into();
+		let bytes: Vec<_> = bytes.to_vec();
 		
-		let src = src.to_bytes();
-		let dst = dst.to_bytes();
+		let buffer: String = String::from_utf8(bytes)?;
 		
-		// merge into one unique bytes stream -- future me 
-		
-		Self::Outbound(src)
+		let mut segments: std::str::SplitWhitespace = buffer.split_whitespace();
+		let code: &str = segments.next().ok_or("missing code")?;
+		let code: u8 = code.parse()?;
+		let out: Self = Self {
+			phantom_data: std::marker::PhantomData,
+			code
+		};
+		Ok(out)
 	}
 }
 
-impl<A, B, C> Workflow for Reservation<A, B, C>
-where
-	A: lib_cryptography::AsymmetricSignatureAlgorithm,
-	B: Default,
-	B: Dns<Algorithm = A> {	
-	fn next(
-		self,
-		swarm: &mut Swarm,
-		event: &mut Event,
-		queue: &mut dyn FnMut(Event)
-	) -> Self {
-		match self {
-			// from client to relay
-			Self::Outbound(Out {
-				secret_key
-			}) => {
-				// dispatch outbound bytes to the target relay
-				// 
-				
-				let peer_id = ;
-				let event: lib_packet::Unsigned<_, _> = bytes.try_into().unwrap();
-				let event: lib_packet::MarkedSignedVerified<_, _, _> = (event, secret_key).try_into().unwrap();
-				let event: lib_bytes::NonEmpty = event.try_into().unwrap();
-				let pkt: sub_system::stream::Packet<_> = (peer_id, event).into();
-				let pkt: sub_system::stream::Outbound<_> = pkt.into();
-				let pkt = Event::from_any(pkt);
-				queue(pkt);
-				
-				Self::Inbound(_)
-			},
-			// receive as relay
-			Self::Inbound(Inbound(bytes)) => {
-				let content: bytes::Bytes = bytes.into();
-				let content: Vec<_> = content.to_vec();
-				let content: bytes::Bytes = content.into();
-				let content: lib_bytes::NonEmpty = content.try_into().unwrap();
-				let content: lib_packet::MarkedSignedUnverified<Route, A, C> = content.try_into().unwrap();
-				let content: lib_packet::MarkedSignedVerified<Route, A, C> = content.try_into().unwrap();
-				let (request, signer, signature) = content.into();
-				Self::Validation(Validation {
-					key: nanoid::nanoid!(),
-					signer,
-					signature,
-					request,
-					dns: B::default()
-				})
-			},
-			Self::Validation(Validation {
-				key,
-				signer,
-				signature,
-				request,
-				dns
-			}) => {
-				tokio::runtime::Handle::current().block_on(async move {
-					let Ok(true) = dns.account_has_sufficient_balance(signer).await else {
-						return Self::Illegal
-					};
-					
-					// expanded opon in cryptography focused milestone: here we bind the reservation cryptographically
-					dns.accept_commitment().await;
-					
-					Self::Connection
-				})
-			},
-			Self::Connection => {
-				// establish an ongoiung forwarded stream to the requested destination
-				Self::Illegal
-			},
-			_ => self
-		}
+impl<T> TryInto<lib_bytes::NonEmpty> for Status<T> {
+	type Error = Box<dyn std::error::Error>;
+	
+	fn try_into(self) -> std::result::Result<lib_bytes::NonEmpty, Self::Error> {
+		let code: u8 = self.code;
+		let code: String = code.to_string();
+		
+		let mut buffer: String = String::default();
+		buffer.push_str(&code);
+		
+		let bytes: Vec<_> = buffer.into_bytes();
+		let bytes: bytes::Bytes = bytes.into();
+		let bytes: lib_bytes::NonEmpty = bytes.try_into()?;
+		
+		Ok(bytes)
 	}
-}
-
-impl<A, B, C> Termination for Reservation<A, B, C> {
-	fn is_ready_to_unmount(&self) -> bool {
-		match self {
-			Self::Illegal => true,
-			_ => false
-		}
-    }
 }

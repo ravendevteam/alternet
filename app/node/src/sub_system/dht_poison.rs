@@ -4,7 +4,7 @@ pub struct DhtPoison;
 
 impl SubSystem for DhtPoison {
     fn receive(&mut self, swarm: &mut Swarm, event: &mut Event, queue: &mut dyn FnMut(Event)) {
-        let Some(SwarmEvent::Behaviour(BehaviourEvent::Kad(kad::Event::OutboundQueryProgressed{
+        let Some(SwarmEvent::Behaviour(BehaviourEvent::Kad(libp2p::kad::Event::OutboundQueryProgressed {
             id,
             result,
             stats,

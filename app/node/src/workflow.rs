@@ -2,10 +2,6 @@ use super::*;
 
 pub mod reservation;
 
-pub trait Termination {
-	fn is_ready_to_unmount(&self) -> bool;
-}
-
 pub trait FromContext 
 where
 	Self: Sized {
@@ -23,6 +19,10 @@ pub trait Workflow {
 		event: &mut Event,
 		queue: &mut dyn FnMut(Event)
 	) -> Self;
+	
+	fn is_ready_to_unmount(&self) -> bool {
+		false
+	}
 }
 
 #[derive(Debug)]
@@ -36,41 +36,34 @@ impl<T> Pool<T>
 where
 	T: FromContext {
 	pub fn generate(
-		self,
+		&mut self,
 		swarm: &mut Swarm,
 		event: &mut Event,
 		queue: &mut dyn FnMut(Event)
-	) -> Self {
-		let Self(mut pool) = self;
-		pool.extend(T::from_context(swarm, event, queue));
-		
-		Self(pool)
+	) {
+		self.0.extend(T::from_context(swarm, event, queue));
 	}
 }
 
-impl<T> Workflow for Pool<T> 
+impl<T> Pool<T>
 where
-	T: Workflow,
-	T: Termination {
-	fn next(
-		self,
+	T: Workflow {
+	pub fn next(
+		&mut self,
 		swarm: &mut Swarm,
 		event: &mut Event,
 		queue: &mut dyn FnMut(Event)
-	) -> Self {
-		let Self(pool) = self;
-		let mut out: Vec<_> = Vec::default();
-		
-		for workflow in pool {
+	) {		
+		let old_pool: Vec<_> = std::mem::take(&mut self.0);
+		let old_pool_len: usize = old_pool.len();
+		let mut new_pool: Vec<_> = Vec::with_capacity(old_pool_len);
+		for workflow in old_pool {
 			if workflow.is_ready_to_unmount() {
 				continue
 			}
-			
 			let workflow: T = workflow.next(swarm, event, queue);
-			
-			out.push(workflow);
+			new_pool.push(workflow);
 		}
-		
-		Self(out)
+		self.0 = new_pool;
 	}
 }

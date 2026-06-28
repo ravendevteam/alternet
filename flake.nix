@@ -39,6 +39,37 @@
 					pkgs.openssl
 				];
 			};
+			
+			mk_soroban_contract = pname: pkgs.stdenv.mkDerivation rec {
+				RUSTFLAGS = "-A warnings";
+				
+				inherit pname;
+				
+				version = "0.1.0";
+				src = ./.;
+				cargoDeps = pkgs.rustPlatform.importCargoLock {
+					lockFile = ./Cargo.lock;
+				};
+				nativeBuildInputs = [
+					pkgs.rustPlatform.cargoSetupHook
+					pkgs.binaryen
+					pkgs.rustc
+					pkgs.cargo
+					pkgs.lld
+					
+					config.packages.stellar
+				];
+				buildPhase = ''
+					export HOME=$(mktemp -d)
+					
+					stellar contract build --package ${pname}
+				'';
+				installPhase = ''
+					mkdir -p $out/lib
+					
+					cp target/wasm32v1-none/release/${pname}.wasm $out/lib/
+				'';
+			};
 		in {
 			packages.e2e = 
 			let
@@ -325,6 +356,71 @@
 			packages.maliciousRelay = mkNode "malicious_relay";
 			packages.maliciousClient = mkNode "malicious_client";
 			packages.maliciousServer = mkNode "malicious_server";
+			
+			packages.soroban_mock_dns = mk_soroban_contract "soroban_mock_dns";
+			packages.soroban_mock_erc_20 = mk_soroban_contract "soroban_mock_erc_20";
+			packages.soroban_mock_nft = mk_soroban_contract "soroban_mock_nft";
+			
+			packages.soroban_mock_erc_20_e2e = pkgs.testers.runNixOSTest {
+				name = "test";
+				
+				nodes.vm = { ... }: {
+					system.stateVersion = "26.05";
+					
+					nix.settings.experimental-features = [
+						"flakes"
+						"nix-command"
+					];
+					
+					virtualisation.cores = 4;
+					virtualisation.diskSize = 40960;
+					virtualisation.memorySize = 12288;
+					virtualisation.docker.enable = true;
+					
+					networking.useDHCP = true;
+					networking.useNetworkd = true;
+					networking.dhcpcd.enable = false;
+					networking.dhcpcd.extraConfig = ''
+				    	denyinterfaces veth*
+				  	'';
+							
+					environment.systemPackages = [
+						pkgs.nushell
+						pkgs.nixd
+						pkgs.nixpkgs-fmt
+						pkgs.clippy
+						pkgs.cargo
+						pkgs.rustc
+						pkgs.rust-analyzer
+						pkgs.pkg-config
+						pkgs.wasm-bindgen-cli
+						pkgs.lld
+						pkgs.gcc
+						pkgs.protobuf
+						pkgs.docker
+						
+						config.packages.stellar
+					];
+				};
+				
+				testScript = pkgs.lib.concatLines [
+					"vm.start()"
+					"vm.wait_for_unit('network.target')"
+					"vm.wait_for_unit('docker.service')"
+					"vm.succeed(\"nu -c 'docker load --input ${config.packages.stellar_testnet_image}'\")"
+					"vm.succeed(\"nu -c 'docker run --detach --name stellar --publish 8000:8000 stellar/quickstart:latest --local'\")"
+					"vm.wait_for_open_port(8000)"
+					"vm.wait_until_succeeds(\"curl -s -X POST -H 'Content-Type: application/json' -d '{\\\"jsonrpc\\\":\\\"2.0\\\",\\\"id\\\":1,\\\"method\\\":\\\"getHealth\\\"}' http://localhost:8000/soroban/rpc | grep -q 'unhealthy\\|healthy'\")"
+					"vm.wait_until_succeeds(\"curl -s http://localhost:8000/friendbot | grep -q 'missing'\")"
+					"vm.succeed('sleep 5')"
+					"vm.succeed(\"nu -c 'stellar network add local --rpc-url http://localhost:8000/soroban/rpc --network-passphrase \\\"Standalone Network ; February 2017\\\"'\")"
+					"vm.succeed(\"nu -c 'stellar network use local'\")"
+					"vm.succeed(\"nu -c 'stellar keys generate deployer'\")"
+					"vm.succeed(\"nu -c 'stellar keys fund deployer'\")"
+					"print(vm.succeed(\"nu -c 'stellar contract deploy --wasm ${config.packages.soroban_mock_erc_20}/lib/soroban_mock_erc_20.wasm --source deployer --network local'\"))"
+					"vm.shutdown()"
+				];
+			};
 
 			packages.stellar_testnet_image = pkgs.dockerTools.pullImage {
 				imageName = "stellar/quickstart";

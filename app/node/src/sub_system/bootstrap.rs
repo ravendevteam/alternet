@@ -20,7 +20,7 @@ enum Mode {
     #[default]
     WaitingForPeers,
     Bootstrapping {
-        query_id: kad::QueryId
+        query_id: libp2p::kad::QueryId
     },
     TimedOut {
         next_attempt: std::time::Instant
@@ -147,7 +147,7 @@ impl SubSystem for Bootstrap {
             Mode::Bootstrapping {
                 query_id
             } => {
-                let Some(SwarmEvent::Behaviour(BehaviourEvent::Kad(kad::Event::OutboundQueryProgressed{
+                let Some(SwarmEvent::Behaviour(BehaviourEvent::Kad(libp2p::kad::Event::OutboundQueryProgressed{
                     id,
                     result,
                     stats,
@@ -158,11 +158,11 @@ impl SubSystem for Bootstrap {
                 if id != query_id {
                     return
                 }
-                let kad::QueryResult::Bootstrap(result) = result else {
+                let libp2p::kad::QueryResult::Bootstrap(result) = result else {
                     return
                 };
                 match result {
-                    Ok(kad::BootstrapOk{
+                    Ok(libp2p::kad::BootstrapOk{
                         peer,
                         num_remaining
                     }) => {

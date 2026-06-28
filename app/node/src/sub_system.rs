@@ -17,7 +17,10 @@ pub mod nat_observer;
 pub mod peer_registry;
 pub mod relay_killer;
 pub mod routing_monitor;
-pub mod search_engine;
+
+// will need refactoring in final milestone to join it as a workflow
+// pub mod search_engine;
+ 
 pub mod self_destruct;
 pub mod session_manager;
 pub mod slug;
