@@ -18,7 +18,7 @@
 		let
 			craneLib = inputs.crane.mkLib pkgs;
 			craneSrc = craneLib.cleanCargoSource (craneLib.path ./.);
-			
+
 			mk_node = role: pkgs.rustPlatform.buildRustPackage {
 				pname = role;
 				version = "0.1.0";
@@ -39,12 +39,12 @@
 					pkgs.openssl
 				];
 			};
-			
+
 			mk_soroban_contract = pname: pkgs.stdenv.mkDerivation rec {
 				RUSTFLAGS = "-A warnings";
-				
+
 				inherit pname;
-				
+
 				version = "0.1.0";
 				src = ./.;
 				cargoDeps = pkgs.rustPlatform.importCargoLock {
@@ -56,22 +56,22 @@
 					pkgs.rustc
 					pkgs.cargo
 					pkgs.lld
-					
+
 					config.packages.stellar
 				];
 				buildPhase = ''
 					export HOME=$(mktemp -d)
-					
+
 					stellar contract build --package ${pname}
 				'';
 				installPhase = ''
 					mkdir -p $out/lib
-					
+
 					cp target/wasm32v1-none/release/${pname}.wasm $out/lib/
 				'';
 			};
 		in {
-			packages.e2e = 
+			packages.e2e =
 			let
 				wan = 1;
 				isp_wan_ip = "192.168.1.254";
@@ -87,25 +87,25 @@
 				server_lan = 3;
 				server_router_wan_ip = "192.168.1.253";
 			in pkgs.testers.runNixOSTest {
-				name = "e2e";			
-				
+				name = "e2e";
+
 				nodes.isp.system.stateVersion = "26.05";
-				
+
 				nodes.isp.virtualisation.vlans = [
 					wan
 				];
-				
+
 				nodes.isp.boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
-				
+
 				nodes.isp.networking.useDHCP = false;
 				nodes.isp.networking.interfaces.eth1.ipv4.addresses = [{ address = isp_wan_ip; prefixLength = 24; }];
 				nodes.isp.networking.interfaces.eth1.ipv4.routes = [
 					{ address = "192.168.2.0"; prefixLength = 24; via = client_router_wan_ip; }
 					{ address = "192.168.3.0"; prefixLength = 24; via = server_router_wan_ip; }
 				];
-				
+
 				nodes.chain.system.stateVersion = "26.05";
-				
+
 				nodes.chain.virtualisation.diskSize = 8000;
 				nodes.chain.virtualisation.memorySize = 2500;
 				nodes.chain.virtualisation.docker.enable = true;
@@ -113,74 +113,74 @@
 				nodes.chain.virtualisation.vlans = [
 					wan
 				];
-				
+
 				nodes.chain.networking.useDHCP = false;
 				nodes.chain.networking.defaultGateway = isp_wan_ip;
 				nodes.chain.networking.interfaces.eth1.ipv4.addresses = [{ address = chain_wan_ip; prefixLength = 24; }];
 				nodes.chain.networking.firewall.allowedTCPPorts = [
 					8080
 				];
-				
+
 				nodes.chain.environment.systemPackages = [
 					pkgs.nushell
 					pkgs.docker
-					
+
 					config.packages.stellar
 				];
 
 				nodes.bootstrap.system.stateVersion = "26.05";
-				
+
 				nodes.bootstrap.virtualisation.vlans = [
 					wan
 				];
-				
+
 				nodes.bootstrap.networking.useDHCP = false;
 				nodes.bootstrap.networking.defaultGateway = isp_wan_ip;
 				nodes.bootstrap.networking.interfaces.eth1.ipv4.addresses = [{ address = bootstrap_ip; prefixLength = 24; }];
-				
+
 				nodes.bootstrap.environment.systemPackages = [
 					pkgs.nushell
-					
+
 					config.packages.bootstrap
 					config.packages.stellar
 				];
-				
+
 				nodes.relay.system.stateVersion = "26.05";
-				
+
 				nodes.relay.virtualisation.vlans = [
 					wan
 				];
-				
+
 				nodes.relay.environment.systemPackages = [
 					pkgs.nushell
-					
+
 					config.packages.relay
 					config.packages.stellar
 				];
-				
+
 				nodes.relay.networking.useDHCP = false;
 				nodes.relay.networking.defaultGateway = isp_wan_ip;
 				nodes.relay.networking.interfaces.eth1.ipv4.addresses = [{ address = relay_ip; prefixLength = 24; }];
-				
+
 				nodes.client.system.stateVersion = "26.05";
-				
+
 				nodes.client.virtualisation.vlans = [
 					client_lan
 				];
-				
+
 				nodes.client.networking.useDHCP = false;
 				nodes.client.networking.defaultGateway = client_router_lan_ip;
 				nodes.client.networking.interfaces.eth1.ipv4.addresses = [{ address = client_ip; prefixLength = 24; }];
-				
+
 				nodes.client_router.system.stateVersion = "26.05";
-				
+
 				nodes.client_router.virtualisation.vlans = [
 					wan
 					client_lan
 				];
-				
+
 				nodes.client_router.boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
-				
+
 				nodes.client_router.networking.useDHCP = false;
 				nodes.client_router.networking.firewall.enable = true;
 				nodes.client_router.networking.firewall.allowPing = true;
@@ -192,29 +192,29 @@
 					iptables -A FORWARD -d ${relay_ip} -p udp --dport 4001 -j ACCEPT
 					iptables -A FORWARD -d ${server_router_wan_ip} -p udp --dport 4001 -j DROP
 					iptables -P FORWARD DROP
-					
+
 					tc qdisc add dev ${client_router_wan_eth} root netem delay 100ms 10ms loss 1%
 				'';
-				
+
 				nodes.client_router.networking.interfaces.eth1.ipv4.addresses = [{ address = client_router_wan_ip; prefixLength = 24; }];
 				nodes.client_router.networking.interfaces.eth2.ipv4.addresses = [{ address = client_router_lan_ip; prefixLength = 24; }];
-				
+
 				# --- call grpc to interact with the nodes within the vm
 				# grpcurl localhost:8080 list
 				# grpcurl localhost:8080 list your.package.ServiceName
 				# grpcurl -d '{"field_name": "value"}' localhost:8080 your.package.ServiceName/MethodName
-				
+
 				testScript = pkgs.lib.concatLines [
 					"isp.start()"
 					"isp.wait_for_unit(\"network.target\")"
-					
+
 					"chain.start()"
 					"chain.wait_for_unit(\"network.target\")"
 					"chain.wait_for_unit(\"docker.service\")"
 					"chain.succeed(\"nu -c 'docker load --input ${config.packages.stellar_testnet_image}'\")"
 					"chain.succeed(\"nu -c 'docker run --detach --name stellar --publish 8080:8080 stellar/quickstart:latest'\")"
 					"chain.wait_for_open_port(8080)"
-					
+
 					"chain.succeed(\"nu -c 'stellar keys generate bootstrap --network local'\")"
 					"chain.succeed(\"nu -c 'stellar keys generate relay --network local'\")"
 					"chain.succeed(\"nu -c 'stellar keys generate client --network local'\")"
@@ -222,31 +222,31 @@
 
 					"bootstrap_public_key=chain.succeed(\"nu -c 'stellar keys public-key bootstrap'\").strip()"
 					"bootstrap_secret_key=chain.succeed(\"nu -c 'stellar keys secret bootstrap'\").strip()"
-					
-					
-					
-					
+
+
+
+
 					"bootstrap.start()"
 					"bootstrap.wait_for_unit(\"network.target\")"
 					# "bootstrap.succeed(\"bootstrap --flag value > /dev/null 2>&1 &\")"
-					
+
 					"relay.start()"
 					"relay.wait_for_unit(\"network.target\")"
-					
-					
+
+
 					"client_router.wait_for_unit('network.target')"
 					"client.wait_for_unit('network.target')"
-					
-					
-					
+
+
+
 					# "bootstrap.succeed('stellar --rpc-url http://${chain_wan_ip}:8080)"
-					
+
 					"bootstrap.execute('bootstrap > /var/log/bootstrap.log 2>&1 &')"
 					"bootstrap.wait_for_open_port(8080)"
 					"bootstrap.succeed('ss -uan | grep :4001')"
-										
+
 					"client.succeed('ping -c 2 192.168.2.254')"
-					
+
 					"bootstrap.succeed('ping -c 2 192.168.1.254')"
 
 					# client -> bootstrap
@@ -254,10 +254,10 @@
 
 					# bootstrap -> client
 					"bootstrap.fail('ping -c 3 -W 1 192.168.2.1')"
-					
+
 					"bootstrap.shutdown()"
 					"chain.shutdown()"
-					
+
 				];
 			};
 
@@ -347,7 +347,7 @@
 					"vm.succeed('export CARGO_TARGET_DIR=/var/tmp/cargo-target && cd /root/workspace && cargo test --jobs 1 --package node --no-default-features -- --nocapture')"
 				];
 			};
-			
+
 			packages.bootstrap = mk_node "bootstrap";
 			packages.relay = mk_node "relay";
 			packages.client = mk_node "client";
@@ -356,34 +356,34 @@
 			packages.maliciousRelay = mk_node "malicious_relay";
 			packages.maliciousClient = mk_node "malicious_client";
 			packages.maliciousServer = mk_node "malicious_server";
-			
+
 			packages.soroban_mock_dns = mk_soroban_contract "soroban_mock_dns";
 			packages.soroban_mock_erc_20 = mk_soroban_contract "soroban_mock_erc_20";
 			packages.soroban_mock_nft = mk_soroban_contract "soroban_mock_nft";
-			
+
 			packages.soroban_mock_erc_20_e2e = pkgs.testers.runNixOSTest {
 				name = "test";
-				
+
 				nodes.vm = { ... }: {
 					system.stateVersion = "26.05";
-					
+
 					nix.settings.experimental-features = [
 						"flakes"
 						"nix-command"
 					];
-					
+
 					virtualisation.cores = 4;
 					virtualisation.diskSize = 40960;
 					virtualisation.memorySize = 12288;
 					virtualisation.docker.enable = true;
-					
+
 					networking.useDHCP = true;
 					networking.useNetworkd = true;
 					networking.dhcpcd.enable = false;
 					networking.dhcpcd.extraConfig = ''
 				    	denyinterfaces veth*
 				  	'';
-							
+
 					environment.systemPackages = [
 						pkgs.nushell
 						pkgs.nixd
@@ -398,99 +398,51 @@
 						pkgs.gcc
 						pkgs.protobuf
 						pkgs.docker
-						
+
 						config.packages.stellar
 					];
 				};
-				
+
 				testScript = pkgs.lib.concatLines [
 					"vm.start()"
-					
+
 					"vm.wait_for_unit('network.target')"
 					"vm.wait_for_unit('docker.service')"
-					
+
 					"vm.succeed(\"nu -c 'docker load --input ${config.packages.stellar_testnet_image}'\")"
 					"vm.succeed(\"nu -c 'docker run --detach --name stellar --publish 8000:8000 stellar/quickstart:latest --local'\")"
-					
+
 					"vm.wait_for_open_port(8000)"
-					
+
 					"vm.wait_until_succeeds(\"curl -s -X POST -H 'Content-Type: application/json' -d '{\\\"jsonrpc\\\":\\\"2.0\\\",\\\"id\\\":1,\\\"method\\\":\\\"getHealth\\\"}' http://localhost:8000/soroban/rpc | grep -q 'unhealthy\\|healthy'\")"
 					"vm.wait_until_succeeds(\"curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/friendbot | grep -q '400'\")"
-					
+
 					"vm.succeed('sleep 5')"
-					
+
 					"vm.succeed(\"nu -c 'stellar network add local --rpc-url http://localhost:8000/soroban/rpc --network-passphrase \\\"Standalone Network ; February 2017\\\"'\")"
 					"vm.succeed(\"nu -c 'stellar network use local'\")"
 					"vm.succeed(\"nu -c 'stellar keys generate deployer'\")"
 					"vm.succeed(\"nu -c 'stellar keys fund deployer'\")"
-					
+
 					"address = vm.succeed(\"nu -c 'stellar contract deploy --wasm ${config.packages.soroban_mock_erc_20}/lib/soroban_mock_erc_20.wasm --source deployer --network local'\").strip()"
-					
+
 					"vm.succeed(F\"nu -c 'stellar contract invoke --id {address} --source deployer --network local -- wake --owner deployer --name \\\"Mock Token\\\" --symbol \\\"MCK\\\" --decimals \\\"18\\\" --initial_mint \\\"1000000000000000000\\\"'\")"
-					
+
 					"assert \"Mock Token\" in vm.succeed(F\"nu -c 'stellar contract invoke --id {address} --source deployer --network local -- name'\")"
-					
+					"assert \"MCK\" in vm.succeed(F\"nu -c 'stellar contract invoke --id {address} --source deployer --network local -- symbol'\")"
+					"assert \"18\" in vm.succeed(F\"nu -c 'stellar contract invoke --id {address} --source deployer --network local -- decimals'\")"
+
 					"vm.shutdown()"
 				];
 			};
 
-			packages.stellar_testnet_image = pkgs.dockerTools.pullImage {
-				imageName = "stellar/quickstart";
-				imageDigest = "sha256:89d4990f8147956011f4090d5d125f7eb4604c6df3ad50289b55082ff1cb5217";
-				sha256 = "sha256-kI/3/QW4hAwfMhDQKfyFRtWA1PDHhn8odMl/GG1hMxU=";
+			packages.stellar_testnet_image = import ./nix/stellar_testnet_image.nix {
+				inherit pkgs;
 			};
-			
-			packages.stellar =
-			let
-				pname = "stellar-cli";
-				version = "26.0.0";
-				architecture.x86_64-linux.target = "x86_64-unknown-linux-gnu";
-				architecture.x86_64-linux.sha256 = "sha256-Mcg9s0LRGEsx9lkec5lQ60V1a+RtzXu1fk846R6jLoQ=";
-				architecture.x86_64-darwin.target = "x86_64-apple-darwin";
-				architecture.x86_64-darwin.sha256 = "sha256-5v6qppaasR8T84XwiTfXhVs2OZuNqtPGd3knmt6hbsg=";
-				architecture.aarch64-linux.target = "aarch64-unknown-linux-gnu";
-				architecture.aarch64-linux.sha256 = "sha256-q/Wu5hii+ocgX871MrV/MhDzSB0S/j0pDFZnexio79Q=";
-				architecture.aarch64-darwin.target = "x86_64-apple-darwin";
-				architecture.aarch64-darwin.sha256 = "sha256-OO7oOWuxlCfenDbwfsOVtZzE2P6lupUaC51GPszzq6g=";
-				compatibleArchitecture = architecture.${system} or (throw "(unsupported_system=${system})");
-				src =
-				let
-					url = "https://github.com/stellar/stellar-cli/releases/download/v${version}/stellar-cli-${version}-${compatibleArchitecture.target}.tar.gz";
-				in pkgs.fetchurl {
-					inherit url;
-					inherit (compatibleArchitecture) sha256;
-				};
-				nativeBuildInputs = [
-					pkgs.nushell
-				] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
-					pkgs.autoPatchelfHook
-				];
-				buildInputs = [
-					pkgs.stdenv.cc.cc.lib
-				] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
-					pkgs.dbus
-					pkgs.systemd
-					pkgs.openssl
-				];
-				dontUnpack = true;
-				dontBuild = true;
-				installPhase = ''
-					nu -c '
-						mkdir ($env.out | path join "bin")
-						tar -xzf $env.src
-						cp stellar ($env.out | path join "bin" "stellar")
-						chmod +x ($env.out | path join "bin" "stellar")
-					'
-				'';
-			in pkgs.stdenv.mkDerivation {
-				inherit pname;
-				inherit version;
-				inherit src;
-				inherit nativeBuildInputs;
-				inherit buildInputs;
-				inherit dontUnpack;
-				inherit dontBuild;
-				inherit installPhase;
+
+			packages.stellar = import ./nix/stellar.nix {
+				inherit pkgs;
+				inherit system;
 			};
 
 			devShells.default = pkgs.mkShell {
@@ -509,7 +461,7 @@
 					pkgs.lld
 					pkgs.protobuf
 					pkgs.docker
-					
+
 					config.packages.stellar
 				];
 
