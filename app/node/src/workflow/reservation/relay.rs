@@ -18,7 +18,7 @@ where
 	A: lib_cryptography::AsymmetricKeyDerivationAlgorithm,
 	A: lib_cryptography::AsymmetricSignatureAlgorithm,
 	B: Default,
-	B: Dns<Algorithm = A>,
+	B: Dns<ForeignAlgorithm = A>,
 	C: 'static,
 	C: Clone,
 	C: Send {
@@ -65,7 +65,7 @@ where
 
 impl<A, B, C> Workflow for Relay<A, B, C>
 where
-	B: Dns<Algorithm = A>,
+	B: Dns<ForeignAlgorithm = A>,
 	B: Default,
 	C: 'static,
 	C: Send {

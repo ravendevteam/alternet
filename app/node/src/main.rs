@@ -159,7 +159,7 @@ struct Duration(u64);
 #[derive(PartialEq)]
 #[derive(Eq)]
 #[derive(derive_more::From)]
-struct Address(Vec<u8>);
+struct PublicKey(Vec<u8>);
 
 #[derive(Debug)]
 #[derive(Clone)]
@@ -198,34 +198,39 @@ struct Proof;
 /// and cryptographic proofs
 #[async_trait::async_trait]
 trait Dns {
-	type Algorithm;
+	type LocalPublicKey;
+	type LocalSecretKey;
+	type LocalAlgorithm;
+	type ForeignAlgorithm;
 	
 	async fn receive_attestation(
 		&self,
-		signer: lib_cryptography::public_key::PublicKey<Self::Algorithm>,
-		signature: lib_cryptography::signature::Signature<Self::Algorithm>
+		local_signer: lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>,
+		foreign_signer: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>,
+		foreign_signature: lib_cryptography::signature::Signature<Self::ForeignAlgorithm>
 	) -> Result;
 
 	/// Receives a proof of trasit from src to dst through possible relays.
-	async fn receive_proof(&self, proof: Proof) -> Result;
+	async fn claim(&self, proof: Proof) -> Result;
 
 	// for a given foreign key will return the onchain identity
 	//
 	// i own this pk offchain, this is who i am onchain
-	async fn attestation(&self, public_key: lib_cryptography::public_key::PublicKey<Self::Algorithm>) -> Result<Address>;
+	async fn attestation(&self, public_key: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>>;
 
-	async fn foreign_attestation(&self) -> Result<lib_cryptography::public_key::PublicKey<Self::Algorithm>>;
+	async fn foreign_attestation(&self) -> Result<lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>>;
 
-	async fn locked_balance_of(&self, owner: lib_cryptography::public_key::PublicKey<Self::Algorithm>) -> Result<Balance>;
-	async fn locked_balance_timeout_of(&self, owner: lib_cryptography::public_key::PublicKey<Self::Algorithm>) -> Result<std::time::Instant>;
+	async fn locked_balance_of(&self, owner: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<Balance>;
+	async fn locked_balance_timeout_of(&self, owner: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<std::time::Instant>;
 
 	// relay can request a commitment from an account they are serving
-	async fn open_commitment(&self, account: lib_cryptography::public_key::PublicKey<Self::Algorithm>) -> Result;
+	async fn open_commitment(&self, account: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result;
 
 	// account accepts the commitment or reservation
 	async fn accept_commitment(&self) -> Result;
 
-	async fn account_has_sufficient_balance(&self, account: lib_cryptography::public_key::PublicKey<Self::Algorithm>) -> Result<bool>;
+	// this will be replaced with a cryptographic commitment scheme in cryptography
+	async fn account_has_sufficient_balance(&self, account: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<bool>;
 
 	// in the future this will be time variable
 	/// Creates a timelocked pool of assets used for congestion charge
@@ -253,12 +258,12 @@ trait Dns {
 	async fn total_claim(&self) -> Result<Balance>;
 	
 	// measures the time since the first transaction 
-	async fn age(&self, pk: lib_cryptography::public_key::PublicKey<Self::Algorithm>) -> Result<Option<Age>>;
+	async fn age(&self, pk: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<Option<Age>>;
 }
 
 #[derive(Debug)]
 struct StellarTestnet {
-	address: String
+	dns: lib_cryptography::public_key::PublicKey<()> // address on chain of the dns contract
 }
 
 impl TryFrom<String> for StellarTestnet {
@@ -274,9 +279,23 @@ impl TryFrom<String> for StellarTestnet {
 
 #[async_trait::async_trait]
 impl Dns for StellarTestnet {
-	type Algorithm = lib_cryptography_algorithm_ed25519::Ed25519Algorithm;
+	type LocalPublicKey = Vec<u8>;
+	type LocalSecretKey = Vec<u8>;
+	type LocalAlgorithm = ();
+	type ForeignAlgorithm = lib_cryptography_algorithm_ed25519::Ed25519Algorithm;
 	
-	async fn foreign_attestation(&self) -> Result<identity::PublicKey> {
+	// generate attestation
+	async fn receive_attestation(
+		&self,
+		local_signer: lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>,
+		foreign_signer: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>,
+		foreign_signature: lib_cryptography::signature::Signature<Self::ForeignAlgorithm>
+	) -> Result {
+		todo!()
+	}
+	
+	
+	async fn foreign_attestation(&self) -> Result<lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>> {
 		todo!()
 	}
 	
@@ -288,18 +307,30 @@ impl Dns for StellarTestnet {
 		todo!()
 	}
 	
-	async fn account_has_sufficient_balance(&self, account: lib_cryptography::public_key::PublicKey<Self::Algorithm>) -> Result<bool> {
-		todo!()
+	async fn account_has_sufficient_balance(&self, account: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<bool> {
+		let account: lib_cryptography::public_key::PublicKey<_> = self.attestation(account).await?;
+		let account: lib_bytes::NonEmpty = account.into();
+		let account: bytes::Bytes = account.into();
+		let account: Vec<_> = account.to_vec();
+		let account: &str = str::from_utf8(&account)?;
+		let dns: lib_bytes::NonEmpty = self.dns.to_owned().into();
+		let dns: bytes::Bytes = dns.into();
+		let dns: Vec<_> = dns.to_vec();
+		let dns: &str = str::from_utf8(&dns)?;
+		let out: String = duct::cmd!(
+			"stellar", "contract", "invoke",
+			"--network", "remote",
+			"--source", "admin",
+			"--id", &dns,
+			"--",
+			"account_has_sufficient_balance",
+			"--account", &account
+		)
+		.read()?;
+		let out: bool = out.parse()?;
+		Ok(out)
 	}
 	
-	async fn receive_attestation(
-		&self,
-		pk: identity::PublicKey,
-		sg: identity::Signature
-	) -> Result {
-		todo!()
-	}
-
 	async fn lock(&self, amount: Balance) -> Result {
 		let Balance(amount) = amount;
 		
@@ -317,57 +348,48 @@ impl Dns for StellarTestnet {
 		Ok(())
 	}
 	
-	async fn locked_balance_of(&self, owner: lib_cryptography::public_key::PublicKey<Self::Algorithm>) -> Result<Balance> {	
-		duct::cmd!(
-			"stellar", "contract", "invoke",
-			"--network", "remote",
-			"--source", "admin",
-			"--",
-			"lock",
-			"--owner", "admin",
-			"--amount", &format!("{}", amount)
-		)
-		.run()?;
-		
-		Ok(())
+	async fn locked_balance_of(&self, owner: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<Balance> {	
+		todo!()
 	}
 	
 	async fn locked_balance_timeout_of(&self, owner: identity::PublicKey) -> Result<std::time::Instant> {
 		todo!()
 	}
 	
-	async fn receive_proof(&self, proof: Proof) -> Result {
+	async fn claim(&self, proof: Proof) -> Result {
 		todo!()
 	}
 	
-	async fn attestation(&self, pk: lib_cryptography::public_key::PublicKey<Self::Algorithm>) -> Result<Address> {
+	async fn attestation(&self, pk: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<PublicKey> {
 		todo!()
 	}
 	
 	async fn renew(&self, domain: Domain) -> Result {
-		duct::cmd!(
-			"stellar", "contract", "invoke",
-			"--network", "remote",
-			"--source", "admin",
-			"--",
-			"renew",
-			""
-		);
+		todo!()
 	}
 	
 	async fn mint(&self, domain: Domain) -> Result {
 		let Domain(domain) = domain;
+		
+		let dns: lib_bytes::NonEmpty = self.dns.to_owned().into();
+		let dns: bytes::Bytes = dns.into();
+		let dns: Vec<_> = dns.to_vec();
+		let dns = str::from_utf8(&dns)?;
+		
+		
+		
 		duct::cmd!(
 			"stellar", "contract", "invoke",
 			"--network", "remote",
 			"--source", "admin",
-			"--id", &self.address,
+			"--id", &dns,
 			"--",
 			"mint",
 			"--owner", "admin",
 			"--domain", &domain
 		)
 		.run()?;
+		
 		Ok(())
 	}
 	
@@ -400,7 +422,7 @@ impl Dns for StellarTestnet {
 		todo!()
 	}
 	
-	async fn age(&self, pk: identity::PublicKey) -> Result<Option<Age>> {
+	async fn age(&self, pk: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<Option<Age>> {
 		todo!()
 	}
 }

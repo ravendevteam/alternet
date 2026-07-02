@@ -209,27 +209,49 @@
 					"isp.wait_for_unit(\"network.target\")"
 
 					"chain.start()"
+					
 					"chain.wait_for_unit(\"network.target\")"
 					"chain.wait_for_unit(\"docker.service\")"
+					
 					"chain.succeed(\"nu -c 'docker load --input ${config.packages.stellar_testnet_image}'\")"
 					"chain.succeed(\"nu -c 'docker run --detach --name stellar --publish 8080:8080 stellar/quickstart:latest'\")"
+					
 					"chain.wait_for_open_port(8080)"
-
+					"chain.wait_until_succeeds(\"curl -s -X POST -H 'Content-Type: application/json' -d '{\\\"jsonrpc\\\":\\\"2.0\\\",\\\"id\\\":1,\\\"method\\\":\\\"getHealth\\\"}' http://localhost:8080/soroban/rpc | grep -q 'unhealthy\\|healthy'\")"
+					"chain.wait_until_succeeds(\"curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/friendbot | grep -q '400'\")"
+					
+					"chain.succeed(\"sleep 5\")"
+					
 					"chain.succeed(\"nu -c 'stellar keys generate bootstrap --network local'\")"
 					"chain.succeed(\"nu -c 'stellar keys generate relay --network local'\")"
 					"chain.succeed(\"nu -c 'stellar keys generate client --network local'\")"
 					"chain.succeed(\"nu -c 'stellar keys generate server --network local'\")"
 
+					"chain.succeed(\"nu -c 'stellar keys fund bootstrap'\")"
+					"chain.succeed(\"nu -c 'stellar keys fund relay'\")"
+					"chain.succeed(\"nu -c 'stellar keys fund client'\")"
+					"chain.succeed(\"nu -c 'stellar keys fund server'\")"
+					
 					"bootstrap_public_key=chain.succeed(\"nu -c 'stellar keys public-key bootstrap'\").strip()"
 					"bootstrap_secret_key=chain.succeed(\"nu -c 'stellar keys secret bootstrap'\").strip()"
 
-
-
-
+					"relay_public_key=chain.succeed(\"nu -c 'stellar keys public-key relay'\").strip()"
+					"relay_secret_key=chain.succeed(\"nu -c 'stellar keys secret relay'\").strip()"
+					
+					"client_public_key=chain.succeed(\"nu -c 'stellar keys public-key client'\").strip()"
+					"client_secret_key=chain.succeed(\"nu -c 'stellar keys secret client'\").strip()"
+					
+					"server_public_key=chain.succeed(\"nu -c 'stellar keys public-key server'\").strip()"
+					"server_secret_key=chain.succeed(\"nu -c 'stellar keys secret server'\").strip()"
+					
 					"bootstrap.start()"
 					"bootstrap.wait_for_unit(\"network.target\")"
 					# "bootstrap.succeed(\"bootstrap --flag value > /dev/null 2>&1 &\")"
 
+					"bootstrap.succeed(\"stellar network add local --rpc-url http://192.168.1.3:8080/soroban/rpc --network-passphrase \"Standalone Network ; February 2017\"\")"
+					"bootstrap.succeed(F\"echo {bootstrap_secret_key} | stellar keys add admin --secret-key\")"
+					
+					
 					"relay.start()"
 					"relay.wait_for_unit(\"network.target\")"
 
@@ -360,8 +382,10 @@
 			packages.soroban_mock_dns = mk_soroban_contract "soroban_mock_dns";
 			packages.soroban_mock_erc_20 = mk_soroban_contract "soroban_mock_erc_20";
 			packages.soroban_mock_nft = mk_soroban_contract "soroban_mock_nft";
+			
+			
 
-			packages.soroban_mock_erc_20_e2e = pkgs.testers.runNixOSTest {
+			checks.soroban_mock_erc_20_e2e = pkgs.testers.runNixOSTest {
 				name = "test";
 
 				nodes.vm = { ... }: {

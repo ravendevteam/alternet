@@ -56,31 +56,31 @@ impl Main {
 		environment.storage().persistent().set(&MemoryStoreKey::RenewTargetTraffic, &target_traffic);
 	}
 	
-	pub fn attestation(environment: soroban_sdk::Env, foreign_public_key: soroban_sdk::BytesN<32>) -> Option<soroban_sdk::Address> {		
-		// environment.storage().persistent().get(&MemoryStoreKey::AttestationOwner(foreign_public_key))
-		
-		None
+	// attestations must be cachable and stable, they must be immutable
+	pub fn attestation(environment: soroban_sdk::Env, account: ForeignPublicKey) -> Option<soroban_sdk::Address> {		
+		environment.storage().persistent().get(&MemoryStoreKey::AttestationOwner(account.0))
 	}
 	
-	pub fn sign_attestation(
+	pub fn attest(
 		environment: soroban_sdk::Env, 
-		owner: soroban_sdk::Address, 
-		foreign_public_key: ForeignPublicKey,
+		local_signer: soroban_sdk::Address, 
+		foreign_signer: ForeignPublicKey,
 		foreign_signature: ForeignSignature
 	) {
-		owner.require_auth();
+		local_signer.require_auth();
 		
-		// let message: soroban_sdk::Bytes = owner.to_owned().to_xdr(&environment);
-		// let raw_pub_key: &soroban_sdk::BytesN<32> = &foreign_public_key.0;
-		// let raw_sig: &soroban_sdk::BytesN<64> = &foreign_signature.0;
+		let message: soroban_sdk::Bytes = local_signer.clone().to_xdr(&environment);
 		
-		// environment.crypto().ed25519_verify(raw_pub_key, &message, raw_sig);
-		// environment.storage().persistent().set(&MemoryStoreKey::Attestation(Clone::clone(&owner)), &foreign_public_key);
-		// environment.storage().persistent().set(&MemoryStoreKey::AttestationOwner(Clone::clone(&foreign_public_key)), &owner);
-		// environment.events().publish((soroban_sdk::symbol_short!("attest"), owner), foreign_public_key);
+		let foreign_signer: &soroban_sdk::BytesN<32> = &foreign_signer.0;
+		let foreign_signature: &soroban_sdk::BytesN<64> = &foreign_signature.0;
+		
+		environment.crypto().ed25519_verify(foreign_signer, &message, foreign_signature);
+		environment.storage().persistent().set(&MemoryStoreKey::Attestation(local_signer.clone()), &foreign_signer);
+		environment.storage().persistent().set(&MemoryStoreKey::AttestationOwner(foreign_signer.clone()), &local_signer);
+		environment.events().publish((soroban_sdk::symbol_short!("attest"), local_signer.clone()), foreign_signer.clone());
 	}
 	
-	pub fn mint(environment: soroban_sdk::Env, account: soroban_sdk::Address) {
+	pub fn mint(environment: soroban_sdk::Env, account: soroban_sdk::Address, domain: soroban_sdk::String) {
 		account.require_auth();
 	
 		let token_address: soroban_sdk::Address = environment.storage().persistent().get(&MemoryStoreKey::Tkn).unwrap();

@@ -1,3 +1,4 @@
+
 use ed25519_dalek::Verifier as _;
 use ed25519_dalek::Signer as _;
 
@@ -19,7 +20,7 @@ impl lib_cryptography::AsymmetricSetLayout for Ed25519Algorithm {
 
 impl lib_cryptography::AsymmetricKeyGenAlgorithm for Ed25519Algorithm {
 	fn generate() -> lib_cryptography::Result<lib_cryptography::pair::Pair<Self>> {
-		let signing_key: ed25519_dalek::SigningKey = ed25519_dalek::SigningKey::generate(&mut rand::rngs::OsRng);
+		let signing_key: ed25519_dalek::SigningKey = ed25519_dalek::SigningKey::generate(&mut rand_core::OsRng);
 		let verifying_key: ed25519_dalek::VerifyingKey = signing_key.verifying_key();
 		let verifying_key: &[_; _] = verifying_key.as_bytes();
 		let signing_key: [_; _] = signing_key.to_bytes();

@@ -26,7 +26,7 @@ where
 	A: lib_cryptography::AsymmetricSignatureAlgorithm,
 	A: lib_cryptography::AsymmetricSignatureAlgorithm,
 	B: Default,
-	B: Dns<Algorithm = A>,
+	B: Dns<ForeignAlgorithm = A>,
 	C: 'static,
 	C: Send,
 	C: Clone {
