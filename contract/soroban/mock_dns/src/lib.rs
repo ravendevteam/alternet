@@ -3,6 +3,58 @@
 use soroban_sdk::FromVal as _;
 use soroban_sdk::xdr::ToXdr as _;
 
+pub trait FixedPoint {
+	fn fmul(self, rhs: Self, decimals: soroban_sdk::U256) -> Self;
+	fn fdiv(self, rhs: Self, decimals: soroban_sdk::U256) -> Self;
+}
+
+impl FixedPoint for soroban_sdk::U256 {
+	fn fmul(self, rhs: Self, decimals: soroban_sdk::U256) -> Self {
+		let environment = self.env().clone();
+		let decimals: u128 = decimals.to_u128().expect("should not overflow");
+		let decimals: u32 = decimals.try_into().expect("should not overflow");
+		let scaler: u128 = 10;
+		let scaler: u128 = scaler.pow(decimals);
+		let x: u128 = self.to_u128().expect("should not overflow");
+		let y: u128 = rhs.to_u128().expect("should not overflow");
+		let out: u128 = x * y;
+		let out: u128 = out / scaler;
+		let out: Self = Self::from_u128(&environment, out);
+		out
+	}
+	
+	fn fdiv(self, rhs: Self, decimals: soroban_sdk::U256) -> Self {
+		let environment = self.env().clone();
+		let decimals: u128 = decimals.to_u128().expect("should not overflow");
+		let decimals: u32 = decimals.try_into().expect("should not overflow");
+		let scaler: u128 = 10;
+		let scaler: u128 = scaler.pow(decimals);
+		let x: u128 = self.to_u128().expect("should not overflow");
+		let y: u128 = rhs.to_u128().expect("should not overflow");
+		let out: u128 = x * scaler;
+		let out: u128 = out / y;
+		let out: Self = Self::from_u128(&environment, out);
+		out
+	}
+}
+
+pub trait Storage {
+	fn extend_memory_store_ttl(&self);
+}
+
+impl Storage for soroban_sdk::storage::Persistent {
+	fn extend_memory_store_ttl(&self) {
+		self.extend_ttl(&MemoryStoreKey::Tkn, 31500000, 31500000);
+		self.extend_ttl(&MemoryStoreKey::Nft, 31500000, 31500000);
+		self.extend_ttl(&MemoryStoreKey::MintMinFee, 31500000, 31500000);
+		self.extend_ttl(&MemoryStoreKey::MintMaxFee, 31500000, 31500000);
+		self.extend_ttl(&MemoryStoreKey::RenewMinFee, 31500000, 31500000);
+		self.extend_ttl(&MemoryStoreKey::RenewMaxFee, 31500000, 31500000);
+		self.extend_ttl(&MemoryStoreKey::RenewTargetTraffic, 31500000, 31500000);
+		self.extend_ttl(&MemoryStoreKey::HarbergerTaxRate, 31500000, 31500000);
+	}
+}
+
 #[soroban_sdk::contracttype]
 pub struct ForeignPublicKey(pub soroban_sdk::BytesN<32>);
 
@@ -22,9 +74,12 @@ pub struct Proof {
 pub enum MemoryStoreKey {
 	Tkn,
 	Nft,
+	MintMinFee,
+	MintMaxFee,
 	RenewMinFee,
 	RenewMaxFee,
 	RenewTargetTraffic,
+	HarbergerTaxRate,
 	Attestation(soroban_sdk::Address),
 	AttestationOwner(soroban_sdk::BytesN<32>),
 	BalanceLock(soroban_sdk::Address)
@@ -35,59 +90,101 @@ pub struct Main;
 
 #[soroban_sdk::contractimpl]
 impl Main {
-	pub fn wake(
+	pub fn configure(
 		environment: soroban_sdk::Env,
 		tkn: soroban_sdk::Address,
 		nft: soroban_sdk::Address,
-		min_fee: soroban_sdk::U256,
-		max_fee: soroban_sdk::U256,
+		mint_min_fee: soroban_sdk::U256,
+		mint_max_fee: soroban_sdk::U256,
+		renew_min_fee: soroban_sdk::U256,
+		renew_max_fee: soroban_sdk::U256,
 		harberger_tax_rate: soroban_sdk::U256,
 		target_traffic: soroban_sdk::U256
 	) {
-		if environment.storage().persistent().has(&MemoryStoreKey::Tkn)
-		|| environment.storage().persistent().has(&MemoryStoreKey::Nft) {
-			panic!("awoken")
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+		
+		if state.has(&MemoryStoreKey::Tkn)
+		|| state.has(&MemoryStoreKey::Nft) {
+			panic!("already configured")
 		}
 
-		environment.storage().persistent().set(&MemoryStoreKey::Tkn, &tkn);
-		environment.storage().persistent().set(&MemoryStoreKey::Nft, &nft);
-		environment.storage().persistent().set(&MemoryStoreKey::RenewMinFee, &min_fee);
-		environment.storage().persistent().set(&MemoryStoreKey::RenewMaxFee, &max_fee);
-		environment.storage().persistent().set(&MemoryStoreKey::RenewTargetTraffic, &target_traffic);
+		state.set(&MemoryStoreKey::Tkn, &tkn);
+		state.set(&MemoryStoreKey::Nft, &nft);
+		state.set(&MemoryStoreKey::MintMinFee, &mint_min_fee);
+		state.set(&MemoryStoreKey::MintMaxFee, &mint_max_fee);
+		state.set(&MemoryStoreKey::RenewMinFee, &renew_min_fee);
+		state.set(&MemoryStoreKey::RenewMaxFee, &renew_max_fee);
+		state.set(&MemoryStoreKey::RenewTargetTraffic, &target_traffic);
+		state.set(&MemoryStoreKey::HarbergerTaxRate, &harberger_tax_rate);
+		
+		state.extend_memory_store_ttl();
 	}
 
-	// attestations must be cachable and stable, they must be immutable
+	// attestations must be cachable and stable, so they will eventually have a ttl before having to reconnect them
 	pub fn attestation(environment: soroban_sdk::Env, account: ForeignPublicKey) -> Option<soroban_sdk::Address> {
-		environment.storage().persistent().get(&MemoryStoreKey::AttestationOwner(account.0))
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+		let ForeignPublicKey(account) = account;
+	
+		state.get(&MemoryStoreKey::AttestationOwner(account))
 	}
 
 	pub fn attest(
 		environment: soroban_sdk::Env,
-		local_signer: soroban_sdk::Address,
+		local_signer: PublicKey,
 		foreign_signer: ForeignPublicKey,
 		foreign_signature: ForeignSignature
 	) {
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+		let event: soroban_sdk::events::Events = environment.events();
+		let crypt: soroban_sdk::crypto::Crypto = environment.crypto();
+		let PublicKey(local_signer) = local_signer;
+		let ForeignPublicKey(foreign_signer) = foreign_signer;
+		let ForeignSignature(foreign_signature) = foreign_signature;
+		
 		local_signer.require_auth();
 
 		let message: soroban_sdk::Bytes = local_signer.clone().to_xdr(&environment);
 
-		let foreign_signer: &soroban_sdk::BytesN<32> = &foreign_signer.0;
-		let foreign_signature: &soroban_sdk::BytesN<64> = &foreign_signature.0;
-
-		environment.crypto().ed25519_verify(foreign_signer, &message, foreign_signature);
-		environment.storage().persistent().set(&MemoryStoreKey::Attestation(local_signer.clone()), &foreign_signer);
-		environment.storage().persistent().set(&MemoryStoreKey::AttestationOwner(foreign_signer.clone()), &local_signer);
-		environment.events().publish((soroban_sdk::symbol_short!("attest"), local_signer.clone()), foreign_signer.clone());
+		crypt.ed25519_verify(&foreign_signer, &message, &foreign_signature);
+		
+		state.set(&MemoryStoreKey::Attestation(local_signer.clone()), &foreign_signer);
+		state.set(&MemoryStoreKey::AttestationOwner(foreign_signer.clone()), &local_signer);
+		
+		state.extend_memory_store_ttl();
+		
+		event.publish((soroban_sdk::symbol_short!("attest"), local_signer.clone()), foreign_signer.clone());
 	}
 
 	pub fn mint(environment: soroban_sdk::Env, account: soroban_sdk::Address, domain: soroban_sdk::String) {
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+		let event: soroban_sdk::events::Events = environment.events();
+		
 		account.require_auth();
 
-		let token_address: soroban_sdk::Address = environment.storage().persistent().get(&MemoryStoreKey::Tkn).unwrap();
-		let domain_nft_address = environment.storage().persistent().get(&MemoryStoreKey::Nft).unwrap();
+		let tkn_public_key: soroban_sdk::Address = state.get(&MemoryStoreKey::Tkn).expect("set during configuration");
+		let nft_public_key: soroban_sdk::Address = state.get(&MemoryStoreKey::Nft).expect("set during configuration");
+		
+		let min_fee: soroban_sdk::U256 = state.get(&MemoryStoreKey::MintMinFee).expect("set during configuration");
+		let max_fee: soroban_sdk::U256 = state.get(&MemoryStoreKey::MintMaxFee).expect("set during configuration");
+		
+		// fixed point multiplication required
+		let entropy_multiplier: soroban_sdk::U256 = Self::shannon_entropy(environment.clone(), domain.clone());
+		
+		
+		let balance: soroban_sdk::U256 = environment.invoke_contract(
+			&tkn_public_key, 
+			&soroban_sdk::Symbol::new(&environment, "balance_of"), 
+			soroban_sdk::vec![
+				&environment,
+				soroban_sdk::Val::from_val(&environment, &account)
+			]
+		);
+		
+		
+		
 
 		environment.invoke_contract::<Option<soroban_sdk::Address>>(
-			&domain_nft_address,
+			&nft_public_key,
 			&soroban_sdk::symbol_short!("owner_of"),
 			soroban_sdk::vec![
 				&environment,
@@ -103,7 +200,7 @@ impl Main {
 		// then check if its expired and been sent back to the mintable pool
 
 	    environment.invoke_contract::<()>(
-	        &token_address,
+	        &tkn_public_key,
 	        &soroban_sdk::symbol_short!("burn"),
 	        soroban_sdk::vec![
 		        &environment,
@@ -113,7 +210,7 @@ impl Main {
 	    );
 
 		environment.invoke_contract::<()>(
-			&domain_nft_address,
+			&nft_public_key,
 			&soroban_sdk::symbol_short!("mint"),
 			soroban_sdk::vec![
 				&environment,

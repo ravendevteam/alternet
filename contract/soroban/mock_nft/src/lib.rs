@@ -1,5 +1,26 @@
 #![no_std]
 
+trait Storage {
+	fn extend_applicable_ttl(&self);
+	fn extend_applicable_domain_ttl(&self, domain: &soroban_sdk::String);
+}
+
+impl Storage for soroban_sdk::storage::Persistent {
+	fn extend_applicable_ttl(&self) {
+		self.extend_ttl(&MemoryStoreKey::Admin, 31500000, 31500000);
+		self.extend_ttl(&MemoryStoreKey::Name, 31500000, 31500000);
+		self.extend_ttl(&MemoryStoreKey::Symbol, 31500000, 31500000);
+	}
+	
+	fn extend_applicable_domain_ttl(&self, domain: &soroban_sdk::String) {
+		let own_key: MemoryStoreKey = MemoryStoreKey::Ownership(domain.clone());
+		let exp_key: MemoryStoreKey = MemoryStoreKey::OwnershipExpiryTimestamp(domain.clone());
+		
+		self.extend_ttl(&own_key, 31500000, 31500000);
+		self.extend_ttl(&exp_key, 31500000, 31500000);
+	}
+}
+
 #[soroban_sdk::contracttype]
 pub enum MemoryStoreKey {
 	Admin,
@@ -12,22 +33,6 @@ pub enum MemoryStoreKey {
 // Partial-Erc721, Partial Erc-173
 #[soroban_sdk::contract]
 pub struct Main;
-
-impl Main {
-	fn extend_ttl(state: &soroban_sdk::storage::Persistent) {
-		state.extend_ttl(&MemoryStoreKey::Admin, 31500000, 31500000);
-		state.extend_ttl(&MemoryStoreKey::Name, 31500000, 31500000);
-		state.extend_ttl(&MemoryStoreKey::Symbol, 31500000, 31500000);
-	}
-	
-	fn extend_domain_ttl(state: &soroban_sdk::storage::Persistent, domain: &soroban_sdk::String) {
-		let own_key: MemoryStoreKey = MemoryStoreKey::Ownership(domain.clone());
-		let exp_key: MemoryStoreKey = MemoryStoreKey::OwnershipExpiryTimestamp(domain.clone());
-		
-		state.extend_ttl(&own_key, 31500000, 31500000);
-		state.extend_ttl(&exp_key, 31500000, 31500000);
-	}
-}
 
 #[soroban_sdk::contractimpl]
 impl Main {	
@@ -45,7 +50,7 @@ impl Main {
 		state.set(&MemoryStoreKey::Name, &name);
 		state.set(&MemoryStoreKey::Symbol, &symbol);
 		
-		Self::extend_ttl(&state);
+		state.extend_applicable_ttl();
 
 		event.publish((soroban_sdk::symbol_short!("wake"), admin), (name, symbol));
 	}
@@ -84,7 +89,7 @@ impl Main {
 				return None
 			}
 			
-			Self::extend_domain_ttl(&state, &domain);
+			state.extend_applicable_domain_ttl(&domain);
 		}
 
 		state.get(&MemoryStoreKey::Ownership(domain))
@@ -95,7 +100,7 @@ impl Main {
 		let event: soroban_sdk::events::Events = environment.events();
 		let admin: soroban_sdk::Address = state.get(&MemoryStoreKey::Admin).expect("set during configuration");
 
-		Self::extend_ttl(&state);
+		state.extend_applicable_ttl();
 		
 		admin.require_auth();
 
@@ -111,7 +116,7 @@ impl Main {
 		state.set(&own_key, &owner);
 		state.set(&exp_key, &expiration);
 
-		Self::extend_domain_ttl(&state, &domain);
+		state.extend_applicable_domain_ttl(&domain);
 		
 		event.publish((soroban_sdk::symbol_short!("mint"), owner), (domain, expiration));
 	}
@@ -121,7 +126,7 @@ impl Main {
 		let event: soroban_sdk::events::Events = environment.events();
 		let admin: soroban_sdk::Address = state.get(&MemoryStoreKey::Admin).expect("set during configuration");
 
-		Self::extend_ttl(&state);
+		state.extend_applicable_ttl();
 		
 		admin.require_auth();
 
@@ -144,7 +149,7 @@ impl Main {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
 		let event: soroban_sdk::events::Events = environment.events();
 
-		Self::extend_ttl(&state);
+		state.extend_applicable_ttl();
 		
 		sender.require_auth();
 
@@ -157,8 +162,7 @@ impl Main {
 		}
 
 		state.set(&key, &recipient);
-		
-		Self::extend_domain_ttl(&state, &domain);
+		state.extend_applicable_domain_ttl(&domain);
 
 		event.publish((soroban_sdk::symbol_short!("transfer"), sender, recipient), domain);
 	}

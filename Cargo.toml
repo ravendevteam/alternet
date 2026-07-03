@@ -13,6 +13,7 @@ members = [
     "lib/cryptography_algorithm/kyber1024",  # cryptography_algorithm_hyber1024
     "lib/e2e",
     "lib/packet",
+    "lib/soroban", 						  	# soroban
     
     # ... coming soon ...
     "task",
