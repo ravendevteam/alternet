@@ -1,3 +1,5 @@
+// a very loose nft for domain tracking
+
 #![no_std]
 
 #[soroban_sdk::contracttype]
