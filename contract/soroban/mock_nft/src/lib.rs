@@ -1,5 +1,3 @@
-// a very loose nft for domain tracking
-
 #![no_std]
 
 #[soroban_sdk::contracttype]
@@ -15,6 +13,12 @@ pub enum MemoryStoreKey {
 pub struct Main;
 
 impl Main {
+	fn extend_ttl(state: &soroban_sdk::storage::Persistent) {
+		state.extend_ttl(&MemoryStoreKey::Admin, 31500000, 31500000);
+		state.extend_ttl(&MemoryStoreKey::Name, 31500000, 31500000);
+		state.extend_ttl(&MemoryStoreKey::Symbol, 31500000, 31500000);
+	}
+	
 	fn extend_domain_ttl(state: &soroban_sdk::storage::Persistent, domain: &soroban_sdk::String) {
 		let own_key: MemoryStoreKey = MemoryStoreKey::Ownership(domain.clone());
 		let exp_key: MemoryStoreKey = MemoryStoreKey::OwnershipExpiryTimestamp(domain.clone());
@@ -40,41 +44,39 @@ impl Main {
 		state.set(&MemoryStoreKey::Name, &name);
 		state.set(&MemoryStoreKey::Symbol, &symbol);
 		
-		state.extend_ttl(&MemoryStoreKey::Admin, 31500000, 31500000);
-		state.extend_ttl(&MemoryStoreKey::Name, 31500000, 31500000);
-		state.extend_ttl(&MemoryStoreKey::Symbol, 31500000, 31500000);
+		Self::extend_ttl(&state);
 
 		event.publish((soroban_sdk::symbol_short!("wake"), admin), (name, symbol));
 	}
 	
 	pub fn name(environment: soroban_sdk::Env) -> soroban_sdk::String {
-		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
-
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();	
+		
 		state.get(&MemoryStoreKey::Name).expect("set during configuration")
 	}
 
 	pub fn symbol(environment: soroban_sdk::Env) -> soroban_sdk::String {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
-
+		
 		state.get(&MemoryStoreKey::Symbol).expect("set during configuration")
 	}
 
 	pub fn expiry_timestamp(environment: soroban_sdk::Env, domain: soroban_sdk::String) -> Option<u64> {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
-
+		
 		state.get(&MemoryStoreKey::OwnershipExpiryTimestamp(domain))
 	}
 
 	pub fn owner(environment: soroban_sdk::Env) -> soroban_sdk::Address {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
-
+		
 		state.get(&MemoryStoreKey::Admin).expect("set during configuration")
 	}
 	
 	pub fn owner_of(environment: soroban_sdk::Env, domain: soroban_sdk::String) -> Option<soroban_sdk::Address> {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
 
-		if let Some(expiration) = Self::expiry_timestamp(environment.clone(), domain.clone()) {
+		if let Some(expiration) = state.get(&MemoryStoreKey::OwnershipExpiryTimestamp(domain.clone())) {
 			let now: u64 = environment.ledger().timestamp();
 
 			if now >= expiration {
@@ -92,6 +94,8 @@ impl Main {
 		let event: soroban_sdk::events::Events = environment.events();
 		let admin: soroban_sdk::Address = state.get(&MemoryStoreKey::Admin).expect("set during configuration");
 
+		Self::extend_ttl(&state);
+		
 		admin.require_auth();
 
 		if Self::owner_of(environment.clone(), domain.clone()).is_some() {
@@ -116,6 +120,8 @@ impl Main {
 		let event: soroban_sdk::events::Events = environment.events();
 		let admin: soroban_sdk::Address = state.get(&MemoryStoreKey::Admin).expect("set during configuration");
 
+		Self::extend_ttl(&state);
+		
 		admin.require_auth();
 
 		let own_key: MemoryStoreKey = MemoryStoreKey::Ownership(domain.clone());
@@ -137,6 +143,8 @@ impl Main {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
 		let event: soroban_sdk::events::Events = environment.events();
 
+		Self::extend_ttl(&state);
+		
 		sender.require_auth();
 
 		let key: soroban_sdk::String = domain.clone();
