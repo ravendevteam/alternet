@@ -1,0 +1,34 @@
+2026-03-20T18:18:27.370111000Z [INFO server] booting
+2026-03-20T18:18:27.371136000Z [INFO server] peer identity initialized: PeerId("12D3KooWQDPqGCUYAJsc73jBSMjiPVqn7KS9j4bTmRkzGoK8MMWM")
+2026-03-20T18:18:27.371212000Z [INFO server] finished booting, entering event loop
+2026-03-20T18:18:27.371359000Z [INFO server::sub_system::bootstrap] dialing bootstrap addr /ip4/172.19.0.2/udp/4001/quic-v1
+2026-03-20T18:18:27.371386000Z [INFO server::sub_system::discovery_monitor] peer 12D3KooWQDPqGCUYAJsc73jBSMjiPVqn7KS9j4bTmRkzGoK8MMWM currently knows no one
+2026-03-20T18:18:27.373024000Z [INFO server::sub_system::monitor] connection established with 12D3KooWNU2rYrBJDo4sZkfT2DxjfBAcvC16uiGMWtndVzMvveoR via Dialer { address: /ip4/172.19.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-03-20T18:18:27.373723000Z [INFO server::sub_system::bootstrap] starting bootstrap 0
+2026-03-20T18:18:27.375605000Z [INFO server::sub_system::bootstrap] bootstrap complete, remaining: 1
+2026-03-20T18:18:27.377041000Z [INFO server::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-03-20T18:18:27.377704000Z [INFO server::sub_system::monitor] connection established with 12D3KooWFLTFUXATabkWhfPSVa8R7HonLSAA4xf2wyhxC9a2PZrk via Dialer { address: /ip4/172.19.0.3/udp/4001/quic-v1/p2p/12D3KooWFLTFUXATabkWhfPSVa8R7HonLSAA4xf2wyhxC9a2PZrk, role_override: Dialer, port_use: Reuse }
+2026-03-20T18:18:28.371327000Z [INFO server::sub_system::monitor] AutoNAT Outbound Request [ID: ProbeId(0)]: Asking bootstrap PeerId("12D3KooWNU2rYrBJDo4sZkfT2DxjfBAcvC16uiGMWtndVzMvveoR") to probe our reachability
+2026-03-20T18:18:28.373463000Z [INFO server::sub_system::monitor] connection established with 12D3KooWNU2rYrBJDo4sZkfT2DxjfBAcvC16uiGMWtndVzMvveoR via Listener { local_addr: /ip4/0.0.0.0/udp/4001/quic-v1, send_back_addr: /ip4/172.19.0.2/udp/46056/quic-v1 }
+2026-03-20T18:18:28.373501000Z [INFO server::sub_system::monitor] AutoNAT Outbound Response [ID: ProbeId(0)]: Bootstrap 12D3KooWNU2rYrBJDo4sZkfT2DxjfBAcvC16uiGMWtndVzMvveoR confirmed we are reachable at /ip4/172.19.0.4/udp/4001/quic-v1/p2p/12D3KooWQDPqGCUYAJsc73jBSMjiPVqn7KS9j4bTmRkzGoK8MMWM
+2026-03-20T18:18:28.373524000Z [INFO server::sub_system::monitor] AutoNAT Status Change: Unknown -> Public(/ip4/172.19.0.4/udp/4001/quic-v1/p2p/12D3KooWQDPqGCUYAJsc73jBSMjiPVqn7KS9j4bTmRkzGoK8MMWM)
+2026-03-20T18:18:28.692837000Z [INFO server::sub_system::monitor] connection established with 12D3KooWD6wpU4sy4hDFR2jnTqv6BuzA9Rwhsvp3WycpYipH6h6j via Listener { local_addr: /ip4/0.0.0.0/udp/4001/quic-v1, send_back_addr: /ip4/172.19.0.1/udp/4001/quic-v1 }
+2026-03-20T18:18:29.686441000Z [INFO server::sub_system::monitor] autonat inbound request [ID: ProbeId(1)]: peer 12D3KooWD6wpU4sy4hDFR2jnTqv6BuzA9Rwhsvp3WycpYipH6h6j requested probe for addresses: [/ip4/172.19.0.1/udp/4001/quic-v1/p2p/12D3KooWD6wpU4sy4hDFR2jnTqv6BuzA9Rwhsvp3WycpYipH6h6j]
+2026-03-20T18:18:32.687410000Z [INFO server::sub_system::discovery_monitor] peer 12D3KooWQDPqGCUYAJsc73jBSMjiPVqn7KS9j4bTmRkzGoK8MMWM knows about 2 peers: [12D3KooWNU2rYrBJDo4sZkfT2DxjfBAcvC16uiGMWtndVzMvveoR, 12D3KooWFLTFUXATabkWhfPSVa8R7HonLSAA4xf2wyhxC9a2PZrk]
+2026-03-20T18:18:32.687727000Z [WARN server::sub_system::monitor] autonat inbound error [Id: ProbeId(1)]: failed to probe peer 12D3KooWD6wpU4sy4hDFR2jnTqv6BuzA9Rwhsvp3WycpYipH6h6j: Response(DialError)
+2026-03-20T18:18:37.089066000Z [INFO server::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-03-20T18:18:37.089896000Z [INFO server::sub_system::bootstrap] dialing bootstrap addr /ip4/172.19.0.2/udp/4001/quic-v1
+2026-03-20T18:18:37.089989000Z [INFO server::sub_system::bootstrap] starting bootstrap 4
+2026-03-20T18:18:37.096564000Z [INFO server::sub_system::bootstrap] bootstrap complete, remaining: 1
+2026-03-20T18:18:37.096646000Z [INFO server::sub_system::monitor] connection established with 12D3KooWNU2rYrBJDo4sZkfT2DxjfBAcvC16uiGMWtndVzMvveoR via Dialer { address: /ip4/172.19.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-03-20T18:18:38.374625000Z [INFO server::sub_system::discovery_monitor] peer 12D3KooWQDPqGCUYAJsc73jBSMjiPVqn7KS9j4bTmRkzGoK8MMWM knows about 2 peers: [12D3KooWNU2rYrBJDo4sZkfT2DxjfBAcvC16uiGMWtndVzMvveoR, 12D3KooWFLTFUXATabkWhfPSVa8R7HonLSAA4xf2wyhxC9a2PZrk]
+2026-03-20T18:18:38.374652000Z [INFO server::sub_system::monitor] connection closed with 12D3KooWNU2rYrBJDo4sZkfT2DxjfBAcvC16uiGMWtndVzMvveoR via Listener { local_addr: /ip4/0.0.0.0/udp/4001/quic-v1, send_back_addr: /ip4/172.19.0.2/udp/46056/quic-v1 }
+2026-03-20T18:18:42.687742000Z [INFO server::sub_system::monitor] connection closed with 12D3KooWD6wpU4sy4hDFR2jnTqv6BuzA9Rwhsvp3WycpYipH6h6j via Listener { local_addr: /ip4/0.0.0.0/udp/4001/quic-v1, send_back_addr: /ip4/172.19.0.1/udp/4001/quic-v1 }
+2026-03-20T18:18:47.096759000Z [INFO server::sub_system::discovery_monitor] peer 12D3KooWQDPqGCUYAJsc73jBSMjiPVqn7KS9j4bTmRkzGoK8MMWM knows about 2 peers: [12D3KooWNU2rYrBJDo4sZkfT2DxjfBAcvC16uiGMWtndVzMvveoR, 12D3KooWFLTFUXATabkWhfPSVa8R7HonLSAA4xf2wyhxC9a2PZrk]
+2026-03-20T18:18:47.096785000Z [INFO server::sub_system::monitor] connection closed with 12D3KooWFLTFUXATabkWhfPSVa8R7HonLSAA4xf2wyhxC9a2PZrk via Dialer { address: /ip4/172.19.0.3/udp/4001/quic-v1/p2p/12D3KooWFLTFUXATabkWhfPSVa8R7HonLSAA4xf2wyhxC9a2PZrk, role_override: Dialer, port_use: Reuse }
+2026-03-20T18:18:47.096805000Z [INFO server::sub_system::monitor] connection closed with 12D3KooWNU2rYrBJDo4sZkfT2DxjfBAcvC16uiGMWtndVzMvveoR via Dialer { address: /ip4/172.19.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-03-20T18:18:47.096881000Z [INFO server::sub_system::monitor] connection closed with 12D3KooWNU2rYrBJDo4sZkfT2DxjfBAcvC16uiGMWtndVzMvveoR via Dialer { address: /ip4/172.19.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-03-20T18:19:28.371491000Z [INFO server::sub_system::routing_monitor] routing churn: 10
+2026-03-20T18:19:28.371718000Z [INFO server::sub_system::discovery_monitor] peer 12D3KooWQDPqGCUYAJsc73jBSMjiPVqn7KS9j4bTmRkzGoK8MMWM knows about 2 peers: [12D3KooWNU2rYrBJDo4sZkfT2DxjfBAcvC16uiGMWtndVzMvveoR, 12D3KooWFLTFUXATabkWhfPSVa8R7HonLSAA4xf2wyhxC9a2PZrk]
+2026-03-20T18:19:28.371744000Z [WARN server::sub_system::monitor] AutoNAT Outbound Error [ID: ProbeId(2)]: Bootstrap node None could not reach us: NoServer
+2026-03-20T18:19:40.307721000Z [INFO server::sub_system::discovery_monitor] peer 12D3KooWQDPqGCUYAJsc73jBSMjiPVqn7KS9j4bTmRkzGoK8MMWM knows about 2 peers: [12D3KooWNU2rYrBJDo4sZkfT2DxjfBAcvC16uiGMWtndVzMvveoR, 12D3KooWFLTFUXATabkWhfPSVa8R7HonLSAA4xf2wyhxC9a2PZrk]

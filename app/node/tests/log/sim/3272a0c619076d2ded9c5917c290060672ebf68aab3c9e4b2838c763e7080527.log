@@ -1,0 +1,719 @@
+2026-06-01T12:56:05.258019000Z [INFO relay] booting
+2026-06-01T12:56:05.258123000Z [INFO relay] peer identity initialized: PeerId("12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW")
+2026-06-01T12:56:05.259103000Z [INFO relay] finished booting, entering event loop
+2026-06-01T12:56:05.259225000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:56:05.259258000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW currently knows no one
+2026-06-01T12:56:05.260857000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:56:05.261429000Z [INFO relay::sub_system::bootstrap] starting bootstrap 0
+2026-06-01T12:56:05.262131000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:56:05.262618000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:56:06.259027000Z [INFO relay::sub_system::monitor] autonat Outbound Request [ID: ProbeId(0)]: Asking bootstrap PeerId("12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ") to probe our reachability
+2026-06-01T12:56:06.261101000Z [INFO relay::sub_system::monitor] autonat outbound response [ID: ProbeId(0)]: Bootstrap 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ confirmed we are reachable at /ip4/172.23.0.10/udp/4001/quic-v1/p2p/12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW
+2026-06-01T12:56:06.261139000Z [INFO relay::sub_system::monitor] autonat status change: Unknown -> Public(/ip4/172.23.0.10/udp/4001/quic-v1/p2p/12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW)
+2026-06-01T12:56:06.261524000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Listener { local_addr: /ip4/0.0.0.0/udp/4001/quic-v1, send_back_addr: /ip4/172.23.0.2/udp/57913/quic-v1 }
+2026-06-01T12:56:10.261665000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:56:15.261758000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:56:15.261921000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:56:15.262491000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:56:15.262589000Z [INFO relay::sub_system::bootstrap] starting bootstrap 3
+2026-06-01T12:56:15.263513000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:56:15.263632000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:56:15.263658000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:56:20.263961000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:56:25.262706000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:56:25.264268000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:56:25.264777000Z [INFO relay::sub_system::bootstrap] starting bootstrap 6
+2026-06-01T12:56:25.264948000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:56:25.266975000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:56:25.267144000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:56:25.268034000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:56:27.240808000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Listener { local_addr: /ip4/0.0.0.0/udp/4001/quic-v1, send_back_addr: /ip4/172.23.0.2/udp/57913/quic-v1 }
+2026-06-01T12:56:30.268113000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:56:35.262696000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:56:35.262837000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T12:56:35.262888000Z [INFO relay::sub_system::routing_monitor] routing churn: 4
+2026-06-01T12:56:35.263487000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:56:35.263555000Z [INFO relay::sub_system::bootstrap] starting bootstrap 9
+2026-06-01T12:56:35.264056000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:56:35.264347000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:56:35.264397000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:56:35.264414000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:56:35.266820000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:56:37.160856000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:56:45.265627000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:56:45.265859000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:56:45.267212000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:56:45.267384000Z [INFO relay::sub_system::bootstrap] starting bootstrap 12
+2026-06-01T12:56:45.269400000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:56:45.269489000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:56:45.269712000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:56:50.268126000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:56:55.266105000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:56:55.267423000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:56:55.267557000Z [INFO relay::sub_system::bootstrap] starting bootstrap 15
+2026-06-01T12:56:55.268367000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:56:55.268997000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:56:55.269052000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:56:55.269093000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:56:57.161093000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:57:00.270130000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:57:04.314280000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:57:04.319224000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:57:04.319277000Z [INFO relay::sub_system::bootstrap] starting bootstrap 18
+2026-06-01T12:57:04.323158000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:57:04.326811000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:57:04.327688000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:57:05.266088000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T12:57:05.266350000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T12:57:05.269926000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:57:05.269982000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:57:06.259396000Z [INFO relay::sub_system::monitor] autonat Outbound Request [ID: ProbeId(1)]: Asking bootstrap PeerId("12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ") to probe our reachability
+2026-06-01T12:57:06.267684000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Listener { local_addr: /ip4/0.0.0.0/udp/4001/quic-v1, send_back_addr: /ip4/172.23.0.2/udp/38217/quic-v1 }
+2026-06-01T12:57:06.267870000Z [INFO relay::sub_system::monitor] autonat outbound response [ID: ProbeId(1)]: Bootstrap 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ confirmed we are reachable at /ip4/172.23.0.10/udp/4001/quic-v1/p2p/12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW
+2026-06-01T12:57:10.270234000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:57:14.329339000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:57:14.329422000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:57:14.329535000Z [INFO relay::sub_system::bootstrap] starting bootstrap 21
+2026-06-01T12:57:14.329577000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:57:14.330990000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:57:14.331713000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:57:14.331739000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:57:15.270596000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:57:21.268660000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:57:24.329500000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:57:24.329562000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:57:24.331211000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:57:24.331276000Z [INFO relay::sub_system::bootstrap] starting bootstrap 24
+2026-06-01T12:57:24.335072000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:57:24.335137000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:57:24.335197000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:57:26.268255000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Listener { local_addr: /ip4/0.0.0.0/udp/4001/quic-v1, send_back_addr: /ip4/172.23.0.2/udp/38217/quic-v1 }
+2026-06-01T12:57:29.331937000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:57:34.332033000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:57:34.332060000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:57:34.332106000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:57:34.332898000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:57:34.332941000Z [INFO relay::sub_system::bootstrap] starting bootstrap 27
+2026-06-01T12:57:34.333641000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:57:34.334171000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:57:34.334340000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:57:35.270979000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T12:57:35.271226000Z [INFO relay::sub_system::routing_monitor] routing churn: 5
+2026-06-01T12:57:39.334359000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:57:44.334239000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:57:44.334290000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:57:44.334435000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:57:44.334478000Z [INFO relay::sub_system::bootstrap] starting bootstrap 30
+2026-06-01T12:57:44.334522000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:57:44.335482000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:57:44.335845000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:57:44.335965000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:57:44.335991000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:57:49.339144000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:57:54.336382000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:57:54.336535000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:57:54.336591000Z [INFO relay::sub_system::bootstrap] starting bootstrap 33
+2026-06-01T12:57:54.336641000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:57:54.337365000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:57:54.337780000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:57:54.337878000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:57:54.338902000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:58:04.336972000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:58:04.337016000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:58:04.337971000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:58:04.338022000Z [INFO relay::sub_system::bootstrap] starting bootstrap 36
+2026-06-01T12:58:04.339417000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:58:04.339657000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:58:04.339722000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:58:06.259557000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T12:58:06.259766000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T12:58:06.259830000Z [INFO relay::sub_system::monitor] autonat Outbound Request [ID: ProbeId(2)]: Asking bootstrap PeerId("12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ") to probe our reachability
+2026-06-01T12:58:06.265746000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Listener { local_addr: /ip4/0.0.0.0/udp/4001/quic-v1, send_back_addr: /ip4/172.23.0.2/udp/35079/quic-v1 }
+2026-06-01T12:58:06.265863000Z [INFO relay::sub_system::monitor] autonat outbound response [ID: ProbeId(2)]: Bootstrap 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ confirmed we are reachable at /ip4/172.23.0.10/udp/4001/quic-v1/p2p/12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW
+2026-06-01T12:58:09.338230000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:58:14.339043000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:58:14.341124000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:58:14.341291000Z [INFO relay::sub_system::bootstrap] starting bootstrap 39
+2026-06-01T12:58:14.341368000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:58:14.341453000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:58:14.344012000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:58:14.344159000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:58:14.344211000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:58:19.340960000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:58:24.337727000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:58:24.340138000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:58:24.340849000Z [INFO relay::sub_system::bootstrap] starting bootstrap 42
+2026-06-01T12:58:24.341280000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:58:24.341379000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:58:24.343566000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:58:24.345012000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:58:24.346010000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:58:26.266092000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Listener { local_addr: /ip4/0.0.0.0/udp/4001/quic-v1, send_back_addr: /ip4/172.23.0.2/udp/35079/quic-v1 }
+2026-06-01T12:58:29.346478000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:58:34.337680000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:58:34.338401000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:58:34.338433000Z [INFO relay::sub_system::bootstrap] starting bootstrap 45
+2026-06-01T12:58:34.339447000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:58:34.339529000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:58:34.339560000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:58:34.346390000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:58:34.347389000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:58:39.338138000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T12:58:39.338272000Z [INFO relay::sub_system::routing_monitor] routing churn: 4
+2026-06-01T12:58:39.347688000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:58:44.338270000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:58:44.341214000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:58:44.341507000Z [INFO relay::sub_system::bootstrap] starting bootstrap 48
+2026-06-01T12:58:44.346073000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:58:44.347284000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:58:44.347352000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:58:44.347621000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:58:44.347897000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:58:49.349494000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:58:54.338566000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:58:54.340865000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:58:54.340957000Z [INFO relay::sub_system::bootstrap] starting bootstrap 51
+2026-06-01T12:58:54.341025000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:58:54.345226000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:58:54.345377000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:58:54.345447000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:58:54.349559000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:59:04.338945000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:59:04.339176000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:59:04.341839000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:59:04.342167000Z [INFO relay::sub_system::bootstrap] starting bootstrap 54
+2026-06-01T12:59:04.344315000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:59:04.345818000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:59:04.346008000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:59:04.349598000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:59:06.259828000Z [INFO relay::sub_system::monitor] autonat Outbound Request [ID: ProbeId(3)]: Asking bootstrap PeerId("12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ") to probe our reachability
+2026-06-01T12:59:06.266726000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Listener { local_addr: /ip4/0.0.0.0/udp/4001/quic-v1, send_back_addr: /ip4/172.23.0.2/udp/45146/quic-v1 }
+2026-06-01T12:59:06.266914000Z [INFO relay::sub_system::monitor] autonat outbound response [ID: ProbeId(3)]: Bootstrap 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ confirmed we are reachable at /ip4/172.23.0.10/udp/4001/quic-v1/p2p/12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW
+2026-06-01T12:59:09.339351000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T12:59:09.339523000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T12:59:09.339630000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:59:14.339454000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:59:14.339730000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:59:14.341018000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:59:14.341213000Z [INFO relay::sub_system::bootstrap] starting bootstrap 57
+2026-06-01T12:59:14.343557000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:59:14.343764000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:59:14.343853000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:59:16.266913000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:59:19.344651000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:59:24.340183000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:59:24.342822000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:59:24.343032000Z [INFO relay::sub_system::bootstrap] starting bootstrap 60
+2026-06-01T12:59:24.345439000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:59:24.345511000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:59:24.345911000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:59:24.346587000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:59:24.346972000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:59:29.346045000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:59:31.266576000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Listener { local_addr: /ip4/0.0.0.0/udp/4001/quic-v1, send_back_addr: /ip4/172.23.0.2/udp/45146/quic-v1 }
+2026-06-01T12:59:34.340366000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:59:34.342007000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:59:34.342156000Z [INFO relay::sub_system::bootstrap] starting bootstrap 63
+2026-06-01T12:59:34.344746000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:59:34.344918000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:59:34.345241000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:59:34.346955000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:59:34.347077000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:59:39.340421000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T12:59:39.340649000Z [INFO relay::sub_system::routing_monitor] routing churn: 4
+2026-06-01T12:59:44.340480000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:59:44.340726000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:59:44.342098000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:59:44.342261000Z [INFO relay::sub_system::bootstrap] starting bootstrap 66
+2026-06-01T12:59:44.344683000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:59:44.345653000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:59:44.345942000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:59:44.346675000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:59:49.345958000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:59:54.341329000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T12:59:54.342682000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:59:54.342842000Z [INFO relay::sub_system::bootstrap] starting bootstrap 69
+2026-06-01T12:59:54.345127000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T12:59:54.345304000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T12:59:54.345488000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T12:59:54.346410000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T12:59:54.346738000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:00:04.341412000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:00:04.341685000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:00:04.342991000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:00:04.343132000Z [INFO relay::sub_system::bootstrap] starting bootstrap 72
+2026-06-01T13:00:04.345408000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:00:04.345538000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:00:04.345644000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:00:04.346488000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:00:09.341483000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:00:09.341699000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T13:00:09.346449000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:00:14.341630000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:00:14.343406000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:00:14.343606000Z [INFO relay::sub_system::bootstrap] starting bootstrap 75
+2026-06-01T13:00:14.347506000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:00:14.347587000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:00:14.347641000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:00:14.347705000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:00:14.347775000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:00:19.347228000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:00:24.342031000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:00:24.343625000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:00:24.343906000Z [INFO relay::sub_system::bootstrap] starting bootstrap 78
+2026-06-01T13:00:24.346057000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:00:24.346348000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:00:24.346495000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:00:24.346685000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:00:24.347369000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:00:29.347710000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:00:34.342409000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:00:34.344255000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:00:34.344388000Z [INFO relay::sub_system::bootstrap] starting bootstrap 81
+2026-06-01T13:00:34.346371000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:00:34.346493000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:00:34.346528000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:00:34.347455000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:00:34.347816000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:00:39.342614000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:00:39.342771000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T13:00:44.342693000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:00:44.342947000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:00:44.344268000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:00:44.344443000Z [INFO relay::sub_system::bootstrap] starting bootstrap 84
+2026-06-01T13:00:44.346780000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:00:44.347606000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:00:44.347701000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:00:44.347886000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:00:49.347396000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:00:54.343190000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:00:54.344782000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:00:54.345024000Z [INFO relay::sub_system::bootstrap] starting bootstrap 87
+2026-06-01T13:00:54.348101000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:00:54.348192000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:00:54.348261000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:00:54.348324000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:00:54.348559000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:00:59.348413000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:01:04.343359000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:01:04.344862000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:01:04.345012000Z [INFO relay::sub_system::bootstrap] starting bootstrap 90
+2026-06-01T13:01:04.346912000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:01:04.347016000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:01:04.347215000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:01:04.348066000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:01:04.348473000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:01:09.343460000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:01:09.343709000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T13:01:14.343511000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:01:14.343752000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:01:14.344944000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:01:14.345117000Z [INFO relay::sub_system::bootstrap] starting bootstrap 93
+2026-06-01T13:01:14.346897000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:01:14.347487000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:01:14.347579000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:01:19.343882000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:01:19.348650000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:01:24.343609000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:01:24.344898000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:01:24.344966000Z [INFO relay::sub_system::bootstrap] starting bootstrap 96
+2026-06-01T13:01:24.345104000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:01:24.346102000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:01:24.346597000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:01:24.346652000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:01:24.347406000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:01:29.347012000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:01:34.344337000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:01:34.346148000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:01:34.346345000Z [INFO relay::sub_system::bootstrap] starting bootstrap 99
+2026-06-01T13:01:34.347457000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:01:34.347536000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:01:34.347598000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:01:34.348056000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:01:34.348115000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:01:39.344630000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:01:39.344852000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T13:01:39.348259000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:01:44.345484000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:01:44.346429000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:01:44.346738000Z [INFO relay::sub_system::bootstrap] starting bootstrap 102
+2026-06-01T13:01:44.346967000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:01:44.350033000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:01:44.350210000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:01:44.350272000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:01:44.351831000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:01:49.349135000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:01:54.345242000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:01:54.346719000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:01:54.346909000Z [INFO relay::sub_system::bootstrap] starting bootstrap 105
+2026-06-01T13:01:54.349015000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:01:54.349178000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:01:54.349291000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:01:54.349359000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:01:54.350307000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:01:59.350212000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:02:04.345728000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:02:04.346950000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:02:04.347089000Z [INFO relay::sub_system::bootstrap] starting bootstrap 108
+2026-06-01T13:02:04.349375000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:02:04.349998000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:02:04.351950000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:02:04.352116000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:02:04.352646000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:02:09.345926000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:02:09.346280000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T13:02:09.351758000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:02:14.346014000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:02:14.347645000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:02:14.347994000Z [INFO relay::sub_system::bootstrap] starting bootstrap 111
+2026-06-01T13:02:14.350860000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:02:14.351188000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:02:14.356476000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:02:14.356567000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:02:14.356622000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:02:19.352376000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:02:24.349181000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:02:24.352486000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:02:24.352631000Z [INFO relay::sub_system::bootstrap] starting bootstrap 114
+2026-06-01T13:02:24.352668000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:02:24.353176000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:02:24.354693000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:02:24.354738000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:02:24.355843000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:02:29.354566000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:02:34.349190000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:02:34.350304000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:02:34.350635000Z [INFO relay::sub_system::bootstrap] starting bootstrap 117
+2026-06-01T13:02:34.352077000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:02:34.352869000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:02:34.355763000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:02:34.355871000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:02:34.356002000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:02:39.349021000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:02:39.349411000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T13:02:39.355449000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:02:44.336789000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:02:44.337231000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:02:44.337288000Z [INFO relay::sub_system::bootstrap] starting bootstrap 120
+2026-06-01T13:02:44.339259000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:02:44.339292000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:02:44.339318000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:02:44.355074000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:02:49.339674000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:02:54.339792000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:02:54.339915000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:02:54.340515000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:02:54.340625000Z [INFO relay::sub_system::bootstrap] starting bootstrap 123
+2026-06-01T13:02:54.341857000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:02:54.341938000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:02:54.341975000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:02:54.355308000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:02:59.341415000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:03:04.340009000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:03:04.340182000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:03:04.342231000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:03:04.342948000Z [INFO relay::sub_system::bootstrap] starting bootstrap 126
+2026-06-01T13:03:04.343133000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:03:04.347092000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:03:04.347826000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:03:04.347896000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:03:09.343002000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:03:09.349727000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:03:09.349889000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T13:03:14.343344000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:03:14.343517000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:03:14.343582000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:03:14.343612000Z [INFO relay::sub_system::bootstrap] starting bootstrap 129
+2026-06-01T13:03:14.343638000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:03:14.346695000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:03:14.347300000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:03:14.347473000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:03:19.351809000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:03:24.351424000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:03:24.352684000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:03:24.352911000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:03:24.352973000Z [INFO relay::sub_system::bootstrap] starting bootstrap 132
+2026-06-01T13:03:24.353037000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:03:24.358003000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:03:24.367488000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:03:24.367609000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:03:29.360854000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:03:34.350340000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:03:34.350513000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:03:34.350582000Z [INFO relay::sub_system::bootstrap] starting bootstrap 135
+2026-06-01T13:03:34.350632000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:03:34.351386000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:03:34.351508000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:03:34.351545000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:03:39.352475000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:03:39.352679000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T13:03:39.352726000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:03:44.354628000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:03:44.355812000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:03:44.355975000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:03:44.356108000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:03:44.356184000Z [INFO relay::sub_system::bootstrap] starting bootstrap 138
+2026-06-01T13:03:44.360279000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:03:44.360517000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:03:44.360785000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:03:49.359585000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:03:54.354178000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:03:54.354481000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:03:54.354691000Z [INFO relay::sub_system::bootstrap] starting bootstrap 141
+2026-06-01T13:03:54.354745000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:03:54.355984000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:03:54.356023000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:03:54.356054000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:03:54.359653000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:03:59.365648000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:04:04.357849000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:04:04.357944000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:04:04.358214000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:04:04.358294000Z [INFO relay::sub_system::bootstrap] starting bootstrap 144
+2026-06-01T13:04:04.359901000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:04:04.361082000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:04:04.361262000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:04:04.362380000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:04:04.365230000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:04:09.357745000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:04:09.357885000Z [INFO relay::sub_system::routing_monitor] routing churn: 4
+2026-06-01T13:04:14.358263000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:04:14.358460000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:04:14.359853000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:04:14.360014000Z [INFO relay::sub_system::bootstrap] starting bootstrap 147
+2026-06-01T13:04:14.360792000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:04:14.362570000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:04:14.362829000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:04:14.363245000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:04:19.362982000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:04:24.364970000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:04:24.366641000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:04:24.366794000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:04:24.366864000Z [INFO relay::sub_system::bootstrap] starting bootstrap 150
+2026-06-01T13:04:24.368492000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:04:24.368724000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:04:24.368943000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:04:29.364509000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:04:34.364150000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:04:34.364986000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:04:34.365164000Z [INFO relay::sub_system::bootstrap] starting bootstrap 153
+2026-06-01T13:04:34.365235000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:04:34.365299000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:04:34.366778000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:04:34.368046000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:04:34.368167000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:04:39.364669000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:04:39.364885000Z [INFO relay::sub_system::routing_monitor] routing churn: 2
+2026-06-01T13:04:39.368699000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:04:44.364774000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:04:44.366499000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:04:44.366911000Z [INFO relay::sub_system::bootstrap] starting bootstrap 156
+2026-06-01T13:04:44.370139000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:04:44.370255000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:04:44.370324000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:04:44.370512000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:04:44.370691000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:04:49.370662000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:04:54.365404000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:04:54.366990000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:04:54.367163000Z [INFO relay::sub_system::bootstrap] starting bootstrap 159
+2026-06-01T13:04:54.368799000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:04:54.370615000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:04:54.370697000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:04:54.370760000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:04:54.370829000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:04:59.374053000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:05:04.365904000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:05:04.367204000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:05:04.367360000Z [INFO relay::sub_system::bootstrap] starting bootstrap 162
+2026-06-01T13:05:04.370319000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:05:04.371893000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:05:04.373477000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:05:04.373979000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:05:04.374216000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:05:09.366812000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:05:09.366906000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T13:05:09.374982000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:05:14.366753000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:05:14.367770000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:05:14.367796000Z [INFO relay::sub_system::bootstrap] starting bootstrap 165
+2026-06-01T13:05:14.368654000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:05:14.369456000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:05:14.369518000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:05:14.374391000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:05:19.367593000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:05:24.367043000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:05:24.367450000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:05:24.372682000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:05:24.372866000Z [INFO relay::sub_system::bootstrap] starting bootstrap 168
+2026-06-01T13:05:24.377162000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:05:24.384926000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:05:24.388431000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:05:24.388522000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:05:29.370401000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:05:34.367158000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:05:34.367651000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:05:34.367724000Z [INFO relay::sub_system::bootstrap] starting bootstrap 171
+2026-06-01T13:05:34.368515000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:05:34.368693000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:05:34.368842000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:05:34.370582000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:05:34.370646000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:05:39.368156000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:05:39.368357000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T13:05:39.390771000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:05:44.368036000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:05:44.370213000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:05:44.370608000Z [INFO relay::sub_system::bootstrap] starting bootstrap 174
+2026-06-01T13:05:44.372015000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:05:44.372280000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:05:44.372432000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:05:44.389493000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:05:49.367486000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:05:54.368024000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:05:54.368287000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:05:54.368789000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:05:54.368861000Z [INFO relay::sub_system::bootstrap] starting bootstrap 177
+2026-06-01T13:05:54.369434000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:05:54.369735000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:05:54.374064000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:05:54.374084000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:05:59.368504000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:06:04.368330000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:06:04.368871000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:06:04.368927000Z [INFO relay::sub_system::bootstrap] starting bootstrap 180
+2026-06-01T13:06:04.368970000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:06:04.369984000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:06:04.370282000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:06:04.370387000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:06:04.372572000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:06:09.368803000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:06:09.369013000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T13:06:09.370466000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:06:14.369560000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:06:14.370475000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:06:14.370599000Z [INFO relay::sub_system::bootstrap] starting bootstrap 183
+2026-06-01T13:06:14.370678000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:06:14.372400000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:06:14.372750000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:06:14.373306000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:06:17.196461000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:06:19.371038000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:06:24.369402000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:06:24.370202000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:06:24.370421000Z [INFO relay::sub_system::bootstrap] starting bootstrap 186
+2026-06-01T13:06:24.370915000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:06:24.372901000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:06:24.372966000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:06:24.373098000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:06:24.373416000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:06:29.373667000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:06:34.370514000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:06:34.371288000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:06:34.371787000Z [INFO relay::sub_system::bootstrap] starting bootstrap 189
+2026-06-01T13:06:34.373657000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:06:34.373787000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:06:34.374016000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:06:34.374131000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:06:34.374213000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:06:39.369974000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:06:39.370250000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T13:06:39.374276000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:06:44.370583000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:06:44.372316000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:06:44.372796000Z [INFO relay::sub_system::bootstrap] starting bootstrap 192
+2026-06-01T13:06:44.374605000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:06:44.375282000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:06:44.375506000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:06:44.377226000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:06:44.377354000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:06:49.376654000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:06:54.370719000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:06:54.371104000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:06:54.371198000Z [INFO relay::sub_system::bootstrap] starting bootstrap 195
+2026-06-01T13:06:54.372364000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:06:54.375778000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:06:54.375853000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:06:54.375971000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:06:54.376756000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:06:59.377073000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:07:04.371506000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:07:04.372909000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:07:04.373098000Z [INFO relay::sub_system::bootstrap] starting bootstrap 198
+2026-06-01T13:07:04.375870000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:07:04.377052000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:07:04.377499000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:07:04.377682000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:07:04.377975000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:07:09.370945000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:07:09.371147000Z [INFO relay::sub_system::routing_monitor] routing churn: 3
+2026-06-01T13:07:09.378368000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:07:14.372345000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:07:14.373692000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:07:14.373882000Z [INFO relay::sub_system::bootstrap] starting bootstrap 201
+2026-06-01T13:07:14.374427000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:07:14.378177000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:07:14.378288000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:07:14.378355000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:07:14.379227000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:07:24.371579000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:07:24.371974000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:07:24.372860000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:07:24.372982000Z [INFO relay::sub_system::bootstrap] starting bootstrap 204
+2026-06-01T13:07:24.375069000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:07:24.377616000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:07:24.377660000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:07:24.379902000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:07:29.378294000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:07:34.372005000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:07:34.373405000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:07:34.373490000Z [INFO relay::sub_system::bootstrap] starting bootstrap 207
+2026-06-01T13:07:34.374582000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:07:34.374688000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:07:34.374893000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:07:39.372202000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:07:39.372492000Z [INFO relay::sub_system::routing_monitor] routing churn: 2
+2026-06-01T13:07:39.372538000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:07:39.378167000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:07:44.372500000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:07:44.373019000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:07:44.373919000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:07:44.373993000Z [INFO relay::sub_system::bootstrap] starting bootstrap 210
+2026-06-01T13:07:44.375881000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:07:44.377642000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:07:44.377728000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:07:44.377773000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:07:49.373608000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:07:54.372613000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:07:54.373048000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:07:54.373140000Z [INFO relay::sub_system::bootstrap] starting bootstrap 213
+2026-06-01T13:07:54.373208000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:07:54.374115000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:07:54.374330000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:07:54.374620000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:07:54.375997000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:07:59.377416000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:08:04.373015000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:08:04.373519000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:08:04.373543000Z [INFO relay::sub_system::bootstrap] starting bootstrap 216
+2026-06-01T13:08:04.374698000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:08:04.374729000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:08:04.374758000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:08:04.377618000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:08:04.377686000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:08:09.373187000Z [WARN relay::sub_system::routing_monitor] routing collapse detected: 1
+2026-06-01T13:08:09.373426000Z [INFO relay::sub_system::routing_monitor] routing churn: 4
+2026-06-01T13:08:14.373396000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:08:14.373463000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:08:14.374096000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:08:14.374153000Z [INFO relay::sub_system::bootstrap] starting bootstrap 219
+2026-06-01T13:08:14.375372000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:08:14.375706000Z [INFO relay::sub_system::monitor] connection established with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }
+2026-06-01T13:08:14.376318000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-06-01T13:08:14.376421000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-06-01T13:08:19.373504000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:08:24.166835000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-06-01T13:08:24.375600000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T13:08:24.375831000Z [INFO relay::sub_system::bootstrap] starting bootstrap 222
+2026-06-01T13:08:24.375956000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWKg826eVJ4fWmhd4MHSsX6pLnEq4uZ9M7c4MdNkCs6bQW knows about 1 peers: [12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ]
+2026-06-01T13:08:24.375981000Z [INFO relay::sub_system::monitor] connection closed with 12D3KooWFy6rMXZW5F6SUPXBSJTkmvC2PbgPEv1d8coXeYBjmQiQ via Dialer { address: /ip4/172.23.0.2/udp/4001/quic-v1, role_override: Dialer, port_use: Reuse }

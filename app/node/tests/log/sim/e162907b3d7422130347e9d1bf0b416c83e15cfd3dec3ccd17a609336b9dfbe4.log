@@ -1,0 +1,126 @@
+2026-06-01T12:56:06.795894000Z [INFO client] booting
+2026-06-01T12:56:06.796026000Z [INFO client] peer identity initialized: PeerId("12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed")
+2026-06-01T12:56:06.797006000Z [INFO client] finished booting, entering event loop
+2026-06-01T12:56:06.797139000Z [INFO client::sub_system::bootstrap] dialing bootstrap addr /ip4/172.23.0.2/udp/4001/quic-v1
+2026-06-01T12:56:06.797248000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T12:56:07.797176000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(0)]: bootstrap node None could not reach us: NoServer
+2026-06-01T12:56:21.804834000Z [INFO client::grpc] received dial request: Request { metadata: MetadataMap { headers: {"te": "trailers", "content-type": "application/grpc", "user-agent": "tonic/0.14.5"} }, message: DialRequest { addr: "/ip4/172.23.0.20/udp/4001/quic-v1" }, extensions: {tonic::transport::server::conn::TcpConnectInfo, axum::routing::url_params::UrlParams} }
+2026-06-01T12:56:21.805052000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T12:56:21.906688000Z [INFO client::sub_system::dialer] successfully dialed /ip4/172.23.0.20/udp/4001/quic-v1
+2026-06-01T12:56:36.910964000Z [INFO client::grpc] received dial request: Request { metadata: MetadataMap { headers: {"te": "trailers", "content-type": "application/grpc", "user-agent": "tonic/0.14.5"} }, message: DialRequest { addr: "/ip4/172.23.0.20/udp/4001/quic-v1" }, extensions: {tonic::transport::server::conn::TcpConnectInfo, axum::routing::url_params::UrlParams} }
+2026-06-01T12:56:36.911126000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T12:56:36.911190000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T12:56:36.911240000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T12:56:37.011992000Z [INFO client::sub_system::dialer] successfully dialed /ip4/172.23.0.20/udp/4001/quic-v1
+2026-06-01T12:56:37.797587000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(1)]: bootstrap node None could not reach us: NoServer
+2026-06-01T12:56:52.015433000Z [INFO client::grpc] received dial request: Request { metadata: MetadataMap { headers: {"te": "trailers", "content-type": "application/grpc", "user-agent": "tonic/0.14.5"} }, message: DialRequest { addr: "/ip4/172.23.0.20/udp/4001/quic-v1" }, extensions: {tonic::transport::server::conn::TcpConnectInfo, axum::routing::url_params::UrlParams} }
+2026-06-01T12:56:52.015974000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T12:56:52.116966000Z [INFO client::sub_system::dialer] successfully dialed /ip4/172.23.0.20/udp/4001/quic-v1
+2026-06-01T12:57:07.121050000Z [INFO client::grpc] received dial request: Request { metadata: MetadataMap { headers: {"te": "trailers", "content-type": "application/grpc", "user-agent": "tonic/0.14.5"} }, message: DialRequest { addr: "/ip4/172.23.0.20/udp/4001/quic-v1" }, extensions: {tonic::transport::server::conn::TcpConnectInfo, axum::routing::url_params::UrlParams} }
+2026-06-01T12:57:07.121253000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T12:57:07.121319000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T12:57:07.121364000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T12:57:07.222239000Z [INFO client::sub_system::dialer] successfully dialed /ip4/172.23.0.20/udp/4001/quic-v1
+2026-06-01T12:57:07.797777000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(2)]: bootstrap node None could not reach us: NoServer
+2026-06-01T12:57:22.225333000Z [INFO client::grpc] received dial request: Request { metadata: MetadataMap { headers: {"te": "trailers", "content-type": "application/grpc", "user-agent": "tonic/0.14.5"} }, message: DialRequest { addr: "/ip4/172.23.0.20/udp/4001/quic-v1" }, extensions: {tonic::transport::server::conn::TcpConnectInfo, axum::routing::url_params::UrlParams} }
+2026-06-01T12:57:22.225611000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T12:57:22.326186000Z [INFO client::sub_system::dialer] successfully dialed /ip4/172.23.0.20/udp/4001/quic-v1
+2026-06-01T12:57:37.328889000Z [INFO client::grpc] received dial request: Request { metadata: MetadataMap { headers: {"te": "trailers", "content-type": "application/grpc", "user-agent": "tonic/0.14.5"} }, message: DialRequest { addr: "/ip4/172.23.0.20/udp/4001/quic-v1" }, extensions: {tonic::transport::server::conn::TcpConnectInfo, axum::routing::url_params::UrlParams} }
+2026-06-01T12:57:37.328944000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T12:57:37.328972000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T12:57:37.329013000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T12:57:37.430641000Z [INFO client::sub_system::dialer] successfully dialed /ip4/172.23.0.20/udp/4001/quic-v1
+2026-06-01T12:57:37.797791000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(3)]: bootstrap node None could not reach us: NoServer
+2026-06-01T12:57:52.434370000Z [INFO client::grpc] received dial request: Request { metadata: MetadataMap { headers: {"te": "trailers", "content-type": "application/grpc", "user-agent": "tonic/0.14.5"} }, message: DialRequest { addr: "/ip4/172.23.0.20/udp/4001/quic-v1" }, extensions: {tonic::transport::server::conn::TcpConnectInfo, axum::routing::url_params::UrlParams} }
+2026-06-01T12:57:52.434944000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T12:57:52.536021000Z [INFO client::sub_system::dialer] successfully dialed /ip4/172.23.0.20/udp/4001/quic-v1
+2026-06-01T12:58:07.539463000Z [INFO client::grpc] received dial request: Request { metadata: MetadataMap { headers: {"te": "trailers", "content-type": "application/grpc", "user-agent": "tonic/0.14.5"} }, message: DialRequest { addr: "/ip4/172.23.0.20/udp/4001/quic-v1" }, extensions: {tonic::transport::server::conn::TcpConnectInfo, axum::routing::url_params::UrlParams} }
+2026-06-01T12:58:07.540018000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T12:58:07.540094000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T12:58:07.540152000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T12:58:07.640319000Z [INFO client::sub_system::dialer] successfully dialed /ip4/172.23.0.20/udp/4001/quic-v1
+2026-06-01T12:58:07.797978000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(4)]: bootstrap node None could not reach us: NoServer
+2026-06-01T12:58:22.644100000Z [INFO client::grpc] received dial request: Request { metadata: MetadataMap { headers: {"te": "trailers", "content-type": "application/grpc", "user-agent": "tonic/0.14.5"} }, message: DialRequest { addr: "/ip4/172.23.0.20/udp/4001/quic-v1" }, extensions: {tonic::transport::server::conn::TcpConnectInfo, axum::routing::url_params::UrlParams} }
+2026-06-01T12:58:22.644537000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T12:58:22.746145000Z [INFO client::sub_system::dialer] successfully dialed /ip4/172.23.0.20/udp/4001/quic-v1
+2026-06-01T12:58:37.798082000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T12:58:37.798234000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T12:58:37.798280000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T12:58:37.798319000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(5)]: bootstrap node None could not reach us: NoServer
+2026-06-01T12:59:07.798277000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T12:59:07.798522000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T12:59:07.798616000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T12:59:07.798673000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(6)]: bootstrap node None could not reach us: NoServer
+2026-06-01T12:59:37.798343000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T12:59:37.799067000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T12:59:37.799151000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T12:59:37.799209000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(7)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:00:07.798808000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:00:07.799478000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:00:07.799581000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:00:07.799646000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(8)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:00:37.798966000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:00:37.799185000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:00:37.799266000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:00:37.799327000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(9)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:01:07.799012000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:01:07.799650000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:01:07.799734000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:01:07.799796000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(10)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:01:37.799411000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:01:37.800588000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:01:37.800703000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:01:37.800807000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(11)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:02:07.799678000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:02:07.800242000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:02:07.800301000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:02:07.800343000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(12)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:02:37.799917000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:02:37.800137000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:02:37.800209000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:02:37.800264000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(13)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:03:07.800035000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:03:07.800619000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:03:07.800712000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:03:07.800771000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(14)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:03:37.800096000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:03:37.800384000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:03:37.800411000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:03:37.800444000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(15)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:04:07.800509000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:04:07.800967000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:04:07.801022000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:04:07.801065000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(16)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:04:37.801136000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:04:37.802288000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:04:37.802331000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:04:37.802361000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(17)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:05:07.800659000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:05:07.800915000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:05:07.800951000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:05:07.800985000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(18)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:05:37.801183000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:05:37.802131000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:05:37.802219000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:05:37.802310000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(19)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:06:07.801275000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:06:07.801730000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:06:07.801759000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:06:07.801779000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(20)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:06:37.801487000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:06:37.802231000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:06:37.802317000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:06:37.802375000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(21)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:07:07.801876000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:07:07.802009000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:07:07.802054000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:07:07.802091000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(22)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:07:37.801765000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:07:37.801913000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:07:37.801947000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:07:37.801974000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(23)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:08:07.802359000Z [WARN client::sub_system::routing_monitor] routing collapse detected: 0
+2026-06-01T13:08:07.803231000Z [INFO client::sub_system::routing_monitor] routing churn: 0
+2026-06-01T13:08:07.803272000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one
+2026-06-01T13:08:07.803297000Z [WARN client::sub_system::monitor] autonat Outbound Error [ID: ProbeId(24)]: bootstrap node None could not reach us: NoServer
+2026-06-01T13:08:22.830421000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWRnQn1UkNzUYHjnzLp9oDgi6SKCC997R9CrHNBbKNSPed currently knows no one

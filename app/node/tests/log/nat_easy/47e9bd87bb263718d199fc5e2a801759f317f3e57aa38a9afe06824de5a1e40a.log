@@ -1,0 +1,13 @@
+2026-03-19T20:40:40.019253000Z [INFO client] booting
+2026-03-19T20:40:40.019374000Z [INFO client] peer identity initialized: PeerId("12D3KooWS4rVuckLLkykurAsQCLJnekU9C66PMJCNVJgHDzrjQYC")
+2026-03-19T20:40:40.020425000Z [INFO client] finished booting, entering event loop
+2026-03-19T20:40:40.020609000Z [INFO client::sub_system::bootstrap] dialing bootstrap addr /ip4/172.19.0.2/udp/4001/quic-v1
+2026-03-19T20:40:40.020660000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWS4rVuckLLkykurAsQCLJnekU9C66PMJCNVJgHDzrjQYC currently knows no one
+2026-03-19T20:40:40.022776000Z [INFO client::sub_system::bootstrap] starting bootstrap 0
+2026-03-19T20:40:40.026117000Z [INFO client::sub_system::bootstrap] bootstrap complete, remaining: 3
+2026-03-19T20:40:50.026509000Z [INFO client::grpc] received dial request: Request { metadata: MetadataMap { headers: {"te": "trailers", "content-type": "application/grpc", "user-agent": "tonic/0.14.5"} }, message: DialRequest { addr: "/ip4/172.19.0.4/udp/4001/quic-v1" }, extensions: {tonic::transport::server::conn::TcpConnectInfo, axum::routing::url_params::UrlParams} }
+2026-03-19T20:40:50.026946000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWS4rVuckLLkykurAsQCLJnekU9C66PMJCNVJgHDzrjQYC knows about 2 peers: [12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR, 12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN]
+2026-03-19T20:40:50.127472000Z [INFO client::sub_system::dialer] successfully dialed /ip4/172.19.0.4/udp/4001/quic-v1
+2026-03-19T20:41:00.031750000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWS4rVuckLLkykurAsQCLJnekU9C66PMJCNVJgHDzrjQYC knows about 2 peers: [12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR, 12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN]
+2026-03-19T20:41:50.244209000Z [INFO client::sub_system::routing_monitor] routing churn: 9
+2026-03-19T20:41:50.244641000Z [INFO client::sub_system::discovery_monitor] peer 12D3KooWS4rVuckLLkykurAsQCLJnekU9C66PMJCNVJgHDzrjQYC knows about 2 peers: [12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR, 12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN]

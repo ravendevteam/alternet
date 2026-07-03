@@ -1,0 +1,13 @@
+2026-03-19T20:40:39.469699000Z [INFO bootstrap] booting
+2026-03-19T20:40:39.469975000Z [INFO bootstrap] peer identity initialized: PeerId("12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN")
+2026-03-19T20:40:39.470810000Z [INFO bootstrap] finished booting, entering event loop
+2026-03-19T20:40:39.470959000Z [INFO bootstrap::sub_system::discovery_monitor] peer 12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN currently knows no one
+2026-03-19T20:40:50.028648000Z [INFO bootstrap::sub_system::discovery_monitor] peer 12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN knows about 2 peers: [12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR, 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi]
+2026-03-19T20:41:00.034324000Z [INFO bootstrap::sub_system::discovery_monitor] peer 12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN knows about 2 peers: [12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR, 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi]
+2026-03-19T20:41:10.543310000Z [INFO bootstrap::sub_system::routing_monitor] routing churn: 14
+2026-03-19T20:41:10.543927000Z [INFO bootstrap::sub_system::discovery_monitor] peer 12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN knows about 2 peers: [12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR, 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi]
+2026-03-19T20:41:20.551852000Z [INFO bootstrap::sub_system::discovery_monitor] peer 12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN knows about 2 peers: [12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR, 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi]
+2026-03-19T20:41:30.559795000Z [INFO bootstrap::sub_system::discovery_monitor] peer 12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN knows about 2 peers: [12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR, 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi]
+2026-03-19T20:41:40.566610000Z [INFO bootstrap::sub_system::routing_monitor] routing churn: 9
+2026-03-19T20:41:40.566685000Z [INFO bootstrap::sub_system::discovery_monitor] peer 12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN knows about 2 peers: [12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR, 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi]
+2026-03-19T20:41:50.571700000Z [INFO bootstrap::sub_system::discovery_monitor] peer 12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN knows about 2 peers: [12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR, 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi]

@@ -1,0 +1,21 @@
+2026-03-19T20:40:39.649065000Z [INFO relay] booting
+2026-03-19T20:40:39.649204000Z [INFO relay] peer identity initialized: PeerId("12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi")
+2026-03-19T20:40:39.650164000Z [INFO relay] finished booting, entering event loop
+2026-03-19T20:40:39.650332000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.19.0.2/udp/4001/quic-v1
+2026-03-19T20:40:39.650374000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi currently knows no one
+2026-03-19T20:40:39.652862000Z [INFO relay::sub_system::bootstrap] starting bootstrap 0
+2026-03-19T20:40:39.653606000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 0
+2026-03-19T20:40:39.845845000Z [INFO relay::sub_system::bootstrap] peer count dropped below threshold (1 < 2), retrying bootstrap in 8s
+2026-03-19T20:40:50.030310000Z [INFO relay::sub_system::bootstrap] bootstrap timeout expired after 8s, retrying
+2026-03-19T20:40:50.030434000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi knows about 1 peers: [12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN]
+2026-03-19T20:40:50.031714000Z [INFO relay::sub_system::bootstrap] dialing bootstrap addr /ip4/172.19.0.2/udp/4001/quic-v1
+2026-03-19T20:40:50.031920000Z [INFO relay::sub_system::bootstrap] starting bootstrap 3
+2026-03-19T20:40:50.035339000Z [INFO relay::sub_system::bootstrap] bootstrap complete, remaining: 0
+2026-03-19T20:41:00.036165000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi knows about 2 peers: [12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN, 12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR]
+2026-03-19T20:41:10.544018000Z [INFO relay::sub_system::routing_monitor] routing churn: 21
+2026-03-19T20:41:10.544110000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi knows about 2 peers: [12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN, 12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR]
+2026-03-19T20:41:20.552517000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi knows about 2 peers: [12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN, 12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR]
+2026-03-19T20:41:30.560823000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi knows about 2 peers: [12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR, 12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN]
+2026-03-19T20:41:40.566732000Z [INFO relay::sub_system::routing_monitor] routing churn: 7
+2026-03-19T20:41:40.566785000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi knows about 2 peers: [12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR, 12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN]
+2026-03-19T20:41:50.655595000Z [INFO relay::sub_system::discovery_monitor] peer 12D3KooWGDua4QUn9PvraGFDbbxrAgZot9Mq9eWHHVQCJ6KJWfxi knows about 2 peers: [12D3KooWKNMWBuCUP9Q9fes1T9a4up4ZUTqifTycE2WPDzEwvjoR, 12D3KooWLuQc9B4L4V1cPrdbqbptuq2QahovBGHCuknxuvau5eEN]
