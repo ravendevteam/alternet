@@ -8,37 +8,45 @@ pub enum MemoryStoreKey {
 	Ownership(soroban_sdk::String),
 	OwnershipExpiryTimestamp(soroban_sdk::String),
 	Name,
-	Symbol,
-	TotalSupply
+	Symbol
 }
-
+// Partial-Erc721, Partial Erc-173
 #[soroban_sdk::contract]
 pub struct Main;
 
-#[soroban_sdk::contractimpl]
 impl Main {
+	fn extend_domain_ttl(state: &soroban_sdk::storage::Persistent, domain: &soroban_sdk::String) {
+		let own_key: MemoryStoreKey = MemoryStoreKey::Ownership(domain.clone());
+		let exp_key: MemoryStoreKey = MemoryStoreKey::OwnershipExpiryTimestamp(domain.clone());
+		
+		state.extend_ttl(&own_key, 31500000, 31500000);
+		state.extend_ttl(&exp_key, 31500000, 31500000);
+	}
+}
+
+#[soroban_sdk::contractimpl]
+impl Main {	
 	pub fn configure(environment: soroban_sdk::Env, admin: soroban_sdk::Address, name: soroban_sdk::String, symbol: soroban_sdk::String) {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
 		let event: soroban_sdk::events::Events = environment.events();
 
 		if state.has(&MemoryStoreKey::Admin)
 		|| state.has(&MemoryStoreKey::Name)
-		|| state.has(&MemoryStoreKey::Symbol)
-	 	|| state.has(&MemoryStoreKey::TotalSupply) {
+		|| state.has(&MemoryStoreKey::Symbol) {
 			panic!("already configured")
 		}
 
 		state.set(&MemoryStoreKey::Admin, &admin);
 		state.set(&MemoryStoreKey::Name, &name);
 		state.set(&MemoryStoreKey::Symbol, &symbol);
-
-		let n_0: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 0);
-
-		state.set(&MemoryStoreKey::TotalSupply, &n_0);
+		
+		state.extend_ttl(&MemoryStoreKey::Admin, 31500000, 31500000);
+		state.extend_ttl(&MemoryStoreKey::Name, 31500000, 31500000);
+		state.extend_ttl(&MemoryStoreKey::Symbol, 31500000, 31500000);
 
 		event.publish((soroban_sdk::symbol_short!("wake"), admin), (name, symbol));
 	}
-
+	
 	pub fn name(environment: soroban_sdk::Env) -> soroban_sdk::String {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
 
@@ -51,19 +59,18 @@ impl Main {
 		state.get(&MemoryStoreKey::Symbol).expect("set during configuration")
 	}
 
-	pub fn total_supply(environment: soroban_sdk::Env) -> soroban_sdk::U256 {
-		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
-		let n_0: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 0);
-
-		state.get(&MemoryStoreKey::TotalSupply).unwrap_or(n_0)
-	}
-
 	pub fn expiry_timestamp(environment: soroban_sdk::Env, domain: soroban_sdk::String) -> Option<u64> {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
 
 		state.get(&MemoryStoreKey::OwnershipExpiryTimestamp(domain))
 	}
 
+	pub fn owner(environment: soroban_sdk::Env) -> soroban_sdk::Address {
+		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+
+		state.get(&MemoryStoreKey::Admin).expect("set during configuration")
+	}
+	
 	pub fn owner_of(environment: soroban_sdk::Env, domain: soroban_sdk::String) -> Option<soroban_sdk::Address> {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
 
@@ -73,6 +80,8 @@ impl Main {
 			if now >= expiration {
 				return None
 			}
+			
+			Self::extend_domain_ttl(&state, &domain);
 		}
 
 		state.get(&MemoryStoreKey::Ownership(domain))
@@ -94,14 +103,11 @@ impl Main {
 
 		let expiration: u64 = environment.ledger().timestamp() + 31500000; // roughly one year from now
 
-		let n_1: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 1);
-		let total_supply: soroban_sdk::U256 = Self::total_supply(Clone::clone(&environment));
-		let total_supply: soroban_sdk::U256 = total_supply.add(&n_1);
-
 		state.set(&own_key, &owner);
 		state.set(&exp_key, &expiration);
-		state.set(&MemoryStoreKey::TotalSupply, &total_supply);
 
+		Self::extend_domain_ttl(&state, &domain);
+		
 		event.publish((soroban_sdk::symbol_short!("mint"), owner), (domain, expiration));
 	}
 
@@ -121,13 +127,8 @@ impl Main {
 			panic!("not authorized")
 		}
 
-		let n_1: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 1);
-		let total_supply: soroban_sdk::U256 = Self::total_supply(environment.clone());
-		let total_supply: soroban_sdk::U256 = total_supply.sub(&n_1);
-
 		state.remove(&own_key);
 		state.remove(&exp_key);
-		state.set(&MemoryStoreKey::TotalSupply, &total_supply);
 
 		event.publish((soroban_sdk::symbol_short!("burn"), owner), domain);
 	}
@@ -147,6 +148,8 @@ impl Main {
 		}
 
 		state.set(&key, &recipient);
+		
+		Self::extend_domain_ttl(&state, &domain);
 
 		event.publish((soroban_sdk::symbol_short!("transfer"), sender, recipient), domain);
 	}
