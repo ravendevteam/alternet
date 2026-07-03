@@ -44,7 +44,7 @@ impl Main {
 		harberger_tax_rate: soroban_sdk::U256,
 		target_traffic: soroban_sdk::U256
 	) {
-		if environment.storage().persistent().has(&MemoryStoreKey::Tkn) 
+		if environment.storage().persistent().has(&MemoryStoreKey::Tkn)
 		|| environment.storage().persistent().has(&MemoryStoreKey::Nft) {
 			panic!("awoken")
 		}
@@ -55,58 +55,84 @@ impl Main {
 		environment.storage().persistent().set(&MemoryStoreKey::RenewMaxFee, &max_fee);
 		environment.storage().persistent().set(&MemoryStoreKey::RenewTargetTraffic, &target_traffic);
 	}
-	
+
 	// attestations must be cachable and stable, they must be immutable
-	pub fn attestation(environment: soroban_sdk::Env, account: ForeignPublicKey) -> Option<soroban_sdk::Address> {		
+	pub fn attestation(environment: soroban_sdk::Env, account: ForeignPublicKey) -> Option<soroban_sdk::Address> {
 		environment.storage().persistent().get(&MemoryStoreKey::AttestationOwner(account.0))
 	}
-	
+
 	pub fn attest(
-		environment: soroban_sdk::Env, 
-		local_signer: soroban_sdk::Address, 
+		environment: soroban_sdk::Env,
+		local_signer: soroban_sdk::Address,
 		foreign_signer: ForeignPublicKey,
 		foreign_signature: ForeignSignature
 	) {
 		local_signer.require_auth();
-		
+
 		let message: soroban_sdk::Bytes = local_signer.clone().to_xdr(&environment);
-		
+
 		let foreign_signer: &soroban_sdk::BytesN<32> = &foreign_signer.0;
 		let foreign_signature: &soroban_sdk::BytesN<64> = &foreign_signature.0;
-		
+
 		environment.crypto().ed25519_verify(foreign_signer, &message, foreign_signature);
 		environment.storage().persistent().set(&MemoryStoreKey::Attestation(local_signer.clone()), &foreign_signer);
 		environment.storage().persistent().set(&MemoryStoreKey::AttestationOwner(foreign_signer.clone()), &local_signer);
 		environment.events().publish((soroban_sdk::symbol_short!("attest"), local_signer.clone()), foreign_signer.clone());
 	}
-	
+
 	pub fn mint(environment: soroban_sdk::Env, account: soroban_sdk::Address, domain: soroban_sdk::String) {
 		account.require_auth();
-	
+
 		let token_address: soroban_sdk::Address = environment.storage().persistent().get(&MemoryStoreKey::Tkn).unwrap();
+		let domain_nft_address = environment.storage().persistent().get(&MemoryStoreKey::Nft).unwrap();
+
+		environment.invoke_contract::<Option<soroban_sdk::Address>>(
+			&domain_nft_address,
+			&soroban_sdk::symbol_short!("owner_of"),
+			soroban_sdk::vec![
+				&environment,
+				soroban_sdk::Val::from_val(&environment, &domain)
+			]
+		)
+		.ok_or(()) // turn option to err, where we expect None, if Some, then panic
+		.expect_err("domain already owned by someone else");
+
+
+
+		// check thaty the domain is not owned by someone else first
+		// then check if its expired and been sent back to the mintable pool
 
 	    environment.invoke_contract::<()>(
-	        &token_address, 
+	        &token_address,
 	        &soroban_sdk::symbol_short!("burn"),
 	        soroban_sdk::vec![
-		        &environment, 
+		        &environment,
 		        soroban_sdk::Val::from_val(&environment, &account),
-				soroban_sdk::Val::from_val(&environment, &299)
+				soroban_sdk::Val::from_val(&environment, &10000_00) // hardcoded for until proper algorithms are in place
 		    ]
 	    );
-		
+
+		environment.invoke_contract::<()>(
+			&domain_nft_address,
+			&soroban_sdk::symbol_short!("mint"),
+			soroban_sdk::vec![
+				&environment,
+				soroban_sdk::Val::from_val(&environment, &domain)
+			]
+		);
+
 		environment.events().publish((soroban_sdk::symbol_short!("mint"), account), ());
 	}
-	
+
 	pub fn renew(environment: soroban_sdk::Env) {
 		// ...
 	}
 
 	pub fn lock(environment: soroban_sdk::Env, owner: soroban_sdk::Address, amount: soroban_sdk::U256) {
 		owner.require_auth();
-		
+
 		let token_address: soroban_sdk::Address = environment.storage().persistent().get(&MemoryStoreKey::Tkn).unwrap();
-		
+
 		environment.invoke_contract::<()>(
 			&token_address,
 			&soroban_sdk::symbol_short!("transfer"),
@@ -117,26 +143,22 @@ impl Main {
 				soroban_sdk::Val::from_val(&environment, &amount)
 			]
 		);
-		
+
 		let n_0: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 0);
 		let key: MemoryStoreKey = MemoryStoreKey::BalanceLock(owner.clone());
 		let old_amount: soroban_sdk::U256 = environment.storage().persistent().get::<_, soroban_sdk::U256>(&key).unwrap_or(n_0);
 		let new_amount: soroban_sdk::U256 = old_amount.add(&amount);
-		
+
 		environment.storage().persistent().set::<_, _>(&key, &new_amount);
 		environment.events().publish((soroban_sdk::symbol_short!("lock"), owner), amount);
 	}
-	
-	pub fn submit_proof(environment: soroban_sdk::Env, proof: Proof) {
-		// tied to the cryptographic commitment mechanism, done in cryptography milestone
-	}
-	
-	pub fn claim(environment: soroban_sdk::Env) {
-		// claims reward from locked pool
 
-		
+	pub fn claim(environment: soroban_sdk::Env, proof: Proof) {
+		// claims reward from locked pool
+		// proof is automatically mapped to the cryptographic commitment
+
 	}
-	
+
 	fn fee_rational(
 		environment: soroban_sdk::Env,
 		min_fee: soroban_sdk::U256,
@@ -146,21 +168,21 @@ impl Main {
 	) -> soroban_sdk::U256 {
 		let n_0: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 0);
 		let n_1: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 1);
-		
+
 		if traffic <= n_0 {
 			return max_fee
 		}
-		
+
 		n_0
 	}
-	
+
 	fn harberger_tax(environment: soroban_sdk::Env, last_mint: soroban_sdk::U256, tax_rate: soroban_sdk::U256) -> soroban_sdk::U256 {
 		let n_100: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&environment, 100);
 		let out: soroban_sdk::U256 = last_mint.div(&n_100);
 		let out: soroban_sdk::U256 = out.mul(&tax_rate);
 		out
 	}
-	
+
 	// algorithm to measure complexity of domains
 	fn shannon_entropy(environment: soroban_sdk::Env, domain: soroban_sdk::String) -> soroban_sdk::U256 {
 		soroban_sdk::U256::from_u32(&environment, 1)

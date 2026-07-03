@@ -101,6 +101,7 @@ use libp2p::autonat;
 use libp2p::futures::StreamExt as _;
 use libp2p::relay;
 use clap::Parser as _;
+use prost::Message;
 use ubyte::ToByteUnit as _;
 use num::ToPrimitive as _;
 
@@ -203,7 +204,7 @@ trait Dns {
 	type LocalAlgorithm;
 	type ForeignAlgorithm;
 	
-	async fn receive_attestation(
+	async fn attest(
 		&self,
 		local_signer: lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>,
 		foreign_signer: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>,
@@ -219,9 +220,6 @@ trait Dns {
 	async fn attestation(&self, public_key: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>>;
 
 	async fn foreign_attestation(&self) -> Result<lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>>;
-
-	async fn locked_balance_of(&self, owner: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<Balance>;
-	async fn locked_balance_timeout_of(&self, owner: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<std::time::Instant>;
 
 	// relay can request a commitment from an account they are serving
 	async fn open_commitment(&self, account: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result;
@@ -284,22 +282,75 @@ impl Dns for StellarTestnet {
 	type LocalAlgorithm = ();
 	type ForeignAlgorithm = lib_cryptography_algorithm_ed25519::Ed25519Algorithm;
 	
+	async fn attestation(&self, public_key: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>> {
+		let dns: lib_bytes::NonEmpty = self.dns.to_owned().into();
+		let dns: bytes::Bytes = dns.into();
+		let dns: Vec<_> = dns.to_vec();
+		let dns: &str = str::from_utf8(&dns)?;
+		let public_key: lib_bytes::NonEmpty = public_key.into();
+		let public_key: bytes::Bytes = public_key.into();
+		let public_key: Vec<_> = public_key.to_vec();
+		let public_key: &str = str::from_utf8(&public_key)?;
+		let out: String = duct::cmd!(
+			"stellar", "contract", "invoke",
+			"--network", "remote",
+			"--source", "admin",
+			"--id", &dns,
+			"--",
+			"attestation",
+			"--public_key", &public_key
+		)
+		.read()?;
+		let out: Vec<_> = out.encode_to_vec();
+		let out: bytes::Bytes = out.into();
+		let out: lib_bytes::NonEmpty = out.try_into()?;
+		let out: lib_cryptography::public_key::PublicKey<_> = out.into();
+		Ok(out)
+	}
+	
 	// generate attestation
-	async fn receive_attestation(
+	async fn attest(
 		&self,
 		local_signer: lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>,
 		foreign_signer: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>,
 		foreign_signature: lib_cryptography::signature::Signature<Self::ForeignAlgorithm>
 	) -> Result {
-		todo!()
+		let dns: lib_bytes::NonEmpty = self.dns.to_owned().into();
+		let dns: bytes::Bytes = dns.into();
+		let dns: Vec<_> = dns.to_vec();
+		let dns: &str = str::from_utf8(&dns)?;
+		let local_signer: lib_bytes::NonEmpty = local_signer.into();
+		let local_signer: bytes::Bytes = local_signer.into();
+		let local_signer: Vec<_> = local_signer.to_vec();
+		let local_signer: &str = str::from_utf8(&local_signer)?;
+		let foreign_signer: lib_bytes::NonEmpty = foreign_signer.into();
+		let foreign_signer: bytes::Bytes = foreign_signer.into();
+		let foreign_signer: Vec<_> = foreign_signer.to_vec();
+		let foreign_signer: &str = str::from_utf8(&foreign_signer)?;
+		let foreign_signature: lib_bytes::NonEmpty = foreign_signature.into();
+		let foreign_signature: bytes::Bytes = foreign_signature.into();
+		let foreign_signature: Vec<_> = foreign_signature.to_vec();
+		let foreign_signature: &str = str::from_utf8(&foreign_signature)?;
+		duct::cmd!(
+			"stellar", "contract", "invoke",
+			"--network", "remote",
+			"--source", "admin",
+			"--id", &dns,
+			"--",
+			"attest",
+			"--local_signer", &local_signer,
+			"--foreign_signer", &foreign_signer,
+			"--foreign_signature", &foreign_signature
+		)
+		.read()?;
+		Ok(())
 	}
-	
 	
 	async fn foreign_attestation(&self) -> Result<lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>> {
 		todo!()
 	}
 	
-	async fn open_commitment(&self, account: identity::PublicKey) -> Result {
+	async fn open_commitment(&self, account: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result {
 		todo!()
 	}
 	
@@ -348,19 +399,7 @@ impl Dns for StellarTestnet {
 		Ok(())
 	}
 	
-	async fn locked_balance_of(&self, owner: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<Balance> {	
-		todo!()
-	}
-	
-	async fn locked_balance_timeout_of(&self, owner: identity::PublicKey) -> Result<std::time::Instant> {
-		todo!()
-	}
-	
 	async fn claim(&self, proof: Proof) -> Result {
-		todo!()
-	}
-	
-	async fn attestation(&self, pk: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<PublicKey> {
 		todo!()
 	}
 	
