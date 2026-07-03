@@ -4942,13 +4942,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "soroban_mock_congestion_monitor"
-version = "0.1.0"
-dependencies = [
- "soroban-sdk",
-]
-
-[[package]]
 name = "soroban_mock_dns"
 version = "0.1.0"
 dependencies = [
@@ -4964,13 +4957,6 @@ dependencies = [
 
 [[package]]
 name = "soroban_mock_nft"
-version = "0.1.0"
-dependencies = [
- "soroban-sdk",
-]
-
-[[package]]
-name = "soroban_mock_pool"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk",

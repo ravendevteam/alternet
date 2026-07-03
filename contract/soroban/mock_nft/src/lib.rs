@@ -8,6 +8,7 @@ pub enum MemoryStoreKey {
 	Name,
 	Symbol
 }
+
 // Partial-Erc721, Partial Erc-173
 #[soroban_sdk::contract]
 pub struct Main;
