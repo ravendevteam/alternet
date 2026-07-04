@@ -155,12 +155,6 @@ struct Fee(u64);
 #[derive(derive_more::From)]
 struct Duration(u64);
 
-#[derive(Debug)]
-#[derive(Clone)]
-#[derive(PartialEq)]
-#[derive(Eq)]
-#[derive(derive_more::From)]
-struct PublicKey(Vec<u8>);
 
 #[derive(Debug)]
 #[derive(Clone)]
@@ -170,29 +164,7 @@ struct PublicKey(Vec<u8>);
 #[derive(derive_more::From)]
 struct Domain(String);
 
-#[derive(Debug)]
-#[derive(Clone)]
-#[derive(PartialEq)]
-#[derive(Eq)]
-#[derive(derive_more::From)]
-#[derive(derive_more::Add)]
-#[derive(derive_more::Sub)]
-struct Traffic(u64);
-
-#[derive(Debug)]
-#[derive(Clone)]
-#[derive(PartialEq)]
-#[derive(Eq)]
-#[derive(derive_more::From)]
-#[derive(derive_more::Add)]
-#[derive(derive_more::Sub)]
-struct Age(std::time::Duration);
-
-#[derive(Debug)]
-#[derive(Clone)]
-#[derive(PartialEq)]
-#[derive(Eq)]
-struct Proof;
+struct BlindProof<T>(lib_cryptography::hash::Hash<T>);
 
 /// External dns source of truth provider, may be swapped and implemented by
 /// other chains or networks, the nodes rely on this sytem for value transfer
@@ -204,59 +176,19 @@ trait Dns {
 	type LocalAlgorithm;
 	type ForeignAlgorithm;
 	
-	async fn attest(
-		&self,
-		local_signer: lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>,
-		foreign_signer: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>,
-		foreign_signature: lib_cryptography::signature::Signature<Self::ForeignAlgorithm>
-	) -> Result;
-
-	/// Receives a proof of trasit from src to dst through possible relays.
-	async fn claim(&self, proof: Proof) -> Result;
-
-	// for a given foreign key will return the onchain identity
-	//
-	// i own this pk offchain, this is who i am onchain
-	async fn attestation(&self, public_key: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>>;
-
-	async fn foreign_attestation(&self) -> Result<lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>>;
-
-	// relay can request a commitment from an account they are serving
-	async fn open_commitment(&self, account: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result;
-
-	// account accepts the commitment or reservation
-	async fn accept_commitment(&self) -> Result;
-
-	// this will be replaced with a cryptographic commitment scheme in cryptography
-	async fn account_has_sufficient_balance(&self, account: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<bool>;
-
-	// in the future this will be time variable
-	/// Creates a timelocked pool of assets used for congestion charge
-	async fn lock(&self, amount: Balance) -> Result;
-
-	async fn renew(&self, domain: Domain) -> Result;
+	async fn attestation(&self, signer: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Option<lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>>;
+	async fn attest(&self, local_signer: lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>, foreign_signer: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>, foreign_signature: lib_cryptography::signature::Signature<Self::ForeignAlgorithm>) -> Result;
+	async fn mint(&self, account: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>, domain: Domain);
+	async fn renew(&self, domain: Domain);
 	
-	async fn mint(&self, domain: Domain) -> Result;
+	// verifies validity, should only be happening sparingly
+	async fn verify_validity(&self, pool_key: u32, coupon: lib_cryptography::hash::Hash<Self::ForeignAlgorithm>);
 	
-	async fn congestion_charge(&self) -> Result<Fee>;
-	async fn fee(&self) -> Result<Fee>;
+	#[cfg(feature = "relay")]
+	async fn claim(&self, pool_key: u32, proofs: Vec<BlindProof<Self::ForeignAlgorithm>>);
 	
-	async fn traffic(&self, domain: Domain) -> Result<Traffic>;
-	
-	
-	// both metrics backed by cryptographic proof, transactions carry a fee to minimize false activity
-	
-	// total amount spent, can be used to vet if clients are actually trustworthy, for new clients, shorter sessions might be ideal, for longer
-	// running clients, longer sessions can take place increasing efficiency
-	// 
-	// ideally measured on a rolling 7 - 30 day basis
-	async fn total_spend(&self) -> Result<Balance>;
-	
-	// total rewards earnt, may be used a judge of reliability
-	async fn total_claim(&self) -> Result<Balance>;
-	
-	// measures the time since the first transaction 
-	async fn age(&self, pk: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<Option<Age>>;
+	#[cfg(feature = "server")]							// pool key, naked coupons
+	async fn commit<const T: usize>(&self, amount: Balance) -> (u32, [BlindProof<Self::ForeignAlgorithm>; T]);
 }
 
 #[derive(Debug)]
@@ -308,13 +240,7 @@ impl Dns for StellarTestnet {
 		Ok(out)
 	}
 	
-	// generate attestation
-	async fn attest(
-		&self,
-		local_signer: lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>,
-		foreign_signer: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>,
-		foreign_signature: lib_cryptography::signature::Signature<Self::ForeignAlgorithm>
-	) -> Result {
+	async fn attest(&self, local_signer: lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>, foreign_signer: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>, foreign_signature: lib_cryptography::signature::Signature<Self::ForeignAlgorithm>) -> Result {
 		let dns: lib_bytes::NonEmpty = self.dns.to_owned().into();
 		let dns: bytes::Bytes = dns.into();
 		let dns: Vec<_> = dns.to_vec();
@@ -346,126 +272,28 @@ impl Dns for StellarTestnet {
 		Ok(())
 	}
 	
-	async fn foreign_attestation(&self) -> Result<lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>> {
-		todo!()
-	}
-	
-	async fn open_commitment(&self, account: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result {
-		todo!()
-	}
-	
-	async fn accept_commitment(&self) -> Result {
-		todo!()
-	}
-	
-	async fn account_has_sufficient_balance(&self, account: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<bool> {
-		let account: lib_cryptography::public_key::PublicKey<_> = self.attestation(account).await?;
-		let account: lib_bytes::NonEmpty = account.into();
-		let account: bytes::Bytes = account.into();
-		let account: Vec<_> = account.to_vec();
-		let account: &str = str::from_utf8(&account)?;
-		let dns: lib_bytes::NonEmpty = self.dns.to_owned().into();
-		let dns: bytes::Bytes = dns.into();
-		let dns: Vec<_> = dns.to_vec();
-		let dns: &str = str::from_utf8(&dns)?;
-		let out: String = duct::cmd!(
-			"stellar", "contract", "invoke",
-			"--network", "remote",
-			"--source", "admin",
-			"--id", &dns,
-			"--",
-			"account_has_sufficient_balance",
-			"--account", &account
-		)
-		.read()?;
-		let out: bool = out.parse()?;
-		Ok(out)
-	}
-	
-	async fn lock(&self, amount: Balance) -> Result {
-		let Balance(amount) = amount;
+	async fn mint(&self, account: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>, domain: Domain) {
 		
-		duct::cmd!(
-			"stellar", "contract", "invoke",
-			"--network", "remote",
-			"--source", "admin",
-			"--",
-			"lock",
-			"--owner", "admin",
-			"--amount", &format!("{}", amount)
-		)
-		.run()?;
+	}
+	
+	async fn renew(&self, domain: Domain) {
 		
-		Ok(())
 	}
 	
-	async fn claim(&self, proof: Proof) -> Result {
-		todo!()
-	}
-	
-	async fn renew(&self, domain: Domain) -> Result {
-		todo!()
-	}
-	
-	async fn mint(&self, domain: Domain) -> Result {
-		let Domain(domain) = domain;
+	async fn verify_validity(&self, pool_key: u32, coupon: lib_cryptography::hash::Hash<Self::ForeignAlgorithm>) {
 		
-		let dns: lib_bytes::NonEmpty = self.dns.to_owned().into();
-		let dns: bytes::Bytes = dns.into();
-		let dns: Vec<_> = dns.to_vec();
-		let dns = str::from_utf8(&dns)?;
+	}
+	
+	#[cfg(feature = "relay")]
+	async fn claim(&self, pool_key: u32, proofs: Vec<BlindProof<Self::ForeignAlgorithm>>) {
 		
+	}
+	
+	#[cfg(feature = "server")]							// pool key, naked coupons
+	async fn commit<const T: usize>(&self, amount: Balance) -> (u32, [BlindProof<Self::ForeignAlgorithm>; T]) {
 		
-		
-		duct::cmd!(
-			"stellar", "contract", "invoke",
-			"--network", "remote",
-			"--source", "admin",
-			"--id", &dns,
-			"--",
-			"mint",
-			"--owner", "admin",
-			"--domain", &domain
-		)
-		.run()?;
-		
-		Ok(())
-	}
-	
-	async fn congestion_charge(&self) -> Result<Fee> {
-		todo!()
-	}
-	
-	async fn fee(&self) -> Result<Fee> {
-		duct::cmd!(
-			"stellar", "contract", "invoke",
-			"--network", "",
-			"--source", "",
-			"--",
-			"fee"
-		);
-		
-
-		todo!()
-	}
-	
-	async fn traffic(&self, domain: Domain) -> Result<Traffic> {
-		todo!()
-	}
-	
-	async fn total_spend(&self) -> Result<Balance> {
-		todo!()
-	}
-	
-	async fn total_claim(&self) -> Result<Balance> {
-		todo!()
-	}
-	
-	async fn age(&self, pk: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<Option<Age>> {
-		todo!()
 	}
 }
-
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 

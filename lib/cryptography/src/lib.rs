@@ -1,4 +1,5 @@
 pub mod encrypted;
+pub mod hash;
 pub mod key;
 pub mod message;
 pub mod pair;

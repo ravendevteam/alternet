@@ -1,7 +1,6 @@
 [workspace]
 resolver = "3"
 members = [
-	# "app/mchain",
     "app/node",
     "image",
     "image_util",
