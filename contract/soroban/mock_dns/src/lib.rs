@@ -86,7 +86,7 @@ impl Domain for soroban_sdk::String {
 	}
 }
 
-trait Shell {
+trait Core {
 	fn configure(
 		self,
 		tkn: soroban_sdk::Address,
@@ -101,13 +101,13 @@ trait Shell {
 	fn attestation(self, account: ForeignPublicKey) -> Option<soroban_sdk::Address>;
 	fn attest(self, local_signer: PublicKey, foreign_signer: ForeignPublicKey, foreign_signature: ForeignSignature);
 	fn mint(self, account: soroban_sdk::Address, domain: soroban_sdk::String);
-	fn renew(environment: soroban_sdk::Env, domain: soroban_sdk::String);
-	fn verify_validity(&self, pool_key: u32, proof: soroban_sdk::Bytes);
-	fn claim(&self, pool_key: u32, proofs: soroban_sdk::Vec<soroban_sdk::Bytes>);
-	fn commit(&self, amount: soroban_sdk::U256, count: u128) -> (u32, soroban_sdk::Vec<soroban_sdk::Bytes>);
+	fn renew(self, domain: soroban_sdk::String);
+	fn verify_validity(self, pool_key: u32, proof: soroban_sdk::Bytes);
+	fn claim(self, pool_key: u32, proofs: soroban_sdk::Vec<soroban_sdk::Bytes>);
+	fn commit(self, amount: soroban_sdk::U256, count: u128) -> (u32, soroban_sdk::Vec<soroban_sdk::Bytes>);
 }
 
-impl Shell for soroban_sdk::Env {
+impl Core for soroban_sdk::Env {
 	fn configure(
 		self,
 		tkn: soroban_sdk::Address,
@@ -171,18 +171,14 @@ impl Shell for soroban_sdk::Env {
 		let state: soroban_sdk::storage::Persistent = self.storage().persistent();
 		let event: soroban_sdk::events::Events = self.events();
 		
-		account.require_auth();
+		// account.require_auth();
 
 		let tkn_public_key: soroban_sdk::Address = state.get(&MemoryStoreKey::Tkn).expect("set during configuration");
 		let nft_public_key: soroban_sdk::Address = state.get(&MemoryStoreKey::Nft).expect("set during configuration");
-		
 		let min_fee: soroban_sdk::U256 = state.get(&MemoryStoreKey::MintMinFee).expect("set during configuration");
 		let max_fee: soroban_sdk::U256 = state.get(&MemoryStoreKey::MintMaxFee).expect("set during configuration");
-		
 		let decimals: u32 = 2;
-		
 		let entropy_multiplier: soroban_sdk::U256 = domain.entropy(decimals);
-		
 		let scaler: u32 = 10;
 		let scaler: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&self, scaler);
 		let entropy_inversion: soroban_sdk::U256 = scaler.sub(&entropy_multiplier);
@@ -215,15 +211,16 @@ impl Shell for soroban_sdk::Env {
 			panic!("domain already owned by someone else")
 		}
 
-	    self.invoke_contract::<()>(
-	        &tkn_public_key,
-	        &soroban_sdk::symbol_short!("burn"),
-	        soroban_sdk::vec![
+		self.invoke_contract::<()>(
+		    &tkn_public_key,
+		    &soroban_sdk::Symbol::new(&self, "transfer"),
+		    soroban_sdk::vec![
 		        &self,
 		        soroban_sdk::Val::from_val(&self, &account),
-				soroban_sdk::Val::from_val(&self, &fee)
+		        soroban_sdk::Val::from_val(&self, &self.current_contract_address()),
+		        soroban_sdk::Val::from_val(&self, &fee)
 		    ]
-	    );
+		);
 
 		self.invoke_contract::<()>(
 			&nft_public_key,
@@ -238,24 +235,82 @@ impl Shell for soroban_sdk::Env {
 		event.publish((soroban_sdk::symbol_short!("mint"), account), ());
 	}
 	
-	fn renew(environment: soroban_sdk::Env, domain: soroban_sdk::String) {
+	fn renew(self, domain: soroban_sdk::String) {
+		let state: soroban_sdk::storage::Persistent = self.storage().persistent();
+		let event: soroban_sdk::events::Events = self.events();
 		
+		let tkn_public_key: soroban_sdk::Address = state.get(&MemoryStoreKey::Tkn).expect("set during configuration");
+		let nft_public_key: soroban_sdk::Address = state.get(&MemoryStoreKey::Nft).expect("set during configuration");
+		
+		let owner: Option<_> = self.invoke_contract::<Option<soroban_sdk::Address>>(
+			&nft_public_key,
+			&soroban_sdk::symbol_short!("owner_of"),
+			soroban_sdk::vec![
+				&self,
+				soroban_sdk::Val::from_val(&self, &domain)
+			]
+		);
+		let owner: soroban_sdk::Address = owner.expect("may only renew an owned domain");
+		
+		//owner.require_auth();
+		
+		let min_fee: soroban_sdk::U256 = state.get(&MemoryStoreKey::RenewMinFee).expect("set during configuration");
+		let max_fee: soroban_sdk::U256 = state.get(&MemoryStoreKey::RenewMaxFee).expect("set during configuration");
+		let decimals: u32 = 2;
+		let entropy_multiplier: soroban_sdk::U256 = domain.entropy(decimals);
+		let scaler: u32 = 10;
+		let scaler: soroban_sdk::U256 = soroban_sdk::U256::from_u32(&self, scaler);
+		let entropy_inversion: soroban_sdk::U256 = scaler.sub(&entropy_multiplier);
+		let fee: soroban_sdk::U256 = max_fee.sub(&min_fee);
+		let fee: soroban_sdk::U256 = min_fee.add(&fee).fmul(entropy_inversion, decimals);
+
+		let balance: soroban_sdk::U256 = self.invoke_contract(
+			&tkn_public_key, 
+			&soroban_sdk::Symbol::new(&self, "balance_of"), 
+			soroban_sdk::vec![
+				&self,
+				soroban_sdk::Val::from_val(&self, &owner)
+			]
+		);
+		
+		if balance < fee {
+			panic!("insufficient balance to pay renewal")
+		}
+		
+	    self.invoke_contract::<()>(
+	        &tkn_public_key,
+	        &soroban_sdk::symbol_short!("burn"),
+	        soroban_sdk::vec![
+		        &self,
+		        soroban_sdk::Val::from_val(&self, &owner),
+				soroban_sdk::Val::from_val(&self, &fee)
+		    ]
+	    );
+					
+		self.invoke_contract::<()>(
+			&nft_public_key,
+			&soroban_sdk::symbol_short!("renew"),
+			soroban_sdk::vec![
+				&self,
+				soroban_sdk::Val::from_val(&self, &domain)
+			]
+		);
+		
+		event.publish((soroban_sdk::symbol_short!("renew"), owner), domain);
 	}
 	
-	fn verify_validity(&self, pool_key: u32, proof: soroban_sdk::Bytes) {
-		
+	fn verify_validity(self, pool_key: u32, proof: soroban_sdk::Bytes) {
+		todo!()
 	}
 	
-	fn claim(&self, pool_key: u32, proofs: soroban_sdk::Vec<soroban_sdk::Bytes>) {
-		
+	fn claim(self, pool_key: u32, proofs: soroban_sdk::Vec<soroban_sdk::Bytes>) {
+		todo!()
 	}
 	
-	fn commit(&self, amount: soroban_sdk::U256, count: u128) -> (u32, soroban_sdk::Vec<soroban_sdk::Bytes>) {
-		
-		()
+	fn commit(self, amount: soroban_sdk::U256, count: u128) -> (u32, soroban_sdk::Vec<soroban_sdk::Bytes>) {
+		todo!()
 	}
 }
-
 
 #[soroban_sdk::contracttype]
 struct Session {
@@ -331,6 +386,6 @@ impl Main {
 	}
 
 	pub fn renew(environment: soroban_sdk::Env, domain: soroban_sdk::String) {
-		
+		environment.renew(domain);
 	}
 }

@@ -196,17 +196,6 @@ struct StellarTestnet {
 	dns: lib_cryptography::public_key::PublicKey<()> // address on chain of the dns contract
 }
 
-impl TryFrom<String> for StellarTestnet {
-	type Error = Box<dyn std::error::Error>;
-	
-	fn try_from(value: String) -> std::result::Result<Self, Self::Error> {
-		// connect to the chain
-		duct::cmd!(
-			"stellar"
-		);
-	}
-}
-
 #[async_trait::async_trait]
 impl Dns for StellarTestnet {
 	type LocalPublicKey = Vec<u8>;
@@ -273,25 +262,25 @@ impl Dns for StellarTestnet {
 	}
 	
 	async fn mint(&self, account: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>, domain: Domain) {
-		
+		todo!()
 	}
 	
 	async fn renew(&self, domain: Domain) {
-		
+		todo!()
 	}
 	
 	async fn verify_validity(&self, pool_key: u32, coupon: lib_cryptography::hash::Hash<Self::ForeignAlgorithm>) {
-		
+		todo!()
 	}
 	
 	#[cfg(feature = "relay")]
 	async fn claim(&self, pool_key: u32, proofs: Vec<BlindProof<Self::ForeignAlgorithm>>) {
-		
+		todo!()
 	}
 	
 	#[cfg(feature = "server")]							// pool key, naked coupons
 	async fn commit<const T: usize>(&self, amount: Balance) -> (u32, [BlindProof<Self::ForeignAlgorithm>; T]) {
-		
+		todo!()
 	}
 }
 

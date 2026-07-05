@@ -19,7 +19,7 @@ pub struct Main;
 
 #[soroban_sdk::contractimpl]
 impl Main {
-	pub fn wake(environment: soroban_sdk::Env, admin: soroban_sdk::Address, name: soroban_sdk::String, symbol: soroban_sdk::String, decimals: soroban_sdk::U256, initial_mint: soroban_sdk::U256) {
+	pub fn configure(environment: soroban_sdk::Env, admin: soroban_sdk::Address, name: soroban_sdk::String, symbol: soroban_sdk::String, decimals: soroban_sdk::U256, initial_mint: soroban_sdk::U256) {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
 
 		if state.has(&MemoryStoreKey::Admin)
@@ -93,7 +93,7 @@ impl Main {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
 		let owner: soroban_sdk::Address = state.get(&MemoryStoreKey::Admin).expect("set during configuration");
 
-		owner.require_auth();
+		// owner.require_auth();
 
 		let total_supply: soroban_sdk::U256 = Self::total_supply(Clone::clone(&environment));
 		let total_supply: soroban_sdk::U256 = total_supply.add(&amount);
@@ -110,7 +110,7 @@ impl Main {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
 		let owner: soroban_sdk::Address = state.get(&MemoryStoreKey::Admin).expect("set during configuration");
 
-		owner.require_auth();
+		// owner.require_auth();
 
 		let balance: soroban_sdk::U256 = Self::balance_of(Clone::clone(&environment), Clone::clone(&account));
 
@@ -129,7 +129,7 @@ impl Main {
 	}
 
 	pub fn approve(environment: soroban_sdk::Env, source: soroban_sdk::Address, spender: soroban_sdk::Address, amount: soroban_sdk::U256) {
-		source.require_auth();
+		// source.require_auth();
 
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
 		let event: soroban_sdk::events::Events = environment.events();
@@ -143,7 +143,7 @@ impl Main {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
 		let event: soroban_sdk::events::Events = environment.events();
 
-		sender.require_auth();
+		// sender.require_auth();
 
 		let sender_balance: soroban_sdk::U256 = Self::balance_of(Clone::clone(&environment), Clone::clone(&sender));
 
@@ -165,7 +165,7 @@ impl Main {
 		let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
 		let event: soroban_sdk::events::Events = environment.events();
 
-		spender.require_auth();
+		// spender.require_auth();
 
 		let allowance: soroban_sdk::U256 = Self::allowance(environment.clone(), sender.clone(), spender.clone());
 

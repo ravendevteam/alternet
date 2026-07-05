@@ -102,7 +102,7 @@ impl Main {
 
 		state.extend_applicable_ttl();
 		
-		admin.require_auth();
+		// admin.require_auth();
 
 		if Self::owner_of(environment.clone(), domain.clone()).is_some() {
 			panic!("domain unavailable")
@@ -119,6 +119,24 @@ impl Main {
 		state.extend_applicable_domain_ttl(&domain);
 		
 		event.publish((soroban_sdk::symbol_short!("mint"), owner), (domain, expiration));
+	}
+	
+	pub fn renew(environment: soroban_sdk::Env, domain: soroban_sdk::String) {
+	    let state: soroban_sdk::storage::Persistent = environment.storage().persistent();
+	    let admin: soroban_sdk::Address = state.get(&MemoryStoreKey::Admin).expect("set during configuration");
+	    
+	    // admin.require_auth();
+	
+	    let exp_key: MemoryStoreKey = MemoryStoreKey::OwnershipExpiryTimestamp(domain.clone());
+	    
+	    let current_expiration: u64 = state.get(&exp_key).expect("domain does not exist");
+	    
+	    let new_expiration: u64 = current_expiration + 31500000;
+	    
+	    state.set(&exp_key, &new_expiration);
+	    state.extend_applicable_domain_ttl(&domain);
+	    
+	    environment.events().publish((soroban_sdk::symbol_short!("renew"), domain), new_expiration);
 	}
 
 	pub fn burn(environment: soroban_sdk::Env, owner: soroban_sdk::Address, domain: soroban_sdk::String) {
