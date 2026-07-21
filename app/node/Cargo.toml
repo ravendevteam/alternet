@@ -36,7 +36,9 @@ libp2p = { version = "0.56.0", features = [
     "request-response",
     "dcutr",
     "autonat",
-    "tokio"
+    "tokio",
+    "websocket",
+    "dns"
 ] }
 toml = "*"
 bon = "*"

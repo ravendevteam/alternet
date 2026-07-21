@@ -93,6 +93,7 @@ cfg_if::cfg_if!(
     }
 );
 
+use libp2p::Transport as _;
 use libp2p::swarm;
 use libp2p::identify;
 use libp2p::kad;
@@ -188,7 +189,7 @@ trait Dns {
 	async fn claim(&self, pool_key: u32, proofs: Vec<BlindProof<Self::ForeignAlgorithm>>);
 	
 	#[cfg(feature = "server")]							// pool key, naked coupons
-	async fn commit<const T: usize>(&self, amount: Balance) -> (u32, [BlindProof<Self::ForeignAlgorithm>; T]);
+	async fn commit<const T: usize>(&self, amount: Balance) -> (u32, [BlindProof<Self::ForeignAlgorithm>; Transport]);
 }
 
 #[derive(Debug)]
@@ -279,7 +280,7 @@ impl Dns for StellarTestnet {
 	}
 	
 	#[cfg(feature = "server")]							// pool key, naked coupons
-	async fn commit<const T: usize>(&self, amount: Balance) -> (u32, [BlindProof<Self::ForeignAlgorithm>; T]) {
+	async fn commit<const T: usize>(&self, amount: Balance) -> (u32, [BlindProof<Self::ForeignAlgorithm>; Transport]) {
 		todo!()
 	}
 }
@@ -412,6 +413,62 @@ struct Behaviour {
     pub stream: libp2p_stream::Behaviour
 }
 
+#[derive(Debug)]
+struct Transport(libp2p::core::transport::Boxed<(libp2p::PeerId, libp2p::core::muxing::StreamMuxerBox)>);
+
+impl TryFrom<&libp2p::identity::Keypair> for Transport {
+	type Error = Box<dyn std::error::Error>;
+	
+	fn try_from(value: &libp2p::identity::Keypair) -> std::result::Result<Self, Self::Error> {
+		let local_keypair = value;
+		
+	    let mut quic_config: quic::Config = quic::Config::new(&local_keypair);
+	    quic_config.handshake_timeout = std::time::Duration::from_millis(3000);
+	    quic_config.keep_alive_interval = std::time::Duration::from_secs(10);
+	    quic_config.max_concurrent_stream_limit = 512;
+	    quic_config.max_connection_data = 10.megabytes().as_u64().to_u32().unwrap();
+	    quic_config.max_idle_timeout = 60000;
+	    quic_config.max_stream_data = 1.megabytes().as_u64().to_u32().unwrap();
+	
+	    let quic = libp2p::quic::tokio::Transport::new(quic_config.to_owned()).map(|(peer_id, muxer), _| (peer_id, libp2p::core::muxing::StreamMuxerBox::new(muxer)));
+
+	    let mut yamux_config = libp2p::yamux::Config::default();
+	    yamux_config.set_receive_window_size(512 * 1024);
+	    yamux_config.set_max_buffer_size(2 * 1024 * 1024);
+	    
+	    let tls_config = libp2p::tls::Config::new(&local_keypair)?;
+	    
+	    let tcp_config: libp2p::tcp::Config = libp2p::tcp::Config::default();
+	    let tcp_config = tcp_config.nodelay(true);
+	    
+	    let tcp = libp2p::tcp::tokio::Transport::new(tcp_config).upgrade(libp2p::core::upgrade::Version::V1).authenticate(tls_config).multiplex(yamux_config).map(|(peer_id, muxer), _| (peer_id, libp2p::core::muxing::StreamMuxerBox::new(muxer)));
+					
+		let ws = libp2p::websocket::WsConfig::new(libp2p::dns::tokio::Transport::system(libp2p::tcp::tokio::Transport::new(libp2p::tcp::Config::default()))?)
+	        .upgrade(libp2p::core::upgrade::Version::V1)
+	        .authenticate(tls_config)
+	        .multiplex(yamux_config)
+			.map(|(peer_id, muxer), _| (peer_id, libp2p::core::muxing::StreamMuxerBox::new(muxer)));
+
+		let out = quic
+    		.or_transport(tcp)
+      		.or_transport(ws)
+        	.map(|either_output, _| match either_output {
+                futures::future::Either::Left(inner) => match inner {
+                    futures::future::Either::Left(res) => res,
+                    futures::future::Either::Right(res) => res,
+                },
+                futures::future::Either::Right(res) => res,
+            })
+         	.boxed();
+		Ok(Self(out))
+	}
+}
+
+impl Into<libp2p::core::transport::Boxed<(libp2p::PeerId, libp2p::core::muxing::StreamMuxerBox)>> for Transport {
+	fn into(self) -> libp2p::core::transport::Boxed<(libp2p::PeerId, libp2p::core::muxing::StreamMuxerBox)> {
+		self.0
+	}
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -525,7 +582,18 @@ async fn main() -> Result<()> {
     let local_peer_id: libp2p::PeerId = local_keypair.public().into();
 
     log::info!("peer identity initialized: {:?}", local_peer_id);
-
+    
+    let mut yamux_config = libp2p::yamux::Config::default();
+    yamux_config.set_receive_window_size(512 * 1024);
+    yamux_config.set_max_buffer_size(2 * 1024 * 1024);
+    
+    let tls_config = libp2p::tls::Config::new(&local_keypair)?;
+    
+    let tcp_config: libp2p::tcp::Config = libp2p::tcp::Config::default();
+    let tcp_config = tcp_config.nodelay(true);
+    
+    let tcp = libp2p::tcp::tokio::Transport::new(tcp_config).upgrade(libp2p::core::upgrade::Version::V1).authenticate(tls_config).multiplex(yamux_config);
+    
     let mut quic_config: quic::Config = quic::Config::new(&local_keypair);
     quic_config.handshake_timeout = std::time::Duration::from_millis(3000);
     quic_config.keep_alive_interval = std::time::Duration::from_secs(10);
@@ -534,6 +602,12 @@ async fn main() -> Result<()> {
     quic_config.max_idle_timeout = 60000;
     quic_config.max_stream_data = 1.megabytes().as_u64().to_u32().unwrap();
 
+    let quic = libp2p::quic::tokio::Transport::new(quic_config.to_owned());
+
+    
+    let transport = quic.or_transport(tcp);
+    
+    
     #[cfg(any(feature = "bootstrap", feature = "malicious_bootstrap"))]
     let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
         .with_tokio()
@@ -844,6 +918,8 @@ async fn main() -> Result<()> {
         .build();
 
     swarm.listen_on("/ip4/0.0.0.0/udp/4001/quic-v1".parse()?)?;
+    swarm.listen_on("/ip4/0.0.0.0/tcp/4001".parse()?)?;
+    swarm.listen_on("/ip4/0.0.0.0/tcp/443/wss".parse()?)?;
 
     #[cfg(any(feature = "server", feature = "malicious_server"))] {
         for addr in &dial {
