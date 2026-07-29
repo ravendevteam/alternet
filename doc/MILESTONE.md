@@ -144,7 +144,7 @@ A simulated onchain environment can fully model domain ownership, lookup, proof 
 
 ## 0.5 Integration
 
-### 0.5.1 End-to-End System Integration $800
+### 0.5.1 End-to-End System Integration $750
 #### Criterial
 - Connection resolution, connectivity, proof generation, and economic settlement into a unified workflow.
 - Ensure client, server, relay, bootstrap, and mock chain components interact harmoniously.
@@ -152,7 +152,7 @@ A simulated onchain environment can fully model domain ownership, lookup, proof 
 - Demonstrate full end-to-end execution across all node types in a unified environment.
 - Provide executable builds accompanied by release instructions.
 
-### 0.5.2 Repository Refactoring, Polish & Final Documentation
+### 0.5.2 Repository Refactoring, Polish & Final Documentation $750
 #### Criteria
 - Perform broad codebase refactoring and general improvements across all modules.
 - Conduct code stabilization, and final repository cleanup.
