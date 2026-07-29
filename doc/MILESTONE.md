@@ -86,115 +86,76 @@ A simulated onchain environment can fully model domain ownership, lookup, proof 
 - CLI interaction tooling.
 - Deterministic simulation environment.
 - Mock chain validation documentation describing state modeling, determinism guarantees, and proof handling assumptions.
-## (0.3.x) Adaptive Network Resilience - $4,000
-### Research Objective
-Validate that the protocol can maintain connectivity under common network-layer censorship techniques through adaptive transport selection, relay redundancy, and dynamic peer indirection.
 
-This milestone focuses on measurable resilience against IP blocking, port filtering, basic protocol filtering, and connection disruption without requiring full protocol obfuscation or anonymity guarantees.
-#### Threat Model
-The protocol is evaluated against a network-level adversary capable of:
-- IP-based blocking.
-- Port-based filtering.
-- Basic protocol fingerprinting.
-- Simple DPI heuristics.
-- Active connection resets.
-- Relay IP enumeration.
-- Bootstrapping targeting.
-- Selective peer hiding and ephemeral relay rotation.
+## 0.3 Adaptive Network Resilience
 
-The milestone does not assume advanced nation-state adversaries performing large-scale traffic correlation or full protocol mimicry detection.
-### Hypothesis
-An adaptive connectivity strategy combining:
-- Multi-transport dialing.
-- Parallel direct and relay attempts.
-- Dynamic relay discovery and rotation.
-- Domain-based peer indirection.
+### 0.3.1 Transport $800
+#### Criteria
+- Establish primary node-to-node transport connections, and initial stream handling utilizing QUIC, and TLS as core supported protocols.
+- Implement multi-transport mechanism to enable automatic switching between transports.
+- Configure fully reproducible transport build and testing environments.
+- Demonstrate successful primary transport connection establishment using QUIC, and TLS.
+- Verify basic transport fallback behaviour between supported connection configurations.
+- Confirm reproducible build, and test automation setup for transport components.
 
-will measurably increase successful connection rates under simulated filtering conditions compared to a static single-transport design.
-#### Implementation Scope
-The following mechanisms will be implemented:
-##### Transport Agility
-- Direct QUIC dialing.
-- QUIC over relay.
-- TCP fallback (where supported).
-- Automatic escalation on failure.
-##### Parallel Dial Strategy
-- Concurrent direct and relay attempts.
-- First-success path selection.
-- Automatic downgrade when direct path is blocked.
-##### Multi-Relay Architecture
-- Dynamic relay selection.
-- Relay capability advertisement via KAD.
-- Circuit rotation across sessions.
-##### Domain-Based Indirection
-- Domain resolution via KAD (resolution implies being able to locate the a record left by the owner of a domain).
-- Domain maps to rotating peer identities.
-- Peer identities map to dynamic relay reservations or direct addresses.
-##### Failure Escalation Logic
-- Detect connection resets.
-- Retry with alternate relay.
-- Retry with alternate transport.
-- Maintain bounded retry strategy.
-##### Bootstrap Redundancy
-- Multiple bootstrap peers.
-- No single static bootstrap dependency.
-### Validation Criteria
-Resilience is evaluated using a deterministic blocking simulation harness capable of emulating filtering and connection disruption scenarios.
+### 0.3.2  Connection Failure Resilience $800
+#### Criteria
+- Enhance node-level stability during active network disruptions.
+- Detect connection drops, timeouts, and resets automatically.
+- Trigger escalation routines to recover alternate paths without loosing operational state.
+- Demonstrate automated detection of broken or dropping connections.
+- Verify automatic path recovery under simulated network failure.
 
-Success is defined by:
-- Observable improvement under at least one filtered condition compared to static direct-only configuration.
-- Automatic recovery behavior under connection disruption.
-- Consistent failover behavior across repeated simulation runs.
-- Observable relay rotation when blocking conditions are introduced.
+### 0.3.3 Dynamic Selection $800
+#### Criteria
+- Discover available intermediary routing nodes dynamically.
+- Evaluate intermediary node performance, latency, and availability.
+- Route traffic dynamically through optimal intermediary candidates.
+- Demonstrate dynamic lookup and evaluation of intermediary nodes.
+- Verify successful indirect traffic routing through selected nodes
 
-The following are recorded and reported:
-- Connection outcomes under baseline and filtered conditions.
-- Transport path selection behavior.
-- Fail-over sequence and recovery patterns.
-- Relay rotation behavior.
+### 0.3.4 Concurrent Connection Handling $800
+#### Criteria
+- Attempt multiple connection paths simultaneously.
+- Demonstrate successful path selection under concurrent dialing conditions.
+- Verify resource lifecycle stability and absence of hung connection states.
 
-All blocking assumptions, measurement methodology, and observed behavior are documented in a resilience evaluation report.
-### Artifact
-- Blocking and filtering simulation harness.
-- Instrumented connection telemetry (transport selection and failover logs).
-- Relay discovery and scoring implementation.
-- Escalation strategy implementation.
-- Measurement report.
-- Technical documentation describing adaptive connectivity design and trade-offs.
-## (0.4.x) Proof System - $2,000
-### Research Objective
-Validate that cryptographic proofs can bind network behavior to economic outcomes.
-### Hypothesis
-Network-level events such as domain control, service availability, relay participation can be cryptographically proven in a way that is verifiable, replay-resistant, economically enforceable.
-### Validation Criteria
-- Valid proofs are accepted by the verification system.
-- Invalid or replayed proofs are rejected.
-- Expired proofs are invalidated.
-- Proof lifecycle and replay protections are documented.
-- Economic state transitions resulting from proofs are observable and reproducible in simulation.
-### Artifact
-- Proof schema definitions.
-- Verification engine.
-- Mock chain integration.
-- Proof lifecycle documentation.
-## (0.5.x) End-to-End Composition - $1,500
-### Research Objective
-Validate full protocol flow under reproducible simulation.
-### Hypothesis
-All system components can operate coherently:
-- Resolution
-- Connectivity
-- Proof Generation
-- Economic Settlement
-### Validation Criteria
-- Domain resolution succeeds in multi-node simulation.
-- Server responds to client requests.
-- Relay fallback engages when direct connection fails.
-- Proof submission and economic updates occur as expected.
-- Failure scenarios are observable and documented.
-- End-to-end interaction flow and failure modes documented.
-### Artifact
-- Multi-node reproducible test environment.
-- End-to-end scenario documentation.
-- Failure mode analysis.
-- End-to-end validation report.
+### 0.3.5 Domain Indirection $800
+#### Criteria
+- Evaluate connectivity under simulated network filtering and disruption scenarios.
+- Demonstrate end-to-end connectivity recovery during simulated blocking.
+- Deliver a high-level resilience evaluation report summarizing system behavior.
+
+## 0.4 Proof System
+
+### 0.4.1 Proof $1000
+#### Criteria
+- Establish mechanisms to generate and verify cryptographic proofs for domain control and node participation.
+- Enforce proof lifecycle rules, including expiration and replay prevention.
+- Demonstrate acceptance of valid cryptographic proofs.
+- Verify automatic rejection of expired, altered, or replayed proofs.
+
+### 0.4.2 Mock Chain Settlement $1000
+#### Criteria
+- Connect verified cryptographic proofs to the simulated state environment.
+- Trigger deterministic state updates and economic reward updates upon proof submission.
+- Demonstrate reproducible state transitions in response to valid proof submissions.
+- Verify state consistency across repeated simulation executions.
+
+## 0.5 Integration
+
+### 0.5.1 End-to-End System Integration $800
+#### Criterial
+- Connection resolution, connectivity, proof generation, and economic settlement into a unified workflow.
+- Ensure client, server, relay, bootstrap, and mock chain components interact harmoniously.
+- Prepare executable builds and deployment artifacts.
+- Demonstrate full end-to-end execution across all node types in a unified environment.
+- Provide executable builds accompanied by release instructions.
+
+### 0.5.2 Repository Refactoring, Polish & Final Documentation
+#### Criteria
+- Perform broad codebase refactoring and general improvements across all modules.
+- Conduct code stabilization, and final repository cleanup.
+- Synthesize overall research findings into final project documentation.
+- Verify final codebase quality, cleanliness, and build stability.
+- Deliver the failure mode analysis report and overall Proof of Concept summary document.
