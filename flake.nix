@@ -663,6 +663,8 @@
 					pkgs.lld
 					pkgs.protobuf
 					pkgs.docker
+					
+					pkgs.mdwatch
 
 					config.packages.stellar
 				];
