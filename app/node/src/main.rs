@@ -177,7 +177,7 @@ trait Dns {
 	type LocalAlgorithm;
 	type ForeignAlgorithm;
 	
-	async fn attestation(&self, signer: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Option<lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>>;
+	async fn attestation(&self, signer: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<Option<lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>>>;
 	async fn attest(&self, local_signer: lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>, foreign_signer: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>, foreign_signature: lib_cryptography::signature::Signature<Self::ForeignAlgorithm>) -> Result;
 	async fn mint(&self, account: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>, domain: Domain);
 	async fn renew(&self, domain: Domain);
@@ -189,7 +189,7 @@ trait Dns {
 	async fn claim(&self, pool_key: u32, proofs: Vec<BlindProof<Self::ForeignAlgorithm>>);
 	
 	#[cfg(feature = "server")]							// pool key, naked coupons
-	async fn commit<const T: usize>(&self, amount: Balance) -> (u32, [BlindProof<Self::ForeignAlgorithm>; Transport]);
+	async fn commit<const T: usize>(&self, amount: Balance) -> (u32, [BlindProof<Self::ForeignAlgorithm>; T]);
 }
 
 #[derive(Debug)]
@@ -204,7 +204,7 @@ impl Dns for StellarTestnet {
 	type LocalAlgorithm = ();
 	type ForeignAlgorithm = lib_cryptography_algorithm_ed25519::Ed25519Algorithm;
 	
-	async fn attestation(&self, public_key: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>> {
+	async fn attestation(&self, public_key: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>) -> Result<Option<lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>>> {
 		let dns: lib_bytes::NonEmpty = self.dns.to_owned().into();
 		let dns: bytes::Bytes = dns.into();
 		let dns: Vec<_> = dns.to_vec();
@@ -227,7 +227,7 @@ impl Dns for StellarTestnet {
 		let out: bytes::Bytes = out.into();
 		let out: lib_bytes::NonEmpty = out.try_into()?;
 		let out: lib_cryptography::public_key::PublicKey<_> = out.into();
-		Ok(out)
+		Ok(Some(out))
 	}
 	
 	async fn attest(&self, local_signer: lib_cryptography::public_key::PublicKey<Self::LocalAlgorithm>, foreign_signer: lib_cryptography::public_key::PublicKey<Self::ForeignAlgorithm>, foreign_signature: lib_cryptography::signature::Signature<Self::ForeignAlgorithm>) -> Result {
@@ -280,7 +280,7 @@ impl Dns for StellarTestnet {
 	}
 	
 	#[cfg(feature = "server")]							// pool key, naked coupons
-	async fn commit<const T: usize>(&self, amount: Balance) -> (u32, [BlindProof<Self::ForeignAlgorithm>; Transport]) {
+	async fn commit<const T: usize>(&self, amount: Balance) -> (u32, [BlindProof<Self::ForeignAlgorithm>; T]) {
 		todo!()
 	}
 }
@@ -353,7 +353,7 @@ struct Cli {
 }
 
 
-#[derive(swarm::NetworkBehaviour)]
+#[derive(libp2p::swarm::NetworkBehaviour)]
 struct Behaviour {
     #[cfg(any(feature = "relay", feature = "malicious_relay"))]
     pub relay: relay::Behaviour,
@@ -374,7 +374,7 @@ struct Behaviour {
         feature = "malicious_client",
         feature = "malicious_server"
     ))]
-    pub dcutr: dcutr::Behaviour,
+    pub dcutr: libp2p::dcutr::Behaviour,
 
     #[cfg(any(
         feature = "bootstrap",
@@ -416,12 +416,8 @@ struct Behaviour {
 #[derive(Debug)]
 struct Transport(libp2p::core::transport::Boxed<(libp2p::PeerId, libp2p::core::muxing::StreamMuxerBox)>);
 
-impl TryFrom<&libp2p::identity::Keypair> for Transport {
-	type Error = Box<dyn std::error::Error>;
-	
-	fn try_from(value: &libp2p::identity::Keypair) -> std::result::Result<Self, Self::Error> {
-		let local_keypair = value;
-		
+impl Transport {
+	pub fn from_keypair_with_quic_to_tls_to_ws_fallback_chain(local_keypair: &libp2p::identity::Keypair) -> Result<Self> {
 	    let mut quic_config: quic::Config = quic::Config::new(&local_keypair);
 	    quic_config.handshake_timeout = std::time::Duration::from_millis(3000);
 	    quic_config.keep_alive_interval = std::time::Duration::from_secs(10);
@@ -441,7 +437,7 @@ impl TryFrom<&libp2p::identity::Keypair> for Transport {
 	    let tcp_config: libp2p::tcp::Config = libp2p::tcp::Config::default();
 	    let tcp_config = tcp_config.nodelay(true);
 	    
-	    let tcp = libp2p::tcp::tokio::Transport::new(tcp_config).upgrade(libp2p::core::upgrade::Version::V1).authenticate(tls_config).multiplex(yamux_config).map(|(peer_id, muxer), _| (peer_id, libp2p::core::muxing::StreamMuxerBox::new(muxer)));
+	    let tcp = libp2p::tcp::tokio::Transport::new(tcp_config).upgrade(libp2p::core::upgrade::Version::V1).authenticate(tls_config.clone()).multiplex(yamux_config.clone()).map(|(peer_id, muxer), _| (peer_id, libp2p::core::muxing::StreamMuxerBox::new(muxer)));
 					
 		let ws = libp2p::websocket::WsConfig::new(libp2p::dns::tokio::Transport::system(libp2p::tcp::tokio::Transport::new(libp2p::tcp::Config::default()))?)
 	        .upgrade(libp2p::core::upgrade::Version::V1)
@@ -460,12 +456,12 @@ impl TryFrom<&libp2p::identity::Keypair> for Transport {
                 futures::future::Either::Right(res) => res,
             })
          	.boxed();
-		Ok(Self(out))
+		Ok(Self(out))	
 	}
 }
 
-impl Into<libp2p::core::transport::Boxed<(libp2p::PeerId, libp2p::core::muxing::StreamMuxerBox)>> for Transport {
-	fn into(self) -> libp2p::core::transport::Boxed<(libp2p::PeerId, libp2p::core::muxing::StreamMuxerBox)> {
+impl Transport {
+	pub fn into_boxed_peer_id_and_stream_muxer(self) -> libp2p::core::transport::Boxed<(libp2p::PeerId, libp2p::core::muxing::StreamMuxerBox)> {
 		self.0
 	}
 }
@@ -583,35 +579,12 @@ async fn main() -> Result<()> {
 
     log::info!("peer identity initialized: {:?}", local_peer_id);
     
-    let mut yamux_config = libp2p::yamux::Config::default();
-    yamux_config.set_receive_window_size(512 * 1024);
-    yamux_config.set_max_buffer_size(2 * 1024 * 1024);
-    
-    let tls_config = libp2p::tls::Config::new(&local_keypair)?;
-    
-    let tcp_config: libp2p::tcp::Config = libp2p::tcp::Config::default();
-    let tcp_config = tcp_config.nodelay(true);
-    
-    let tcp = libp2p::tcp::tokio::Transport::new(tcp_config).upgrade(libp2p::core::upgrade::Version::V1).authenticate(tls_config).multiplex(yamux_config);
-    
-    let mut quic_config: quic::Config = quic::Config::new(&local_keypair);
-    quic_config.handshake_timeout = std::time::Duration::from_millis(3000);
-    quic_config.keep_alive_interval = std::time::Duration::from_secs(10);
-    quic_config.max_concurrent_stream_limit = 512;
-    quic_config.max_connection_data = 10.megabytes().as_u64().to_u32().unwrap();
-    quic_config.max_idle_timeout = 60000;
-    quic_config.max_stream_data = 1.megabytes().as_u64().to_u32().unwrap();
-
-    let quic = libp2p::quic::tokio::Transport::new(quic_config.to_owned());
-
-    
-    let transport = quic.or_transport(tcp);
-    
+    let transport: libp2p::core::transport::Boxed<_> = Transport::from_keypair_with_quic_to_tls_to_ws_fallback_chain(&local_keypair)?.into_boxed_peer_id_and_stream_muxer();
     
     #[cfg(any(feature = "bootstrap", feature = "malicious_bootstrap"))]
     let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
         .with_tokio()
-        .with_quic_config(|_| quic_config)
+        .with_other_transport(|_| transport)?
         .with_behaviour(|_| {
             let kad_store: kad::store::MemoryStore = kad::store::MemoryStore::new(local_peer_id);
 
@@ -685,8 +658,8 @@ async fn main() -> Result<()> {
     #[cfg(any(feature = "client", feature = "malicious_client"))]
     let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
         .with_tokio()
-        .with_quic_config(|_| quic_config)
-        .with_relay_client(noise::Config::new, yamux::Config::default)?
+    	.with_other_transport(|_| transport)?
+        .with_relay_client(libp2p::noise::Config::new, libp2p::yamux::Config::default)?
         .with_behaviour(|_, relay_client| {
             let kad_store: kad::store::MemoryStore = kad::store::MemoryStore::new(local_peer_id);
 
@@ -731,7 +704,7 @@ async fn main() -> Result<()> {
 
             let autonat = autonat::Behaviour::new(local_peer_id, autonat_conf);
 
-            let dcutr: dcutr::Behaviour = dcutr::Behaviour::new(local_peer_id);
+            let dcutr: libp2p::dcutr::Behaviour = libp2p::dcutr::Behaviour::new(local_peer_id);
 
             let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
                 .with_agent_version(agent_version)
@@ -758,8 +731,8 @@ async fn main() -> Result<()> {
     #[cfg(any(feature = "server", feature = "malicious_server"))]
     let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
         .with_tokio()
-        .with_quic_config(|_| quic_config)
-        .with_relay_client(noise::Config::new, yamux::Config::default)?
+        .with_other_transport(|_| transport)?
+        .with_relay_client(libp2p::noise::Config::new, libp2p::yamux::Config::default)?
         .with_behaviour(|_, relay_client| {
             let kad_store: kad::store::MemoryStore = kad::store::MemoryStore::new(local_peer_id);
 
@@ -804,7 +777,7 @@ async fn main() -> Result<()> {
 
             let autonat = autonat::Behaviour::new(local_peer_id, autonat_conf);
 
-            let dcutr: dcutr::Behaviour = dcutr::Behaviour::new(local_peer_id);
+            let dcutr: libp2p::dcutr::Behaviour = libp2p::dcutr::Behaviour::new(local_peer_id);
 
             let identify_config: identify::Config = identify::Config::new(protocol_version, local_public_key)
                 .with_agent_version(agent_version)
@@ -831,7 +804,7 @@ async fn main() -> Result<()> {
     #[cfg(any(feature = "relay", feature = "malicious_relay"))]
     let mut swarm: libp2p::Swarm<_> = libp2p::SwarmBuilder::with_existing_identity(local_keypair)
         .with_tokio()
-        .with_quic_config(|_| quic_config)
+        .with_other_transport(|_| transport)?
         .with_behaviour(|_| {
             let relay_config: relay::Config = relay::Config {
                 max_circuit_bytes: 1.mebibytes().as_u64(),
@@ -919,7 +892,7 @@ async fn main() -> Result<()> {
 
     swarm.listen_on("/ip4/0.0.0.0/udp/4001/quic-v1".parse()?)?;
     swarm.listen_on("/ip4/0.0.0.0/tcp/4001".parse()?)?;
-    swarm.listen_on("/ip4/0.0.0.0/tcp/443/wss".parse()?)?;
+    swarm.listen_on("/ip4/0.0.0.0/tcp/4001/ws".parse()?)?;
 
     #[cfg(any(feature = "server", feature = "malicious_server"))] {
         for addr in &dial {

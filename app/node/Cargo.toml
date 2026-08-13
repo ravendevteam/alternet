@@ -131,7 +131,7 @@ path = "src/main.rs"
 required-features = ["malicious_relay"]
 
 [features]
-default = ["relay", "end_to_end"]
+default = ["bootstrap", "end_to_end"]
 bootstrap = []
 client = []
 server = []

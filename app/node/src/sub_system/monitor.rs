@@ -86,7 +86,7 @@ impl SubSystem for Monitor {
                 feature = "malicious_client",
                 feature = "malicious_server"
             ))]
-            Some(SwarmEvent::Behaviour(BehaviourEvent::Dcutr(dcutr::Event{
+            Some(SwarmEvent::Behaviour(BehaviourEvent::Dcutr(libp2p::dcutr::Event{
                 remote_peer_id,
                 result
             }))) => {

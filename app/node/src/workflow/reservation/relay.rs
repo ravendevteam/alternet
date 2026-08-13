@@ -43,9 +43,7 @@ where
 			let signer: &lib_cryptography::public_key::PublicKey<_> = packet.signer();
 			let signer: lib_cryptography::public_key::PublicKey<_> = signer.to_owned();
 			
-			let Ok(true) = dns.account_has_sufficient_balance(signer.to_owned()).await else {
-				return Vec::default()
-			};
+			// verification
 			
 			let caller = Identity::from((signer, peer.to_owned()));
 
