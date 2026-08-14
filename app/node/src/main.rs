@@ -892,7 +892,7 @@ async fn main() -> Result<()> {
 
     swarm.listen_on("/ip4/0.0.0.0/udp/4001/quic-v1".parse()?)?;
     swarm.listen_on("/ip4/0.0.0.0/tcp/4001".parse()?)?;
-    swarm.listen_on("/ip4/0.0.0.0/tcp/4001/ws".parse()?)?;
+    swarm.listen_on("/ip4/0.0.0.0/tcp/4002/ws".parse()?)?;
 
     #[cfg(any(feature = "server", feature = "malicious_server"))] {
         for addr in &dial {

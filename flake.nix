@@ -1,49 +1,51 @@
 {
 	inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 	inputs.flake-parts.url = "github:hercules-ci/flake-parts";
+	inputs.rust-flake.url = "github:juspay/rust-flake";
+	inputs.rust-flake.inputs.nixpkgs.follows = "nixpkgs";
+	inputs.fenix.url = "github:nix-community/fenix";
+	inputs.fenix.inputs.nixpkgs.follows = "nixpkgs";
 	inputs.crane.url = "github:ipetkov/crane";
+	inputs.crane.inputs.nixpkgs.follows = "nixpkgs";
 
 	outputs = inputs @ { flake-parts, ... }:
 	flake-parts.lib.mkFlake {
 		inherit inputs;
 	} {
-		systems = [
-			"x86_64-linux"
-			"x86_64-darwin"
-			"aarch64-linux"
-			"aarch64-darwin"
+		imports = [
+			inputs.rust-flake.flakeModules.default
+			inputs.rust-flake.flakeModules.nixpkgs
 		];
+	
+		systems = inputs.nixpkgs.lib.systems.flakeExposed;
 
-		perSystem = { config, pkgs, system, ... }:
+		perSystem = { config, pkgs, system, inputs', ... }:
 		let
-			craneLib = inputs.crane.mkLib pkgs;
-			craneSrc = craneLib.cleanCargoSource (craneLib.path ./.);
-
-			mk_node = role: pkgs.rustPlatform.buildRustPackage {
+			crane = (inputs.crane.mkLib pkgs).overrideToolchain inputs'.fenix.packages.stable.toolchain;
+			
+			node_args.src = ./.;
+			node_args.pname = "node";
+			node_args.version = "0.1.0";
+			node_args.doCheck = false;
+			node_args.nativeBuildInputs = [
+				pkgs.pkg-config
+				pkgs.protobuf
+			];
+			node_args.buildInputs = [
+				pkgs.openssl
+			];
+			node_extra_args.cargoExtraArgs = "--package node --no-default-features";
+			node_artifacts = crane.buildDepsOnly (node_args // node_extra_args);
+			mk_node = role: crane.buildPackage (node_args // {
 				pname = role;
-				version = "0.1.0";
-				src = ./.;
-				doCheck = false;
-				cargoLock.lockFile = ./Cargo.lock;
-				cargoBuildFlags = [
-					"--package" "node"
-					"--bin" role
-					"--features=${role}"
-					"--no-default-features"
-				];
-				nativeBuildInputs = [
-					pkgs.protobuf
-					pkgs.pkg-config
-				];
-				buildInputs = [
-					pkgs.openssl
-				];
-			};
-
+				cargoArtifacts = node_artifacts;
+				cargoExtraArgs = "--package node --bin ${role} --features ${role} --no-default-features";
+			});
+			
 			mk_soroban_contract = pname: pkgs.stdenv.mkDerivation rec {
-				RUSTFLAGS = "-A warnings";
-
 				inherit pname;
+				
+				RUSTFLAGS = "-A warnings";
 
 				version = "0.1.0";
 				src = ./.;
@@ -71,6 +73,58 @@
 				'';
 			};
 		in {
+			devShells.default = pkgs.mkShell {
+				RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
+				
+				inputsFrom = [
+					config.devShells.rust
+				];
+
+				nativeBuildInputs = [
+					pkgs.nushell
+					pkgs.nixd
+					pkgs.nixpkgs-fmt
+					pkgs.clippy
+					pkgs.cargo
+					pkgs.rustc
+					pkgs.rust-analyzer
+					pkgs.pkg-config
+					pkgs.wasm-bindgen-cli
+					pkgs.lld
+					pkgs.protobuf
+					pkgs.docker
+					pkgs.mdwatch
+
+					config.packages.stellar
+				];
+
+				buildInputs = [
+					pkgs.openssl
+				];
+
+				shellHook = ''
+					nu -c '
+						$env.PATH = ($env.PATH | prepend ($env.PWD | path join ".local" "bin"))
+						$env.PATH = ($env.PATH | prepend ($env.HOME | path join ".cargo" "bin"))
+
+						try {
+							rustup target add wasm32-unknown-unknown
+						}
+					'
+				'';
+			};
+			
+			rust-project.toolchain = inputs'.fenix.packages.stable.toolchain;
+			
+			packages.bootstrap = mk_node "bootstrap";
+			packages.relay = mk_node "relay";
+			packages.client = mk_node "client";
+			packages.server = mk_node "server";
+			packages.malicious_bootstrap = mk_node "malicious_bootstrap";
+			packages.malicious_relay = mk_node "malicious_relay";
+			packages.malicious_client = mk_node "malicious_client";
+			packages.malicious_server = mk_node "malicious_server";
+			
 			packages.e2e =
 			let
 				wan = 1;
@@ -370,14 +424,66 @@
 				];
 			};
 
-			packages.bootstrap = mk_node "bootstrap";
-			packages.relay = mk_node "relay";
-			packages.client = mk_node "client";
-			packages.server = mk_node "server";
-			packages.maliciousBootstrap = mk_node "malicious_bootstrap";
-			packages.maliciousRelay = mk_node "malicious_relay";
-			packages.maliciousClient = mk_node "malicious_client";
-			packages.maliciousServer = mk_node "malicious_server";
+			packages.transport_e2e =
+			let
+				name = "main";
+				
+				system_state_version = "26.05";
+				
+				nodes.router.system.stateVersion = system_state_version;
+				nodes.router.virtualisation.vlans = [1 2];
+				nodes.router.boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
+				nodes.router.networking.useDHCP = false;
+				nodes.router.networking.firewall.enable = false;
+				nodes.router.networking.interfaces.eth1.ipv4.addresses = [{ address = "192.168.1.254"; prefixLength = 24; }];
+				nodes.router.networking.interfaces.eth2.ipv4.addresses = [{ address = "192.168.2.254"; prefixLength = 24; }];	
+				
+				nodes.bootstrap.system.stateVersion = system_state_version;
+				nodes.bootstrap.virtualisation.vlans = [1];
+				nodes.bootstrap.networking.useDHCP = false;
+				nodes.bootstrap.networking.interfaces.eth1.ipv4.addresses = [{ address = "192.168.1.1"; prefixLength = 24; }];
+				nodes.bootstrap.networking.firewall.allowedTCPPorts = [4001 4002];
+				nodes.bootstrap.networking.firewall.allowedUDPPorts = [4001];
+				nodes.bootstrap.networking.nameservers = ["1.1.1.1" "8.8.8.8"];
+
+				nodes.bootstrap.environment.systemPackages = [
+					pkgs.iproute2
+					pkgs.nettools
+					
+					config.packages.bootstrap
+				];
+
+				nodes.client.system.stateVersion = system_state_version;
+				nodes.client.virtualisation.vlans = [2];
+				nodes.client.networking.useDHCP = false;
+				nodes.client.networking.interfaces.eth1.ipv4.addresses = [{ address = "192.168.2.1"; prefixLength = 24; }];
+				
+				nodes.client.environment.systemPackages = [
+					pkgs.iproute2
+					pkgs.nettools
+					
+					config.packages.client
+				];
+			in pkgs.testers.runNixOSTest {
+				inherit name;
+				inherit nodes;
+
+				testScript = pkgs.lib.concatLines [
+					"router.start()"
+					"router.wait_for_unit(\"network.target\")"
+					
+					"bootstrap.start()"
+					"bootstrap.wait_for_unit(\"network.target\")"
+					"bootstrap.execute(\"bootstrap > /tmp/bootstrap.log 2>&1 &\")"
+					"bootstrap.wait_for_open_port(4001)"
+					"bootstrap.wait_for_open_port(4002)"
+					"bootstrap.wait_until_succeeds(\"cat /tmp/bootstrap.log | grep -i 'listen'\", timeout=30)"
+					
+					"client.start()"
+					"client.wait_for_unit(\"network.target\")"
+					"client.succeed(\"client --dial /ip4/192.168.1.1/udp/4001/quic-v1 --dial /ip4/192.168.1.1/tcp/4001 --dial /ip4/192.168.1.1/tcp/4002/ws > /tmp/bootstrap.log 2>&1 &\")"
+				];
+			};
 
 			packages.soroban_mock_dns = mk_soroban_contract "soroban_mock_dns";
 			packages.soroban_mock_erc_20 = mk_soroban_contract "soroban_mock_erc_20";
@@ -385,7 +491,7 @@
 
 			packages.soroban_mock_dns_e2e = pkgs.testers.runNixOSTest {
 				name = "main";
-				
+
 				nodes.vm = { ... }: {
 					system.stateVersion = "26.05";
 
@@ -424,44 +530,44 @@
 						config.packages.stellar
 					];
 				};
-				
+
 				testScript = pkgs.lib.concatLines [
 					"vm.start()"
-										
+
 					"vm.wait_for_unit('network.target')"
 					"vm.wait_for_unit('docker.service')"
-					
+
 					"vm.succeed(\"nu -c 'docker load --input ${config.packages.stellar_testnet_image}'\")"
 					"vm.succeed(\"nu -c 'docker run --detach --name stellar --publish 8000:8000 stellar/quickstart:latest --local'\")"
-					
+
 					"vm.wait_for_open_port(8000)"
-					
+
 					"vm.wait_until_succeeds(\"curl -s -X POST -H 'Content-Type: application/json' -d '{\\\"jsonrpc\\\":\\\"2.0\\\",\\\"id\\\":1,\\\"method\\\":\\\"getHealth\\\"}' http://localhost:8000/soroban/rpc | grep -q 'unhealthy\\|healthy'\")"
 					"vm.wait_until_succeeds(\"curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/friendbot | grep -q '400'\")"
-					
+
 					"vm.succeed('sleep 5')"
-					
+
 					"vm.succeed(\"nu -c 'stellar network add local --rpc-url http://localhost:8000/soroban/rpc --network-passphrase \\\"Standalone Network ; February 2017\\\"'\")"
 					"vm.succeed(\"nu -c 'stellar network use local'\")"
-					
+
 					"vm.succeed(\"nu -c 'stellar keys generate deployer'\")"
 					"vm.succeed(\"nu -c 'stellar keys generate user_a'\")"
 					"vm.succeed(\"nu -c 'stellar keys generate user_b'\")"
-					
+
 					"vm.succeed(\"nu -c 'stellar keys fund deployer'\")"
 					"vm.succeed(\"nu -c 'stellar keys fund user_a'\")"
 					"vm.succeed(\"nu -c 'stellar keys fund user_b'\")"
-					
+
 					"tkn_public_key = vm.succeed(\"nu -c 'stellar contract deploy --wasm ${config.packages.soroban_mock_erc_20}/lib/soroban_mock_erc_20.wasm --source deployer --network local'\").strip()"
 					"nft_public_key = vm.succeed(\"nu -c 'stellar contract deploy --wasm ${config.packages.soroban_mock_nft}/lib/soroban_mock_nft.wasm --source deployer --network local'\").strip()"
-					
+
 					"vm.succeed(\"nu -c 'stellar contract invoke --id \" + tkn_public_key + \" --source deployer --network local -- configure --admin deployer --name \\\"Mock Token\\\" --symbol \\\"MCK\\\" --decimals \\\"2\\\" --initial_mint \\\"10000000\\\"'\")"
 					"vm.succeed(\"nu -c 'stellar contract invoke --id \" + nft_public_key + \" --source deployer --network local -- configure --admin deployer --name \\\"Namespace\\\" --symbol \\\"NSP\\\"'\")"
-					
+
 					"dns_public_key = vm.succeed(\"nu -c 'stellar contract deploy --wasm ${config.packages.soroban_mock_dns}/lib/soroban_mock_dns.wasm --source deployer --network local'\").strip()"
-					
+
 					"vm.succeed(\"nu -c 'stellar contract invoke --id \" + dns_public_key + \" --source deployer --network local -- configure --tkn \" + tkn_public_key + \" --nft \" + nft_public_key + \" --mint_min_fee 10000 --mint_max_fee 90000 --renew_min_fee 10000 --renew_max_fee 90000 --harberger_tax_rate 500 --target_traffic 50000'\")"
-				
+
 					"deployer_addr = vm.succeed(\"nu -c 'stellar keys address deployer'\").strip()"
 					"user_a_addr = vm.succeed(\"nu -c 'stellar keys address user_a'\").strip()"
 
@@ -469,11 +575,11 @@
 					"vm.succeed(\"nu -c 'stellar contract invoke --id \" + dns_public_key + \" --source user_a --network local -- mint --account \" + user_a_addr + \" --domain \\\"alternet\\\"'\")"
 
 					"vm.succeed(\"nu -c 'stellar contract invoke --id \" + dns_public_key + \" --source user_a --network local -- renew --domain \\\"alternet\\\"'\")"
-					
+
 					"vm.shutdown()"
 				];
 			};
-			
+
 			packages.soroban_mock_nft_e2e = pkgs.testers.runNixOSTest {
 				name = "main";
 
@@ -541,7 +647,7 @@
 					"vm.succeed(\"nu -c 'stellar keys fund alice'\")"
 
 					"deployer_public_key = vm.succeed(\"nu -c 'stellar keys address deployer'\").strip()"
-					
+
 					"alice_public_key = vm.succeed(\"nu -c 'stellar keys address alice'\").strip()"
 
 					"address = vm.succeed(\"nu -c 'stellar contract deploy --wasm ${config.packages.soroban_mock_nft}/lib/soroban_mock_nft.wasm --source deployer --network local'\").strip()"
@@ -552,13 +658,13 @@
 					"assert \"MDN\" in vm.succeed(F\"nu -c 'stellar contract invoke --id {address} --source deployer --network local -- symbol'\")"
 
 					"vm.succeed(F\"nu -c 'stellar contract invoke --id {address} --source deployer --network local -- mint --owner deployer --domain \\\"stellar.stellar\\\"'\")"
-					
+
 					"assert deployer_public_key in vm.succeed(F\"nu -c 'stellar contract invoke --id {address} --source deployer --network local -- owner_of --domain \\\"stellar.stellar\\\"'\")"
 
 					"vm.succeed(F\"nu -c 'stellar contract invoke --id {address} --source deployer --network local -- transfer --sender deployer --recipient {alice_public_key} --domain \\\"stellar.stellar\\\"'\")"
 
 					"assert alice_public_key in vm.succeed(F\"nu -c 'stellar contract invoke --id {address} --source deployer --network local -- owner_of --domain \\\"stellar.stellar\\\"'\")"
-					
+
 					"vm.shutdown()"
 				];
 			};
@@ -645,44 +751,6 @@
 			packages.stellar = import ./nix/stellar.nix {
 				inherit pkgs;
 				inherit system;
-			};
-
-			devShells.default = pkgs.mkShell {
-				RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
-
-				nativeBuildInputs = [
-					pkgs.nushell
-					pkgs.nixd
-					pkgs.nixpkgs-fmt
-					pkgs.clippy
-					pkgs.cargo
-					pkgs.rustc
-					pkgs.rust-analyzer
-					pkgs.pkg-config
-					pkgs.wasm-bindgen-cli
-					pkgs.lld
-					pkgs.protobuf
-					pkgs.docker
-					
-					pkgs.mdwatch
-
-					config.packages.stellar
-				];
-
-				buildInputs = [
-					pkgs.openssl
-				];
-
-				shellHook = ''
-					nu -c '
-						$env.PATH = ($env.PATH | prepend ($env.PWD | path join ".local" "bin"))
-						$env.PATH = ($env.PATH | prepend ($env.HOME | path join ".cargo" "bin"))
-
-						try {
-							rustup target add wasm32-unknown-unknown
-						}
-					'
-				'';
 			};
 		};
 	};
