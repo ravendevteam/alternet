@@ -1,9 +1,9 @@
-{
-	perSystem = { pkgs, inputs, inputs', ... }:
+{ self, inputs, ... }: {
+	perSystem = { pkgs, inputs', ... }:
 	let
 		crane = (inputs.crane.mkLib pkgs).overrideToolchain inputs'.fenix.packages.stable.toolchain;
 
-		node_args.src = ./.;
+		node_args.src = self;
 		node_args.pname = "node";
 		node_args.version = "0.1.0";
 		node_args.doCheck = false;

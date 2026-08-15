@@ -3,8 +3,8 @@
 		checks.soroban_mock_dns = pkgs.testers.runNixOSTest {
 			name = "main";
 
-			nodes.vm.systemVersion = "26.05";
-			nodes.vm.settings.experimental-features = ["flakes" "nix-command"];
+			nodes.vm.system.stateVersion = "26.05";
+			nodes.vm.nix.settings.experimental-features = ["flakes" "nix-command"];
 			nodes.vm.virtualisation.cores = 4;
 			nodes.vm.virtualisation.diskSize = 40960;
 			nodes.vm.virtualisation.memorySize = 12288;
@@ -17,7 +17,7 @@
 				denyinterfaces veth*
 			'';
 
-			vm.environment.systemPackages = [
+			nodes.vm.environment.systemPackages = [
 				pkgs.nushell
 				pkgs.nixd
 				pkgs.nixpkgs-fmt
