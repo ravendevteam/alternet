@@ -28,7 +28,7 @@
 			./nix/pkg/soroban_mock_nft.nix
 			./nix/pkg/stellar.nix
 			./nix/pkg/stellar_testnet_image.nix
-			./nix/shell.nix
+			./nix/dev.nix
 		];
 	};
 }
