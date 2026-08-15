@@ -181,9 +181,7 @@ async fn main() -> Result<()> {
 
            	std::process::Command::new("rustup").args(["target", "add", "wasm32-unknown-unknown"]).status().ok();
 
-            loader.finish_with_message(format!("{} wasm32-unknown-unknown target added", success_icon));
-
-            eprintln!();
+            loader.finish_with_message(format!("{} wasm32-unknown-unknown target added \n", success_icon));
 
             indoc::eprintdoc! {
             	r#"
