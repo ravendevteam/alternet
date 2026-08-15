@@ -15,7 +15,7 @@ members = [
     "lib/soroban", 						  	# soroban
     
     # ... coming soon ...
-    "task",
+    "dev",
     
 	"contract/soroban/mock_dns",				 # soroban_mock_dns
 	"contract/soroban/mock_erc_20",				 # soroban_mock_erc_20

@@ -10,6 +10,8 @@ struct Main {
 
 #[derive(clap::Subcommand)]
 enum Command {
+	#[command(hide = true)]
+	Welcome,
     Package {
         #[arg(long)]
         name: String,
@@ -164,6 +166,19 @@ async fn main() -> Result<()> {
     use clap::Parser as _;
     let main: Main = Main::parse();
     match &main.command {
+    	Command::Welcome => {
+     		std::process::Command::new("rustup").args(["target", "add", "wasm32-unknown-unknown"]).status().ok();
+
+            eprintln!("\x1b[1;32mWelcome to the dev environment!\x1b[0m\n");
+            eprintln!("\x1b[1;33m🛠️ Task Runner:\x1b[0m");
+            eprintln!("  The \x1b[1;36mtask\x1b[0m binary is available in your environment.");
+            eprintln!("  Run \x1b[1;36mtask\x1b[0m to list all available helper commands for this repository.\n");
+            eprintln!("\x1b[1;33m❄️ Nix Usage Tip:\x1b[0m");
+            eprintln!("  • This dev shell isolates dependencies without modifying your global system.");
+            eprintln!("  • Run \x1b[1;36mnix flake check\x1b[0m to run all project checks.");
+            eprintln!("  • Run \x1b[1;36mnix build .#<package>\x1b[0m to build a specific target.");
+            eprintln!("  • If inputs change, update them with \x1b[1;36mnix flake update\x1b[0m.");
+     	},
         Command::Package {
             name,
             tag,

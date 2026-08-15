@@ -1,5 +1,5 @@
 [package]
-name = "task"
+name = "dev"
 version = "0.1.0"
 edition = "2024"
 description = "Repository-level developer CLI for build automation"
@@ -17,3 +17,6 @@ tar = "*"
 walkdir = "*"
 cargo_metadata = "*"
 spinners = "*"
+indicatif = "*"
+owo-colors = "*"
+indoc = "*"

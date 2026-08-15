@@ -1293,6 +1293,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "dev"
+version = "0.1.0"
+dependencies = [
+ "bollard",
+ "bytes 1.11.1",
+ "cargo_metadata",
+ "clap",
+ "futures-util",
+ "serde",
+ "serde_json",
+ "spinners",
+ "tar",
+ "tokio",
+ "tokio-util",
+ "walkdir",
+]
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5210,24 +5228,6 @@ dependencies = [
  "filetime",
  "libc",
  "xattr",
-]
-
-[[package]]
-name = "task"
-version = "0.1.0"
-dependencies = [
- "bollard",
- "bytes 1.11.1",
- "cargo_metadata",
- "clap",
- "futures-util",
- "serde",
- "serde_json",
- "spinners",
- "tar",
- "tokio",
- "tokio-util",
- "walkdir",
 ]
 
 [[package]]

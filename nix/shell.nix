@@ -23,7 +23,7 @@
 				pkgs.mdwatch
 
 				config.packages.stellar
-				config.packages.task
+				config.packages.dev
 			];
 
 			buildInputs = [
@@ -31,7 +31,9 @@
 			];
 
 			shellHook = ''
-				nu -c "${builtins.readFile ./shell.nu}"
+				export PATH="$PWD/.local/bin:$HOME/.cargo/bin:$PATH"
+
+				dev welcome
 			'';
 		};
 
