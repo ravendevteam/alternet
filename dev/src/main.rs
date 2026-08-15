@@ -183,9 +183,10 @@ async fn main() -> Result<()> {
 
             loader.finish_with_message(format!("{} wasm32-unknown-unknown target added", success_icon));
 
+            eprintln!();
+
             indoc::eprintdoc! {
             	r#"
-
 {welcome}
 
 {dev_header}
