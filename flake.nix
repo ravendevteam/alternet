@@ -15,6 +15,8 @@
 		imports = [
 			inputs.rust-flake.flakeModules.default
 			inputs.rust-flake.flakeModules.nixpkgs
+			
+			./nix/check/transport.nix
 		];
 
 		systems = inputs.nixpkgs.lib.systems.flakeExposed;
@@ -424,7 +426,7 @@
 				];
 			};
 
-			packages.transport_e2e =
+			checks.transport_e2e =
 			let
 				name = "main";
 
@@ -434,17 +436,30 @@
 				schema = ./app/node/proto/an.proto;
 				system_state_version = "26.05";
 
-				mk_grpc_call = node: endpoint: "o = ${node}.succeed(\"grpcurl -plaintext -import-path / -proto ${schema} -d '{}' ${localhost_grpc_endpoint} an.Node/${endpoint}\")";
-				mk_print = "print(F\"{o}\")";
+				mk_grpc_call = node: endpoint: "last = json.loads(${node}.succeed(\"grpcurl -plaintext -import-path / -proto ${schema} -d '{}' ${localhost_grpc_endpoint} an.Node/${endpoint}\"))";
+				
+				println = "print(F\"{last}\")";
 				
 				nodes.router.system.stateVersion = system_state_version;
 				nodes.router.virtualisation.vlans = [1 2];
 				nodes.router.boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
+				
 				nodes.router.networking.useDHCP = false;
-				nodes.router.networking.firewall.enable = false;
+				nodes.router.networking.firewall.enable = true;
+				nodes.router.networking.firewall.extraCommands = ''
+					iptables -A FORWARD -p udp --dport 4001 -j DROP
+					iptables -A FORWARD -p tcp --dport 4001 -j DROP
+					iptables -A FORWARD -p tcp --dport 4002 -j DROP
+				'';
+				
 				nodes.router.networking.interfaces.eth1.ipv4.addresses = [{ address = "192.168.1.254"; prefixLength = 24; }];
 				nodes.router.networking.interfaces.eth2.ipv4.addresses = [{ address = "192.168.2.254"; prefixLength = 24; }];
 
+				nodes.router.environment.systemPackages = [
+					pkgs.iptables
+					pkgs.iproute2
+				];
+				
 				nodes.bootstrap.system.stateVersion = system_state_version;
 				nodes.bootstrap.virtualisation.vlans = [1];
 				nodes.bootstrap.networking.useDHCP = false;
@@ -493,6 +508,8 @@
 				'';
 				
 				test_script = pkgs.lib.concatLines [
+					"import json"
+					
 					"router.start()"
 					"router.wait_for_unit(\"network.target\")"
 
@@ -511,7 +528,10 @@
 					"client.wait_for_open_port(4002)"
 					
 					(mk_grpc_call "client" "Peers")
-					(mk_print) # no peers
+					
+					println
+					
+					"assert len(last.get(\"peers\", [])) >= 1, \"expected at least 1 peer, got none\""
 				];
 				testScript = test_script;
 			in pkgs.testers.runNixOSTest {
