@@ -1,6 +1,6 @@
 {
 	perSystem = { pkgs, config, ... }: {
-		packages.soroban_mock_erc_20_e2e = pkgs.testers.runNixOSTest {
+		checks.soroban_mock_erc_20_e2e = pkgs.testers.runNixOSTest {
 			name = "test";
 
 			nodes.vm = { ... }: {

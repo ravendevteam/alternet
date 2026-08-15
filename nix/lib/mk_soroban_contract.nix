@@ -1,12 +1,13 @@
 self: pkgs: config: pname: pkgs.stdenv.mkDerivation rec {
+	inherit pname;
+
 	RUSTFLAGS = "-A warnings";
 
-	pname = pname;
 	version = "0.1.0";
 	src = (import ./mk_rel_root.nix self);
 
 	cargoDeps = pkgs.rustPlatform.importCargoLock {
-		lockFile = (import ./mk_rel.nix self /Cargo.lock);
+		lockFile = (import ./mk_rel.nix self "/Cargo.lock");
 	};
 
 	nativeBuildInputs = [
