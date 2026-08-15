@@ -30,6 +30,13 @@ pub struct PeerIdResponse {
     #[prost(string, tag = "1")]
     pub peer_id: ::prost::alloc::string::String,
 }
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct PeersRequest {}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct PeersResponse {
+    #[prost(string, repeated, tag = "1")]
+    pub peers: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
 /// Generated client implementations.
 pub mod node_client {
     #![allow(
@@ -175,6 +182,24 @@ pub mod node_client {
             req.extensions_mut().insert(GrpcMethod::new("an.Node", "Dial"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn peers(
+            &mut self,
+            request: impl tonic::IntoRequest<super::PeersRequest>,
+        ) -> std::result::Result<tonic::Response<super::PeersResponse>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/an.Node/Peers");
+            let mut req = request.into_request();
+            req.extensions_mut().insert(GrpcMethod::new("an.Node", "Peers"));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// Generated server implementations.
@@ -202,6 +227,10 @@ pub mod node_server {
             &self,
             request: tonic::Request<super::DialRequest>,
         ) -> std::result::Result<tonic::Response<super::DialResponse>, tonic::Status>;
+        async fn peers(
+            &self,
+            request: tonic::Request<super::PeersRequest>,
+        ) -> std::result::Result<tonic::Response<super::PeersResponse>, tonic::Status>;
     }
     #[derive(Debug)]
     pub struct NodeServer<T> {
@@ -393,6 +422,49 @@ pub mod node_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let method = DialSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/an.Node/Peers" => {
+                    #[allow(non_camel_case_types)]
+                    struct PeersSvc<T: Node>(pub Arc<T>);
+                    impl<T: Node> tonic::server::UnaryService<super::PeersRequest>
+                    for PeersSvc<T> {
+                        type Response = super::PeersResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::PeersRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as Node>::peers(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = PeersSvc(inner);
                         let codec = tonic_prost::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

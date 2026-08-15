@@ -954,6 +954,8 @@ async fn main() -> Result<()> {
     let discovery_monitor: sub_system::discovery_monitor::DiscoveryMonitor = sub_system::discovery_monitor::DiscoveryMonitor::builder()
         .interval(std::time::Duration::from_secs(5))
         .build();
+    
+    let peer_registry: sub_system::peer_registry::PeerRegistry = sub_system::peer_registry::PeerRegistry::builder().build();
 
     let mut sub_system_bus: sub_system::Bus = sub_system::Bus::default();
     sub_system_bus.add_system(bootstrap);
@@ -964,6 +966,7 @@ async fn main() -> Result<()> {
     sub_system_bus.add_system(sub_system::metadata::Metadata);
     sub_system_bus.add_system(sub_system::monitor::Monitor);
     sub_system_bus.add_system(sub_system::session_manager::SessionManager::default());
+    sub_system_bus.add_system(peer_registry);
 
     cfg_if::cfg_if!(
         if #[cfg(feature = "malicious_relay")] {

@@ -27,6 +27,11 @@ message PeerIdResponse {
     string peer_id = 1;
 }
 
+message PeersRequest {}
+message PeersResponse {
+	repeated string peers = 1;
+}
+
 service Node {
     rpc PeerId(PeerIdRequest) returns (PeerIdResponse);
 
@@ -35,4 +40,6 @@ service Node {
 
 
     rpc Dial(DialRequest) returns (DialResponse);
+
+    rpc Peers(PeersRequest) returns (PeersResponse);
 }

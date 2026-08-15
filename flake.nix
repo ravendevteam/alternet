@@ -16,13 +16,13 @@
 			inputs.rust-flake.flakeModules.default
 			inputs.rust-flake.flakeModules.nixpkgs
 		];
-	
+
 		systems = inputs.nixpkgs.lib.systems.flakeExposed;
 
 		perSystem = { config, pkgs, system, inputs', ... }:
 		let
 			crane = (inputs.crane.mkLib pkgs).overrideToolchain inputs'.fenix.packages.stable.toolchain;
-			
+
 			node_args.src = ./.;
 			node_args.pname = "node";
 			node_args.version = "0.1.0";
@@ -41,10 +41,10 @@
 				cargoArtifacts = node_artifacts;
 				cargoExtraArgs = "--package node --bin ${role} --features ${role} --no-default-features";
 			});
-			
+
 			mk_soroban_contract = pname: pkgs.stdenv.mkDerivation rec {
 				inherit pname;
-				
+
 				RUSTFLAGS = "-A warnings";
 
 				version = "0.1.0";
@@ -75,7 +75,7 @@
 		in {
 			devShells.default = pkgs.mkShell {
 				RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
-				
+
 				inputsFrom = [
 					config.devShells.rust
 				];
@@ -113,9 +113,9 @@
 					'
 				'';
 			};
-			
+
 			rust-project.toolchain = inputs'.fenix.packages.stable.toolchain;
-			
+
 			packages.bootstrap = mk_node "bootstrap";
 			packages.relay = mk_node "relay";
 			packages.client = mk_node "client";
@@ -124,7 +124,7 @@
 			packages.malicious_relay = mk_node "malicious_relay";
 			packages.malicious_client = mk_node "malicious_client";
 			packages.malicious_server = mk_node "malicious_server";
-			
+
 			packages.e2e =
 			let
 				wan = 1;
@@ -427,8 +427,15 @@
 			packages.transport_e2e =
 			let
 				name = "main";
-				
+
+				localhost = "0.0.0.0";
+				localhost_grpc_endpoint_port = "8080";
+				localhost_grpc_endpoint = "${localhost}:${localhost_grpc_endpoint_port}";
+				schema = ./app/node/proto/an.proto;
 				system_state_version = "26.05";
+
+				mk_grpc_call = node: endpoint: "o = ${node}.succeed(\"grpcurl -plaintext -import-path / -proto ${schema} -d '{}' ${localhost_grpc_endpoint} an.Node/${endpoint}\")";
+				mk_print = "print(F\"{o}\")";
 				
 				nodes.router.system.stateVersion = system_state_version;
 				nodes.router.virtualisation.vlans = [1 2];
@@ -436,8 +443,8 @@
 				nodes.router.networking.useDHCP = false;
 				nodes.router.networking.firewall.enable = false;
 				nodes.router.networking.interfaces.eth1.ipv4.addresses = [{ address = "192.168.1.254"; prefixLength = 24; }];
-				nodes.router.networking.interfaces.eth2.ipv4.addresses = [{ address = "192.168.2.254"; prefixLength = 24; }];	
-				
+				nodes.router.networking.interfaces.eth2.ipv4.addresses = [{ address = "192.168.2.254"; prefixLength = 24; }];
+
 				nodes.bootstrap.system.stateVersion = system_state_version;
 				nodes.bootstrap.virtualisation.vlans = [1];
 				nodes.bootstrap.networking.useDHCP = false;
@@ -445,44 +452,72 @@
 				nodes.bootstrap.networking.firewall.allowedTCPPorts = [4001 4002];
 				nodes.bootstrap.networking.firewall.allowedUDPPorts = [4001];
 				nodes.bootstrap.networking.nameservers = ["1.1.1.1" "8.8.8.8"];
+				nodes.bootstrap.networking.defaultGateway = "192.168.1.254";
 
 				nodes.bootstrap.environment.systemPackages = [
 					pkgs.iproute2
 					pkgs.nettools
-					
+					pkgs.grpcurl
+
 					config.packages.bootstrap
 				];
+				
+				nodes.bootstrap.systemd.services.bootstrap.wantedBy = ["multi-user.target"];
+				nodes.bootstrap.systemd.services.bootstrap.after = ["network.target"];
+				nodes.bootstrap.systemd.services.bootstrap.serviceConfig.Restart = "on-failure";
+				nodes.bootstrap.systemd.services.bootstrap.serviceConfig.ExecStart = "${config.packages.bootstrap}/bin/bootstrap";
 
 				nodes.client.system.stateVersion = system_state_version;
 				nodes.client.virtualisation.vlans = [2];
 				nodes.client.networking.useDHCP = false;
 				nodes.client.networking.interfaces.eth1.ipv4.addresses = [{ address = "192.168.2.1"; prefixLength = 24; }];
-				
+				nodes.client.networking.nameservers = ["1.1.1.1" "8.8.8.8"];
+				nodes.client.networking.defaultGateway = "192.168.2.254";
+
 				nodes.client.environment.systemPackages = [
 					pkgs.iproute2
 					pkgs.nettools
-					
+					pkgs.grpcurl
+
 					config.packages.client
 				];
-			in pkgs.testers.runNixOSTest {
-				inherit name;
-				inherit nodes;
-
-				testScript = pkgs.lib.concatLines [
+				
+				nodes.client.systemd.services.client.wantedBy = ["multi-user.target"];
+				nodes.client.systemd.services.client.after = ["network.target"];
+				nodes.client.systemd.services.client.serviceConfig.Restart = "on-failure";
+				nodes.client.systemd.services.client.serviceConfig.ExecStart = ''
+					${config.packages.client}/bin/client \
+						--dial /ip4/192.168.1.1/udp/4001/quic-v1 \
+						--dial /ip4/192.168.1.1/tcp/4001 \
+						--dial /ip4/192.168.1.1/tcp/4002/ws
+				'';
+				
+				test_script = pkgs.lib.concatLines [
 					"router.start()"
 					"router.wait_for_unit(\"network.target\")"
-					
+
 					"bootstrap.start()"
 					"bootstrap.wait_for_unit(\"network.target\")"
-					"bootstrap.execute(\"bootstrap > /tmp/bootstrap.log 2>&1 &\")"
+					"bootstrap.wait_for_unit(\"bootstrap.service\")"
+					"bootstrap.wait_for_open_port(8080)"
 					"bootstrap.wait_for_open_port(4001)"
 					"bootstrap.wait_for_open_port(4002)"
-					"bootstrap.wait_until_succeeds(\"cat /tmp/bootstrap.log | grep -i 'listen'\", timeout=30)"
 					
 					"client.start()"
 					"client.wait_for_unit(\"network.target\")"
-					"client.succeed(\"client --dial /ip4/192.168.1.1/udp/4001/quic-v1 --dial /ip4/192.168.1.1/tcp/4001 --dial /ip4/192.168.1.1/tcp/4002/ws > /tmp/bootstrap.log 2>&1 &\")"
+					"client.wait_for_unit(\"client.service\")"
+					"client.wait_for_open_port(8080)"
+					"client.wait_for_open_port(4001)"
+					"client.wait_for_open_port(4002)"
+					
+					(mk_grpc_call "client" "Peers")
+					(mk_print) # no peers
 				];
+				testScript = test_script;
+			in pkgs.testers.runNixOSTest {
+				inherit name;
+				inherit nodes;
+				inherit testScript;
 			};
 
 			packages.soroban_mock_dns = mk_soroban_contract "soroban_mock_dns";
