@@ -2,6 +2,7 @@
 name = "task"
 version = "0.1.0"
 edition = "2024"
+description = "Repository-level developer CLI for build automation"
 
 [dependencies]
 clap = { version = "*", features = ["derive"] }

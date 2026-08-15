@@ -23,6 +23,7 @@
 				pkgs.mdwatch
 
 				config.packages.stellar
+				config.packages.task
 			];
 
 			buildInputs = [
@@ -30,14 +31,7 @@
 			];
 
 			shellHook = ''
-				nu -c '
-					$env.PATH = ($env.PATH | prepend ($env.PWD | path join ".local" "bin"))
-					$env.PATH = ($env.PATH | prepend ($env.HOME | path join ".cargo" "bin"))
-
-					try {
-						rustup target add wasm32-unknown-unknown
-					}
-				'
+				nu -c "${builtins.readFile ./shell.nu}"
 			'';
 		};
 
