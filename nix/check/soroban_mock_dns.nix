@@ -1,7 +1,5 @@
 {
-	perSystem = { pkgs, config }: {
-		packages.soroban_mock_dns = (import ./mk_contract.nix pkgs config "soroban_mock_dns");
-
+	perSystem = { pkgs, config, ... }: {
 		checks.soroban_mock_dns = pkgs.testers.runNixOSTest {
 			name = "main";
 

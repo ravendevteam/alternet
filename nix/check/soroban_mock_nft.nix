@@ -1,3 +1,5 @@
+{
+	perSystem = { pkgs, config, ... }: {
 		packages.soroban_mock_nft_e2e = pkgs.testers.runNixOSTest {
 			name = "main";
 
@@ -86,3 +88,5 @@
 				"vm.shutdown()"
 			];
 		};
+	};
+}

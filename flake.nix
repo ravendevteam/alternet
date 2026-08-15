@@ -22,12 +22,12 @@
 			./nix/check/soroban_mock_erc_20.nix
 			./nix/check/soroban_mock_nft.nix
 			./nix/check/transport.nix
-			./nix/pkgs/node.nix
-			./nix/pkgs/soroban_mock_dns.nix
-			./nix/pkgs/soroban_mock_erc_20.nix
-			./nix/pkgs/soroban_mock_nft.nix
-			./nix/pkgs/stellar.nix
-			./nix/pkgs/stellar_testnet_image.nix
+			./nix/pkg/node.nix
+			./nix/pkg/soroban_mock_dns.nix
+			./nix/pkg/soroban_mock_erc_20.nix
+			./nix/pkg/soroban_mock_nft.nix
+			./nix/pkg/stellar.nix
+			./nix/pkg/stellar_testnet_image.nix
 			./nix/shell.nix
 		];
 	};
