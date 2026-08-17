@@ -3,7 +3,6 @@ resolver = "3"
 members = [
     "app/node",
     "image",
-    "image_util",
     
     "lib/bytes",
     "lib/cryptography",
