@@ -104,6 +104,10 @@
 		};
 	in {
 		checks.transport = mk_check no_firewall_extra_commands;
+		
+		checks.transport_without_tcp = mk_check ''
+			iptables -A FORWARD -p tcp --dport 4001 -j DROP
+		'';
 
 		checks.transport_without_quic = mk_check ''
 			iptables -A FORWARD -p udp --dport 4001 -j DROP

@@ -6,8 +6,8 @@ edition = "2024"
 [dependencies]
 lib_cryptography = { version = "*", package = "cryptography", path = "../../cryptography" }
 lib_bytes = { version = "*", package = "bytes", path = "../../bytes" }
-ed25519-dalek = { version = "*", features = ["rand_core"] }
+ed25519-dalek = { version = "3.0.0", features = ["rand_core"] }
 ed25519 = "*"
-rand = "*"
-rand_core = { version = "*", features = ["std"] }
+rand = "0.10.2"
+rand_core = { version = "0.10.1" }
 bytes = "*"
